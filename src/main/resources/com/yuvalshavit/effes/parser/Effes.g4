@@ -11,9 +11,15 @@ dataTypeArg: VAR_NAME COLON disjunctiveType;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 
-atomicType: TYPE_NAME generic?;
+atomicType: GENERIC_NAME
+          | TYPE_NAME generic?
+          ;
 
-generic: '[' GENERIC_NAME (':' disjunctiveType)? ']';
+generic: '[' genericParam ']';
+
+genericParam: TYPE_NAME
+            | GENERIC_NAME (':' disjunctiveType)?
+            ;
 
 INDENT: '{';
 OUTDENT: '}';

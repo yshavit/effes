@@ -6,11 +6,20 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.misc.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -20,8 +29,10 @@ import org.testng.annotations.Test;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,8 +81,18 @@ public final class EffesParserTest {
       EffesLexer lexer = new EffesLexer(input);
       TokenStream tokens = new CommonTokenStream(lexer);
       EffesParser parser = new EffesParser(tokens);
+      parser.removeErrorListeners(); // don't spit to stderr
+      parser.addErrorListener(new AntlrFailureListener());
       Method ruleMethod = parser.getClass().getMethod(ruleName);
-      RuleContext rule = (RuleContext) ruleMethod.invoke(parser);
+      RuleContext rule;
+      try {
+        rule = (RuleContext) ruleMethod.invoke(parser);
+      } catch (InvocationTargetException e) {
+        if (e.getCause() instanceof AntlrParseException) {
+          throw (AntlrParseException) e.getCause();
+        }
+        throw e;
+      }
       StringBuilder sb = new StringBuilder();
       prettyPrint(sb, 0, rule, parser.getRuleNames(), parser.getTokenNames());
       actualTree = sb.toString();
@@ -117,4 +138,19 @@ public final class EffesParserTest {
     return Resources.getResource(pathBase + "/" + fileName);
   }
 
+  private static class AntlrFailureListener extends BaseErrorListener {
+    @Override
+    public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
+                            int charPositionInLine, String msg, @Nullable RecognitionException e) {
+      throw new AntlrParseException(line, charPositionInLine, msg);
+    }
+  }
+
+  private static class AntlrParseException extends RuntimeException {
+    public AntlrParseException(int line, int posInLine, String msg) {
+      // posInLine comes in 0-indexed, but we want to 1-index it so it lines up with what editors say (they
+      // tend to 1-index)
+      super(String.format("at line %d column %d: %s", line, posInLine+1, msg));
+    }
+  }
 }

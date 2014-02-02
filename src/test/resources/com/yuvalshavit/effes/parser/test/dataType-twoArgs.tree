@@ -17,6 +17,7 @@ dataType
         atomicType
           TYPE_NAME: Set
           generic
-            TYPE_NAME: PersonId
+            genericParam
+              TYPE_NAME: PersonId
         atomicType
           TYPE_NAME: Unknown
