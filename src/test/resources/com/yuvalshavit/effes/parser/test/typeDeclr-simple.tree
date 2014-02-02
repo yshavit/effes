@@ -1,0 +1,8 @@
+typeDeclr
+  TYPE_NAME: Boolean
+  typeDeclrBody
+    disjunctiveType
+      atomicType
+        TYPE_NAME: True
+      atomicType
+        TYPE_NAME: False
