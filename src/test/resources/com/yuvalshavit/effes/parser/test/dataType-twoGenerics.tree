@@ -1,0 +1,22 @@
+dataType
+  TYPE_NAME: Pair
+  generic
+    genericParam
+      GENERIC_NAME: A
+      genericParamRestriction
+        disjunctiveType
+          atomicType
+            TYPE_NAME: Eq
+    genericParam
+      GENERIC_NAME: B
+  dataTypeArgs
+    dataTypeArg
+      VAR_NAME: first
+      disjunctiveType
+        atomicType
+          GENERIC_NAME: A
+    dataTypeArg
+      VAR_NAME: second
+      disjunctiveType
+        atomicType
+          GENERIC_NAME: B
