@@ -34,7 +34,6 @@ import java.util.Set;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.not;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -77,6 +76,7 @@ public final class EffesParserTest {
     try (InputStream efInputStream = new BufferedInputStream(url(fileNameNoExt + ".ef").openStream())) {
       CharStream input = new ANTLRInputStream(efInputStream);
       EffesLexer lexer = new EffesLexer(input);
+      lexer.addErrorListener(new AntlrFailureListener());
       TokenStream tokens = new CommonTokenStream(lexer);
       EffesParser parser = new EffesParser(tokens);
       parser.removeErrorListeners(); // don't spit to stderr

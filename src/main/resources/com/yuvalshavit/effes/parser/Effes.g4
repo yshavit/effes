@@ -23,7 +23,7 @@ genericParam: TYPE_NAME
 
 INDENT: '{';
 OUTDENT: '}';
-NL: '\r'? '\n';
+NL: ('\r'? '\n') | EOF;
 WS: [ \t]+ -> skip;
 LINE_COMMENT: '--' .*? NL;
 
