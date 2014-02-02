@@ -1,0 +1,22 @@
+dataType
+  TYPE_NAME: Person
+  dataTypeArgs
+    dataTypeArg
+      VAR_NAME: id
+      disjunctiveType
+        atomicType
+          TYPE_NAME: PersonId
+    dataTypeArg
+      VAR_NAME: name
+      disjunctiveType
+        atomicType
+          TYPE_NAME: String
+    dataTypeArg
+      VAR_NAME: siblings
+      disjunctiveType
+        atomicType
+          TYPE_NAME: Set
+          generic
+            TYPE_NAME: PersonId
+        atomicType
+          TYPE_NAME: Unknown

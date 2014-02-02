@@ -9,9 +9,7 @@ dataTypeArgs: '(' dataTypeArg (',' dataTypeArg)* ')';
 
 dataTypeArg: VAR_NAME COLON disjunctiveType;
 
-disjunctiveType: conjunctiveType ('|' conjunctiveType)*;
-
-conjunctiveType: atomicType; // TODO
+disjunctiveType: atomicType ('|' atomicType)*;
 
 atomicType: TYPE_NAME generic?;
 

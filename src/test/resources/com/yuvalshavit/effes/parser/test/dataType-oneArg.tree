@@ -1,0 +1,8 @@
+dataType
+  TYPE_NAME: Just
+  dataTypeArgs
+    dataTypeArg
+      VAR_NAME: item
+      disjunctiveType
+        atomicType
+          GENERIC_NAME: A
