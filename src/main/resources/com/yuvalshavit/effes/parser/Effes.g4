@@ -1,6 +1,6 @@
 grammar Effes;
 
-dataType: 'data type'
+dataTypeDeclr: 'data type'
           TYPE_NAME generic?
           dataTypeArgs?
         ;
