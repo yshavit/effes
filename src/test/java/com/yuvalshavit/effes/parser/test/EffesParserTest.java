@@ -145,15 +145,15 @@ public final class EffesParserTest {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
                             int charPositionInLine, String msg, @Nullable RecognitionException e) {
-      throw new AntlrParseException(line, charPositionInLine, msg);
+      throw new AntlrParseException(line, charPositionInLine, msg, e);
     }
   }
 
   private static class AntlrParseException extends RuntimeException {
-    public AntlrParseException(int line, int posInLine, String msg) {
+    public AntlrParseException(int line, int posInLine, String msg, Throwable cause) {
       // posInLine comes in 0-indexed, but we want to 1-index it so it lines up with what editors say (they
       // tend to 1-index)
-      super(String.format("at line %d column %d: %s", line, posInLine+1, msg));
+      super(String.format("at line %d column %d: %s", line, posInLine+1, msg), cause);
     }
   }
 }
