@@ -1,5 +1,24 @@
 grammar Effes;
 
+tokens { INDENT, DEDENT }
+@lexer::header {
+  import com.google.common.base.Supplier;
+}
+@lexer::members {
+  private final Supplier<Token> superTokens = new Supplier<Token>() {
+    @Override
+    public Token get() {
+      return EffesLexer.super.nextToken();
+    }
+  };
+
+  private final Denter denter = new Denter(superTokens, NL, EffesParser.INDENT, EffesParser.DEDENT);
+  @Override
+  public Token nextToken() {
+    return denter.nextToken();
+  }
+}
+
 dataTypeDeclr: 'data type'
                TYPE_NAME generic?
                dataTypeArgs?
@@ -11,7 +30,8 @@ dataTypeArg: VAR_NAME ':' disjunctiveType;
 
 typeDeclr: 'type' TYPE_NAME generic? typeDeclrBody;
 
-typeDeclrBody: '=' disjunctiveType;
+typeDeclrBody: '=' disjunctiveType
+             | ':' INDENT 'todo' OUTDENT;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 
@@ -27,11 +47,9 @@ genericParam: TYPE_NAME
 
 genericParamRestriction: disjunctiveType;
 
-INDENT: '{';
-OUTDENT: '}';
-NL: ('\r'? '\n') | EOF;
+NL: ('\r'? '\n' ' '*) | EOF;
 WS: [ \t]+ -> skip;
-LINE_COMMENT: '--' .*? NL;
+LINE_COMMENT: '--' ~[\r\n]* -> skip;
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;

@@ -48,7 +48,7 @@ public final class EffesParserTest {
 
   @DataProvider(name = "test1")
   public Object[][] readParseFiles() {
-    Set<String> files = Sets.newHashSet(readFile("").split("\n"));
+    Set<String> files = Sets.newHashSet(readFile(".").split("\n"));
     List<Object[]> parseTests = Lists.newArrayList();
     for (String efFile : files) {
       if (efFile.endsWith(".ef")) {
