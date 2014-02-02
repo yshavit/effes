@@ -5,8 +5,6 @@ dataTypeDeclr: 'data type'
                dataTypeArgs?
              ;
 
-
-
 dataTypeArgs: '(' dataTypeArg (',' dataTypeArg)* ')';
 
 dataTypeArg: VAR_NAME ':' disjunctiveType;
