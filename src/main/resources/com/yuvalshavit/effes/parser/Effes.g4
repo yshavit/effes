@@ -13,8 +13,7 @@ dataTypeArg: VAR_NAME ':' disjunctiveType;
 
 typeDeclr: 'type' TYPE_NAME generic? typeDeclrBody;
 
-typeDeclrBody: '=' disjunctiveType
-             ;
+typeDeclrBody: '=' disjunctiveType;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 
