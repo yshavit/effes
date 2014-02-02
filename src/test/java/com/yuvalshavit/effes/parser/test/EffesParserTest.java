@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.Nullable;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -32,6 +33,9 @@ import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.not;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
@@ -96,6 +100,7 @@ public final class EffesParserTest {
 
   private void prettyPrint(StringBuilder out, int indent, ParseTree tree, String[] ruleNames, String[] tokenNames) {
     assertNotNull(tree);
+    assertThat(tree, not(instanceOf(ErrorNode.class)));
     if (tree instanceof RuleNode) {
       writeIndent(out, indent);
       RuleNode rule = (RuleNode) tree;
