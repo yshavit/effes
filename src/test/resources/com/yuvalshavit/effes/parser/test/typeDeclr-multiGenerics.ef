@@ -1,1 +1,1 @@
-type Either[A,B] = A | B
+type Either[A, B:Hashable] = A | B

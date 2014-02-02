@@ -5,6 +5,10 @@ typeDeclr
       GENERIC_NAME: A
     genericParam
       GENERIC_NAME: B
+      genericParamRestriction
+        disjunctiveType
+          atomicType
+            TYPE_NAME: Hashable
   typeDeclrBody
     disjunctiveType
       atomicType
