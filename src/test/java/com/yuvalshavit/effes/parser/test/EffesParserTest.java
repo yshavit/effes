@@ -10,10 +10,12 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DiagnosticErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.Nullable;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -79,7 +81,9 @@ public final class EffesParserTest {
       lexer.addErrorListener(new AntlrFailureListener());
       TokenStream tokens = new CommonTokenStream(lexer);
       EffesParser parser = new EffesParser(tokens);
+      parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
       parser.removeErrorListeners(); // don't spit to stderr
+      parser.addErrorListener(new DiagnosticErrorListener());
       parser.addErrorListener(new AntlrFailureListener());
       Method ruleMethod = parser.getClass().getMethod(ruleName);
       RuleContext rule;
