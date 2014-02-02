@@ -1,0 +1,13 @@
+typeDeclr
+  TYPE_NAME: Either
+  generic
+    genericParam
+      GENERIC_NAME: A
+    genericParam
+      GENERIC_NAME: B
+  typeDeclrBody
+    disjunctiveType
+      atomicType
+        GENERIC_NAME: A
+      atomicType
+        GENERIC_NAME: B
