@@ -31,7 +31,7 @@ dataTypeArg: VAR_NAME ':' disjunctiveType;
 typeDeclr: 'type' TYPE_NAME generic? typeDeclrBody;
 
 typeDeclrBody: '=' disjunctiveType
-             | ':' INDENT 'todo' OUTDENT;
+             | ':' INDENT 'todo' DEDENT;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 

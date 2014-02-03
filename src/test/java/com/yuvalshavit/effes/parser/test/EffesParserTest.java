@@ -43,6 +43,7 @@ import static org.testng.Assert.fail;
 
 public final class EffesParserTest {
   private static final String pathBase = EffesParserTest.class.getPackage().getName().replace('.', '/');
+  private static final Set<String> tokensToIgnoreOnOutput = Sets.newHashSet("INDENT", "DEDENT");
 
   public static final String PARSE_TESTS = "test1";
 
@@ -128,7 +129,7 @@ public final class EffesParserTest {
 
   private boolean tokenIsInteresting(String tokenName) {
     // good enough for now; will break if/when the parser doesn't use string literal tokens
-    return !tokenName.startsWith("'");
+    return !(tokensToIgnoreOnOutput.contains(tokenName) || tokenName.startsWith("'"));
   }
 
   private void writeIndent(StringBuilder out, int indent) {
