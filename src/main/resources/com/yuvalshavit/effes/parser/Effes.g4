@@ -11,8 +11,8 @@ tokens { INDENT, DEDENT }
       return EffesLexer.super.nextToken();
     }
   };
-
   private final Denter denter = new Denter(superTokens, NL, EffesParser.INDENT, EffesParser.DEDENT);
+
   @Override
   public Token nextToken() {
     return denter.nextToken();
