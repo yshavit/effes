@@ -5,13 +5,12 @@ tokens { INDENT, DEDENT }
   import com.google.common.base.Supplier;
 }
 @lexer::members {
-  private final Supplier<Token> superTokens = new Supplier<Token>() {
+  private final DenterHelper denter = new DenterHelper(NL, EffesParser.INDENT, EffesParser.DEDENT) {
     @Override
-    public Token get() {
+    public Token pullToken() {
       return EffesLexer.super.nextToken();
     }
   };
-  private final DenterHelper denter = new DenterHelper(superTokens, NL, EffesParser.INDENT, EffesParser.DEDENT);
 
   @Override
   public Token nextToken() {
