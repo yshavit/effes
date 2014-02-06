@@ -2,7 +2,7 @@ grammar Effes;
 
 tokens { INDENT, DEDENT }
 @lexer::header {
-  import com.google.common.base.Supplier;
+  import com.yuvalshavit.antlr4.DenterHelper;
 }
 @lexer::members {
   private final DenterHelper denter = new DenterHelper(NL, EffesParser.INDENT, EffesParser.DEDENT) {
