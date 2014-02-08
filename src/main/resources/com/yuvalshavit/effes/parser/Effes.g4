@@ -20,17 +20,17 @@ tokens {INDENT, DEDENT }
 
 // type declr
 
-typeDeclr: 'type' TYPE_NAME genericsDeclr? typeDef;
+typeDeclr: TYPE TYPE_NAME genericsDeclr? typeDef;
 
-typeDef: ':' typeDeclrBody
-       | '=' disjunctiveType
+typeDef: COLON typeDeclrBody
+       | EQ disjunctiveType
        ;
 
 typeDeclrBody: typeDeclrElement+;
 
 typeDeclrElement: methodDeclr
-                | '@pattern' '->' disjunctiveType methodDef
-                | '@create' methodDef
+                | PATTERN ARROW disjunctiveType methodDef
+                | CREATE methodDef
                 ;
 
 methodDeclr: funcModifiers?
@@ -39,7 +39,7 @@ methodDeclr: funcModifiers?
              methodDef
            ;
 
-funcModifiers: '[' VAR_NAME+ ']';
+funcModifiers: OPEN_BRACE VAR_NAME+ CLOSE_BRACE;
 
 methodName: VAR_NAME
           | CMP_OPS
@@ -47,38 +47,38 @@ methodName: VAR_NAME
           | ADD_OPS
           ;
 
-methodReturnDeclr: '->' disjunctiveType;
+methodReturnDeclr: ARROW disjunctiveType;
 
-methodDef: ':' exprBlock ;
+methodDef: COLON exprBlock ;
 
 // TODO ambiguity between if-else as an expr or stat, ditto with case
 
 // data type declr
 
-dataTypeDeclr: 'data type'
+dataTypeDeclr: DATA TYPE
                TYPE_NAME genericsDeclr?
                dataTypeArgs?
              ;
 
-dataTypeArgs: '(' dataTypeArg (',' dataTypeArg)* ')';
+dataTypeArgs: OPEN_PAREN dataTypeArg (COMMA dataTypeArg)* CLOSE_PAREN;
 
-dataTypeArg: VAR_NAME ':' disjunctiveType;
+dataTypeArg: VAR_NAME COLON disjunctiveType;
 
 // generics and types
 
-genericsDeclr: '[' genericDeclr (',' genericDeclr)* ']';
+genericsDeclr: OPEN_BRACE genericDeclr (COMMA genericDeclr)* CLOSE_BRACE;
 
 genericDeclr: TYPE_NAME
             | GENERIC_NAME genericParamRestriction?
             ;
 
-genericParamRestriction: ':' disjunctiveType;
+genericParamRestriction: COLON disjunctiveType;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 
 atomicType: GENERIC_NAME genericParamRestriction? # GenericAtom
           | TYPE_NAME genericsDeclr?              # ConcreteAtom
-          | '(' atomicType (',' atomicType)* ')'  # TupleAtom
+          | OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN  # TupleAtom
           ;
 
 // blocks and statements
@@ -86,30 +86,30 @@ atomicType: GENERIC_NAME genericParamRestriction? # GenericAtom
 block: INDENT stat+ DEDENT;
 
 stat: ifStatFragment elseStatFragment* elseStatFragment? # IfElseStat
-    | VAR_NAME '=' expr                                  # AssignStat
+    | VAR_NAME EQ expr                                  # AssignStat
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not
 // statements; a block isn't a statement. So we have to treat "else if" as a
 // special section rather than just an "else" followed by a stat.
-ifStatFragment: 'if' expr block;
-elseIfStatFragment: 'else' 'if' expr block;
-elseStatFragment: 'else' block;
+ifStatFragment: IF expr block;
+elseIfStatFragment: ELSE IF expr block;
+elseStatFragment: ELSE block;
 
 // expressions
 
-expr: 'if' expr ifExprBody          # IfExpr
-    | 'case' expr 'of' casePatterns # CaseOfExpr
+expr: IF expr ifExprBody          # IfExpr
+    | CASE expr OF casePatterns # CaseOfExpr
     | INT                           # IntLiteral
     | VAR_NAME                      # VarExpr
     | TYPE_NAME methodInvokeArgs?   # CtorInvoke
     | VAR_NAME methodInvokeArgs     # MethodInvoke
     ;
 
-methodInvokeArgs: '(' expr* ')';
+methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
 
-ifExprBody: 'then' expr 'else' expr // TODO else if
-          | INDENT 'then' exprBlock ('else' 'if' expr 'then' exprBlock)* 'else' exprBlock
+ifExprBody: THEN expr ELSE expr // TODO else if
+          | INDENT THEN exprBlock (ELSE IF expr THEN exprBlock)* ELSE exprBlock
           ;
 
 exprBlock: expr
@@ -117,19 +117,35 @@ exprBlock: expr
 
 casePatterns: INDENT casePattern+ DEDENT;
 
-casePattern: TYPE_NAME casePatternArgs? ':' (expr | block);
+casePattern: TYPE_NAME casePatternArgs? COLON (expr | block);
 
-casePatternArgs: '(' casePatternArg ')';
+casePatternArgs: OPEN_PAREN casePatternArg (COMMA casePatternArg)* CLOSE_PAREN;
 
 casePatternArg: VAR_NAME
-              | '_'
+              | UNDERSCORE
               ;
 
+// tokens
+
+DATA: 'data';
+TYPE: 'type';
+COLON: ':';
+EQ: '=';
+ARROW: '->';
+PATTERN: '@pattern';
+CREATE: '@create';
 OPEN_PAREN: '(';
 CLOSE_PAREN: ')';
+OPEN_BRACE: '[';
+CLOSE_BRACE: ']';
 COMMA: ',';
-
-// tokens
+PIPE: '|';
+IF: 'if';
+THEN: 'then';
+ELSE: 'else';
+CASE: 'case';
+OF: 'of';
+UNDERSCORE: '_';
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
@@ -137,7 +153,6 @@ VAR_NAME: [a-z]+ [a-z0-9_]*;
 CMP_OPS: '==' | '!=' | '<' | '<=' | '>' | '>=';
 MULT_OPS: '*' | '/';
 ADD_OPS: '+' | '-';
-
 INT: '-'? [1-9] [0-9]*;
 
 NL: ('\r'? '\n' ' '*) | EOF;
