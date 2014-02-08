@@ -76,17 +76,38 @@ genericParamRestriction: COLON disjunctiveType;
 
 disjunctiveType: atomicType ('|' atomicType)*;
 
-atomicType: GENERIC_NAME genericParamRestriction? # GenericAtom
-          | TYPE_NAME genericsDeclr?              # ConcreteAtom
-          | OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN  # TupleAtom
+atomicType: GENERIC_NAME genericParamRestriction?                 # GenericAtom
+          | TYPE_NAME genericsDeclr?                              # ConcreteAtom
+          | OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN # TupleAtom
           ;
 
 // blocks and statements
 
-block: INDENT stat+ DEDENT;
+block: weakStat? INDENT stat+ DEDENT;
 
-stat: ifStatFragment elseStatFragment* elseStatFragment? # IfElseStat
-    | VAR_NAME EQ expr                                  # AssignStat
+exprBlock: expr
+         | weakStat ? INDENT statOrExpr* expr DEDENT;
+
+statOrExpr: stat
+          | expr
+          ;
+
+// A "weak" statement is one that isn't strong enough to start an exprBlock.
+// This helps the parser figure out the exprBlock's opening subrule without
+// having to lookahead like crazy.
+// In other words, when we use the syntax of "inlining" the first statement
+// of a block, that first statement can't be a weakStat.
+// For instance, "if <expr>" can start an expression as well as a statement.
+// If we didn't have weakStat, this would cause an ambiguity in a exprBlock
+// that starts with "if <expr>", one that wouldn't be resolved until we
+// saw the INDENT. And even then, the rule's alternatives would be order-
+// dependent. So, this weakStat bit is ugly, but less ugly than the alternative.
+weakStat: ifStatFragment elseStatFragment* elseStatFragment? # IfElseStat
+        | CASE expr OF casePattern                           # CaseStat
+        ;
+
+stat: weakStat
+    | VAR_NAME EQ expr
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not
@@ -98,8 +119,8 @@ elseStatFragment: ELSE block;
 
 // expressions
 
-expr: IF expr ifExprBody          # IfExpr
-    | CASE expr OF casePatterns # CaseOfExpr
+expr: IF expr ifExprBody            # IfExpr
+    | CASE expr OF casePatterns     # CaseOfExpr
     | INT                           # IntLiteral
     | VAR_NAME                      # VarExpr
     | TYPE_NAME methodInvokeArgs?   # CtorInvoke
@@ -108,16 +129,14 @@ expr: IF expr ifExprBody          # IfExpr
 
 methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
 
-ifExprBody: THEN expr ELSE expr // TODO else if
+ifExprBody: THEN expr ELSE expr
           | INDENT THEN exprBlock (ELSE IF expr THEN exprBlock)* ELSE exprBlock
           ;
 
-exprBlock: expr
-         | stat ? INDENT stat* expr DEDENT;
-
+// TODO split case patterns into statements and exprs
 casePatterns: INDENT casePattern+ DEDENT;
 
-casePattern: TYPE_NAME casePatternArgs? COLON (expr | block);
+casePattern: TYPE_NAME casePatternArgs? COLON exprBlock;
 
 casePatternArgs: OPEN_PAREN casePatternArg (COMMA casePatternArg)* CLOSE_PAREN;
 
