@@ -35,8 +35,9 @@ typeDeclrElement: methodDeclr
 
 methodDeclr: funcModifiers?
              methodName
+             methodArgs
              methodReturnDeclr?
-             methodDef
+             methodDef?
            ;
 
 funcModifiers: OPEN_BRACE VAR_NAME+ CLOSE_BRACE;
@@ -46,6 +47,10 @@ methodName: VAR_NAME
           | MULT_OPS
           | ADD_OPS
           ;
+
+methodArgs: methodArg*;
+
+methodArg: (VAR_NAME COLON)? disjunctiveType;
 
 methodReturnDeclr: ARROW disjunctiveType;
 
