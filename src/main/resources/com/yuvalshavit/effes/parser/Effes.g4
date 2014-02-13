@@ -54,9 +54,7 @@ methodArg: (VAR_NAME COLON)? disjunctiveType;
 
 methodReturnDeclr: ARROW disjunctiveType;
 
-methodDef: COLON exprBlock ;
-
-// TODO ambiguity between if-else as an expr or stat, ditto with case
+methodDef: block; // TODO expr directly, without the "return"?
 
 // data type declr
 
@@ -88,31 +86,18 @@ atomicType: GENERIC_NAME genericParamRestriction?                 # GenericAtom
 
 // blocks and statements
 
-block: weakStat? INDENT stat+ DEDENT;
-
-exprBlock: expr
-         | weakStat ? INDENT statOrExpr* expr DEDENT;
+block: stat
+     | INDENT stat+ DEDENT
+     ;
 
 statOrExpr: stat
           | expr
           ;
 
-// A "weak" statement is one that isn't strong enough to start an exprBlock.
-// This helps the parser figure out the exprBlock's opening subrule without
-// having to lookahead like crazy.
-// In other words, when we use the syntax of "inlining" the first statement
-// of a block, that first statement can't be a weakStat.
-// For instance, "if <expr>" can start an expression as well as a statement.
-// If we didn't have weakStat, this would cause an ambiguity in a exprBlock
-// that starts with "if <expr>", one that wouldn't be resolved until we
-// saw the INDENT. And even then, the rule's alternatives would be order-
-// dependent. So, this weakStat bit is ugly, but less ugly than the alternative.
-weakStat: ifStatFragment elseStatFragment* elseStatFragment? # IfElseStat
-        | CASE expr OF casePattern                           # CaseStat
-        ;
-
-stat: weakStat
-    | VAR_NAME EQ expr
+stat: ifStatFragment elseIfStatFragment* elseStatFragment? # IfElseStat
+    | CASE expr OF casePattern                             # CaseStat
+    | VAR_NAME EQ expr                                     # AssignStat
+    | RETURN expr                                          # ReturnStat
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not
@@ -124,7 +109,7 @@ elseStatFragment: ELSE block;
 
 // expressions
 
-expr: IF expr ifExprBody            # IfExpr
+expr: IF expr THEN expr ELSE expr   # IfExpr
     | CASE expr OF casePatterns     # CaseOfExpr
     | INT                           # IntLiteral
     | VAR_NAME                      # VarExpr
@@ -134,20 +119,20 @@ expr: IF expr ifExprBody            # IfExpr
 
 methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
 
-ifExprBody: THEN expr ELSE expr
-          | INDENT THEN exprBlock (ELSE IF expr THEN exprBlock)* ELSE exprBlock
-          ;
-
 // TODO split case patterns into statements and exprs
 casePatterns: INDENT casePattern+ DEDENT;
 
-casePattern: TYPE_NAME casePatternArgs? COLON exprBlock;
+casePattern: TYPE_NAME? casePatternArgs? COLON exprBlock;
 
 casePatternArgs: OPEN_PAREN casePatternArg (COMMA casePatternArg)* CLOSE_PAREN;
 
 casePatternArg: VAR_NAME
               | UNDERSCORE
               ;
+
+exprBlock: expr
+           (WHERE INDENT stat+ DEDENT)?
+         ;
 
 // tokens
 
@@ -169,6 +154,8 @@ THEN: 'then';
 ELSE: 'else';
 CASE: 'case';
 OF: 'of';
+RETURN: 'return';
+WHERE: 'where';
 UNDERSCORE: '_';
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
