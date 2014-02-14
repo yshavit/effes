@@ -26,7 +26,7 @@ typeDef: COLON typeDeclrBody
        | EQ disjunctiveType
        ;
 
-typeDeclrBody: typeDeclrElement+;
+typeDeclrBody: INDENT typeDeclrElement+ DEDENT;
 
 typeDeclrElement: methodDeclr
                 | PATTERN ARROW disjunctiveType methodDef
@@ -77,7 +77,7 @@ genericDeclr: TYPE_NAME
 
 genericParamRestriction: COLON disjunctiveType;
 
-disjunctiveType: atomicType ('|' atomicType)*;
+disjunctiveType: atomicType (PIPE atomicType)*;
 
 atomicType: GENERIC_NAME genericParamRestriction?                 # GenericAtom
           | TYPE_NAME genericsDeclr?                              # ConcreteAtom
