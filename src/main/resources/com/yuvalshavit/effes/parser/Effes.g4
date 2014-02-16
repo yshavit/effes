@@ -36,7 +36,7 @@ typeDeclrElement: methodDeclr
 methodDeclr: funcModifiers?
              methodName
              methodArgs
-             methodReturnDeclr?
+             (methodReturnDeclr COLON)?
              methodDef?
            ;
 
@@ -96,8 +96,8 @@ statOrExpr: stat
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment? # IfElseStat
     | CASE expr OF casePattern                             # CaseStat
-    | VAR_NAME EQ expr                                     # AssignStat
-    | RETURN expr                                          # ReturnStat
+    | VAR_NAME EQ expr NL                                  # AssignStat
+    | RETURN expr NL                                       # ReturnStat
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not

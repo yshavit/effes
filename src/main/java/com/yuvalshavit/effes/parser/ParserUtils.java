@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 public final class ParserUtils {
-  private static final Set<String> tokensToIgnoreOnOutput = Sets.newHashSet("INDENT", "DEDENT");
+  private static final Set<String> tokensToIgnoreOnOutput = Sets.newHashSet("INDENT", "DEDENT", "NL");
 
   public static EffesParser createParser(Reader input) throws IOException {
     CharStream charStream = new ANTLRInputStream(input);
@@ -36,8 +36,8 @@ public final class ParserUtils {
     EffesParser parser = new EffesParser(tokens);
     parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
     parser.removeErrorListeners(); // don't spit to stderr
+//    parser.setTrace(true);
     parser.addErrorListener(new DiagnosticErrorListener());
-    parser.addErrorListener(new AntlrFailureListener());
     return parser;
   }
 
@@ -69,7 +69,7 @@ public final class ParserUtils {
       throw new NullPointerException("null tree");
     }
     if (tree instanceof ErrorNode) {
-      throw new IllegalArgumentException("tree cannot be of error node");
+      out.append("!!!ERROR!!! ").append(tree);
     }
     if (tree instanceof RuleNode) {
       writeIndent(out, indent);

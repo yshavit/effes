@@ -52,7 +52,17 @@ public final class EffesParserTest {
   @Test(dataProvider = PARSE_TESTS)
   public void parse(String fileNameNoExt) throws IOException, ReflectiveOperationException {
     assertThat("file name", fileNameNoExt, containsString("-"));
-    String expectedContent = readFile(fileNameNoExt + ".tree");
+    String expectedContent;
+    try {
+      expectedContent = readFile(fileNameNoExt + ".tree");
+    } catch (IllegalArgumentException e) {
+      if (e.getMessage() != null && e.getMessage().endsWith("not found.")) {
+        // if the .tree file isn't found, just set expectedContent to null for easy prototyping
+        expectedContent = null;
+      } else {
+        throw e;
+      }
+    }
 
     String ruleName = fileNameNoExt.split("-", 2)[0];
 
