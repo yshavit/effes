@@ -3,6 +3,7 @@ grammar Effes;
 tokens {INDENT, DEDENT }
 @lexer::header {
   import com.yuvalshavit.antlr4.DenterHelper;
+  import com.yuvalshavit.antlr4.DenterOptions;
 }
 @lexer::members {
   private final DenterHelper denter = new DenterHelper(NL, EffesParser.INDENT, EffesParser.DEDENT) {
@@ -15,6 +16,10 @@ tokens {INDENT, DEDENT }
   @Override
   public Token nextToken() {
     return denter.nextToken();
+  }
+  
+  public DenterOptions getDenterOptions() {
+    return denter.getOptions();
   }
 }
 

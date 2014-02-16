@@ -31,7 +31,7 @@ public final class ParserUtils {
   public static EffesParser createParser(Reader input) throws IOException {
     CharStream charStream = new ANTLRInputStream(input);
     EffesLexer lexer = new EffesLexer(charStream);
-    lexer.addErrorListener(new AntlrFailureListener());
+    lexer.addErrorListener(new ExceptionThrowingFailureListener());
     TokenStream tokens = new CommonTokenStream(lexer);
     EffesParser parser = new EffesParser(tokens);
     parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
@@ -103,7 +103,7 @@ public final class ParserUtils {
     }
   }
 
-  private static class AntlrFailureListener extends BaseErrorListener {
+  public static class ExceptionThrowingFailureListener extends BaseErrorListener {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
                             int charPositionInLine, String msg, @Nullable RecognitionException e) {

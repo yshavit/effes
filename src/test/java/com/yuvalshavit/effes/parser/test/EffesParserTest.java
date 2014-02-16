@@ -4,9 +4,11 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.TokenSource;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -70,6 +72,15 @@ public final class EffesParserTest {
     try (InputStream efInputStream = new BufferedInputStream(url(fileNameNoExt + ".ef").openStream());
          Reader efReader = new InputStreamReader(efInputStream, Charsets.UTF_8)) {
       EffesParser parser = ParserUtils.createParser(efReader);
+      parser.addErrorListener(new ParserUtils.ExceptionThrowingFailureListener());
+      if (ruleName.startsWith("_")) {
+        // signifies a fragment
+        ruleName = ruleName.substring(1);
+        TokenSource lexer = parser.getTokenStream().getTokenSource();
+        EffesLexer effesLexer = (EffesLexer) lexer;
+        effesLexer.getDenterOptions().ignoreEOF();
+      }
+
       RuleContext rule = ParserUtils.ruleByName(parser, ruleName);
       StringBuilder sb = new StringBuilder();
       ParserUtils.prettyPrint(sb, rule, parser);
