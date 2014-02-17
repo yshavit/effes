@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +33,8 @@ public final class EffesParserTest {
 
   @DataProvider(name = "test1")
   public Object[][] readParseFiles() {
-    Set<String> files = Sets.newHashSet(readFile(".").split("\n"));
+    Set<String> files = Sets.newTreeSet();
+    Collections.addAll(files, readFile(".").split("\n"));
     List<Object[]> parseTests = Lists.newArrayList();
     for (String efFile : files) {
       if (efFile.endsWith(".ef")) {
@@ -72,6 +74,7 @@ public final class EffesParserTest {
     try (InputStream efInputStream = new BufferedInputStream(url(fileNameNoExt + ".ef").openStream());
          Reader efReader = new InputStreamReader(efInputStream, Charsets.UTF_8)) {
       EffesParser parser = ParserUtils.createParser(efReader);
+      parser.setTrace(true);
       parser.addErrorListener(new ParserUtils.ExceptionThrowingFailureListener());
       if (ruleName.startsWith("_")) {
         // signifies a fragment
