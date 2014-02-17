@@ -11,7 +11,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Nullable;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -36,8 +39,7 @@ public final class ParserUtils {
     EffesParser parser = new EffesParser(tokens);
     parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
     parser.removeErrorListeners(); // don't spit to stderr
-//    parser.setTrace(true);
-    parser.addErrorListener(new DiagnosticErrorListener());
+    parser.addErrorListener(new TunableDiagnosticErrorListener());
     return parser;
   }
 
@@ -100,6 +102,16 @@ public final class ParserUtils {
   private static void writeIndent(StringBuilder out, int indent) {
     for (int i = 0; i < indent; ++i) {
       out.append("  ");
+    }
+  }
+
+  public static class TunableDiagnosticErrorListener extends DiagnosticErrorListener {
+    @Override
+    public void reportAttemptingFullContext(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex,
+                                            @NotNull ATNConfigSet configs) {
+      if (Boolean.getBoolean("antlr.report.ALL")) {
+        super.reportAttemptingFullContext(recognizer, dfa, startIndex, stopIndex, configs);
+      }
     }
   }
 
