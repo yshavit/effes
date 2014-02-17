@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.parser.test;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.parser.EffesLexer;
@@ -35,6 +36,10 @@ public final class EffesParserTest {
   public Object[][] readParseFiles() {
     Set<String> files = Sets.newTreeSet();
     Collections.addAll(files, readFile(".").split("\n"));
+    String testCasePattern = System.getProperty("test.caseRegex");
+    if (testCasePattern != null) {
+      files = Sets.filter(files, Predicates.containsPattern(testCasePattern));
+    }
     List<Object[]> parseTests = Lists.newArrayList();
     for (String efFile : files) {
       if (efFile.endsWith(".ef")) {
@@ -74,7 +79,7 @@ public final class EffesParserTest {
     try (InputStream efInputStream = new BufferedInputStream(url(fileNameNoExt + ".ef").openStream());
          Reader efReader = new InputStreamReader(efInputStream, Charsets.UTF_8)) {
       EffesParser parser = ParserUtils.createParser(efReader);
-      parser.setTrace(true);
+      parser.setTrace(Boolean.getBoolean("test.antlr.trace"));
       parser.addErrorListener(new ParserUtils.ExceptionThrowingFailureListener());
       if (ruleName.startsWith("_")) {
         // signifies a fragment
