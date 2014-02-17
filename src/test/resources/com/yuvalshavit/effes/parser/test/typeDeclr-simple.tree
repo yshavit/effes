@@ -1,6 +1,6 @@
 typeDeclr
   TYPE_NAME: Boolean
-  typeDeclrBody
+  typeDef
     disjunctiveType
       atomicType
         TYPE_NAME: True

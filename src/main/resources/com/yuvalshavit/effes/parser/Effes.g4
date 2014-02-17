@@ -28,7 +28,7 @@ tokens {INDENT, DEDENT }
 typeDeclr: TYPE TYPE_NAME genericsDeclr? typeDef;
 
 typeDef: COLON typeDeclrBody
-       | EQ disjunctiveType
+       | EQ disjunctiveType NL
        ;
 
 typeDeclrBody: INDENT typeDeclrElement+ DEDENT;

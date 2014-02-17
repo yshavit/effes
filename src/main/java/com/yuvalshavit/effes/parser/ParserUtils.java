@@ -113,6 +113,14 @@ public final class ParserUtils {
         super.reportAttemptingFullContext(recognizer, dfa, startIndex, stopIndex, configs);
       }
     }
+
+    @Override
+    public void reportContextSensitivity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex,
+                                         @NotNull ATNConfigSet configs) {
+      if (Boolean.getBoolean("antlr.report.contextSensitivity")) {
+        super.reportContextSensitivity(recognizer, dfa, startIndex, stopIndex, configs);
+      }
+    }
   }
 
   public static class ExceptionThrowingFailureListener extends BaseErrorListener {

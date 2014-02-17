@@ -1,0 +1,5 @@
+disjunctiveType
+  atomicType
+    TYPE_NAME: True
+  atomicType
+    TYPE_NAME: False

@@ -16,8 +16,8 @@ dataTypeDeclr
       disjunctiveType
         atomicType
           TYPE_NAME: Set
-          generic
-            genericParam
+          genericsDeclr
+            genericDeclr
               TYPE_NAME: PersonId
         atomicType
           TYPE_NAME: Unknown

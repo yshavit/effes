@@ -1,13 +1,13 @@
 dataTypeDeclr
   TYPE_NAME: Pair
-  generic
-    genericParam
+  genericsDeclr
+    genericDeclr
       GENERIC_NAME: A
       genericParamRestriction
         disjunctiveType
           atomicType
             TYPE_NAME: Eq
-    genericParam
+    genericDeclr
       GENERIC_NAME: B
   dataTypeArgs
     dataTypeArg

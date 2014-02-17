@@ -1,0 +1,11 @@
+disjunctiveType
+  atomicType
+    TYPE_NAME: List
+    genericsDeclr
+      genericDeclr
+        TYPE_NAME: Foo
+  atomicType
+    TYPE_NAME: Set
+    genericsDeclr
+      genericDeclr
+        TYPE_NAME: Bar

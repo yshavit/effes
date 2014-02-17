@@ -1,0 +1,6 @@
+disjunctiveType
+  atomicType
+    TYPE_NAME: Set
+    genericsDeclr
+      genericDeclr
+        TYPE_NAME: Foo

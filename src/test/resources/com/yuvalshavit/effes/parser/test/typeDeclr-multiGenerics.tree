@@ -1,15 +1,15 @@
 typeDeclr
   TYPE_NAME: Either
-  generic
-    genericParam
+  genericsDeclr
+    genericDeclr
       GENERIC_NAME: A
-    genericParam
+    genericDeclr
       GENERIC_NAME: B
       genericParamRestriction
         disjunctiveType
           atomicType
             TYPE_NAME: Hashable
-  typeDeclrBody
+  typeDef
     disjunctiveType
       atomicType
         GENERIC_NAME: A
