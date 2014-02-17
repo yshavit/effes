@@ -1,0 +1,44 @@
+stat
+  expr
+    VAR_NAME: foo
+  caseStatPattern
+    caseMatcher
+      TYPE_NAME: List
+      casePatternArgs
+        casePatternArg
+          VAR_NAME: a
+        casePatternArg
+          VAR_NAME: b
+        casePatternArg
+          VAR_NAME: c
+    block
+      stat
+        VAR_NAME: a
+        expr
+          INT: 123
+  caseStatPattern
+    caseMatcher
+      casePatternArgs
+        casePatternArg
+          VAR_NAME: e
+        casePatternArg
+    block
+      stat
+        VAR_NAME: b
+        expr
+          INT: 456
+  caseStatPattern
+    caseMatcher
+      TYPE_NAME: Nothing
+    block
+      stat
+        VAR_NAME: c
+        expr
+          INT: 789
+  caseStatPattern
+    caseMatcher
+    block
+      stat
+        VAR_NAME: d
+        expr
+          INT: 120

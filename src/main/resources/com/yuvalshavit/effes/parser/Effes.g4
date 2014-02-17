@@ -100,7 +100,7 @@ statOrExpr: stat
           ;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment? # IfElseStat
-    | CASE expr OF casePattern                             # CaseStat
+    | CASE expr OF INDENT caseStatPattern+ DEDENT          # CaseStat
     | VAR_NAME EQ expr NL                                  # AssignStat
     | RETURN expr NL                                       # ReturnStat
     ;
@@ -115,7 +115,7 @@ elseStatFragment: ELSE block;
 // expressions
 
 expr: IF expr THEN expr ELSE expr   # IfExpr
-    | CASE expr OF casePatterns     # CaseOfExpr
+    | CASE expr OF caseExprs        # CaseOfExpr
     | INT                           # IntLiteral
     | VAR_NAME                      # VarExpr
     | TYPE_NAME methodInvokeArgs?   # CtorInvoke
@@ -124,10 +124,17 @@ expr: IF expr THEN expr ELSE expr   # IfExpr
 
 methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
 
-// TODO split case patterns into statements and exprs
-casePatterns: INDENT casePattern+ DEDENT;
+caseExprs: INDENT caseExprPattern+ DEDENT;
 
-casePattern: TYPE_NAME? casePatternArgs? COLON exprBlock;
+caseStatPattern: caseMatcher COLON block;
+
+caseExprPattern: caseMatcher COLON exprBlock;
+
+caseMatcher: TYPE_NAME casePatternArgs?
+           | casePatternArgs
+           | UNDERSCORE
+           ;
+
 
 casePatternArgs: OPEN_PAREN casePatternArg (COMMA casePatternArg)* CLOSE_PAREN;
 
