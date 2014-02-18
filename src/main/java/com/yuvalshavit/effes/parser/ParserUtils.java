@@ -88,8 +88,9 @@ public final class ParserUtils {
       } else {
         StringBuilder expectedClassName = new StringBuilder(ruleName).append("Context");
         expectedClassName.setCharAt(0, Character.toUpperCase(expectedClassName.charAt(0)));
-        if (!expectedClassName.toString().equals(ruleName)) {
-          StringBuilder labelName = new StringBuilder(tree.getClass().getSimpleName());
+        String actualClassName = tree.getClass().getSimpleName();
+        if (!expectedClassName.toString().equals(actualClassName)) {
+          StringBuilder labelName = new StringBuilder(actualClassName);
           labelName.setLength(labelName.length() - "Context".length());
           // This is a labeled alternative.
           ruleName = labelName.toString();
