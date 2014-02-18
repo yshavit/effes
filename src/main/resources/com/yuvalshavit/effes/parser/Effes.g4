@@ -123,11 +123,15 @@ expr: OPEN_PAREN expr CLOSE_PAREN   # ParenExpr
     | IF expr THEN expr ELSE expr   # IfExpr
     | CASE expr OF caseExprs        # CaseOfExpr
     | VAR_NAME                      # VarExpr
-    | TYPE_NAME methodInvokeArgs?   # CtorInvoke
-    | expr VAR_NAME expr*           # MethodInvoke
+    | TYPE_NAME ctorInvokeArgs?     # CtorInvoke
+    | expr VAR_NAME methodInvokeArgs# MethodInvoke
     ;
 
-methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
+ctorInvokeArgs: OPEN_PAREN methodInvokeArgs CLOSE_PAREN;
+
+methodInvokeArgs:
+                | expr (COMMA expr)*
+                ;
 
 caseExprs: INDENT caseExprPattern+ DEDENT;
 
