@@ -114,12 +114,17 @@ elseStatFragment: ELSE block;
 
 // expressions
 
-expr: IF expr THEN expr ELSE expr   # IfExpr
-    | CASE expr OF caseExprs        # CaseOfExpr
+expr: OPEN_PAREN expr CLOSE_PAREN   # ParenExpr
+    | expr MULT_OPS expr            # MultOrDivExpr
+    | expr ADD_OPS expr             # AddOrSubExpr
+    | DOLLAR <assoc=right> expr     # DollarExpr
+    | expr DUBSLASH                 # PipeExpr
     | INT                           # IntLiteral
+    | IF expr THEN expr ELSE expr   # IfExpr
+    | CASE expr OF caseExprs        # CaseOfExpr
     | VAR_NAME                      # VarExpr
     | TYPE_NAME methodInvokeArgs?   # CtorInvoke
-    | VAR_NAME methodInvokeArgs     # MethodInvoke
+    | expr VAR_NAME expr*           # MethodInvoke
     ;
 
 methodInvokeArgs: OPEN_PAREN expr* CLOSE_PAREN;
@@ -169,6 +174,8 @@ OF: 'of';
 RETURN: 'return';
 WHERE: 'where';
 UNDERSCORE: '_';
+DOLLAR: '$';
+DUBSLASH: '\\';
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
