@@ -190,7 +190,7 @@ DUBSLASH: '\\\\';
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
-VAR_NAME: [a-z]+ [a-z0-9_]*;
+VAR_NAME: [a-z]+ [a-zA-Z0-9_]*;
 CMP_OPS: '==' | '!=' | '<' | '<=' | '>' | '>=';
 MULT_OPS: '*' | '/';
 ADD_OPS: '+' | '-';
