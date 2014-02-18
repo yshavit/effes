@@ -186,7 +186,7 @@ RETURN: 'return';
 WHERE: 'where';
 UNDERSCORE: '_';
 DOLLAR: '$';
-DUBSLASH: '\\';
+DUBSLASH: '\\\\';
 
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
