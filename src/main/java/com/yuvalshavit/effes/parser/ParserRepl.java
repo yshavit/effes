@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.TokenSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +31,6 @@ public final class ParserRepl {
       if (line == null) {
         return null;
       }
-
       if (".".equals(line)) {
         return sb.toString();
       }
@@ -59,22 +59,30 @@ public final class ParserRepl {
   }
 
   private static void parse(String effes, String ruleName) {
-    int lengthAdjust;
+    boolean isFragment;
     if (ruleName.startsWith("_")) {
       ruleName = ruleName.substring(1);
-      lengthAdjust = 1;
+      if (effes.endsWith("\n")) {
+        effes = effes.substring(0, effes.length() - 1);
+      }
+      isFragment = true;
     } else {
-      lengthAdjust = 0;
+      isFragment = false;
     }
     try {
       EffesParser parser = ParserUtils.createParser(effes);
+      if (isFragment) {
+        TokenSource lexer = parser.getTokenStream().getTokenSource();
+        EffesLexer effesLexer = (EffesLexer) lexer;
+        effesLexer.getDenterOptions().ignoreEOF();
+      }
       ParserRuleContext rule = ParserUtils.ruleByName(parser, ruleName);
       StringBuilder sb = new StringBuilder();
       ParserUtils.prettyPrint(sb, rule, parser);
       System.out.println(sb.toString());
       pause();
       // stopIndex is inclusive, so need to add 1. effes String has trailing \n, so need to subtract 1
-      if ((rule.getStop().getStopIndex() + 1) != (effes.length() - lengthAdjust)) {
+      if ((rule.getStop().getStopIndex() + 1) != (effes.length())) {
         System.err.println("Incomplete parse. Parsed the following:");
         String parsed = effes.substring(0, rule.getStop().getStopIndex() + 1);
         for (String parsedLine : parsed.split("\n")) {

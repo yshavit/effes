@@ -127,6 +127,13 @@ expr: OPEN_PAREN expr CLOSE_PAREN   # ParenExpr
     | expr VAR_NAME methodInvokeArgs# MethodInvoke
     ;
 
+/**
+ * The expr rule is rewritten in such a way that it takes an int arg and needs
+ * a surrounding context. For test purposes, it's convenient to have a variant
+ * that can be called "plain".
+ */
+expr__ForTest__: expr;
+
 ctorInvokeArgs: OPEN_PAREN methodInvokeArgs CLOSE_PAREN;
 
 methodInvokeArgs:

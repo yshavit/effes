@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 public final class ParserUtils {
+  public static final String TEST_RULE_SUFFIX = "__ForTest__";
   private static final Set<String> tokensToIgnoreOnOutput = Sets.newHashSet("INDENT", "DEDENT", "NL");
 
   public static EffesParser createParser(Reader input) throws IOException {
@@ -49,7 +50,13 @@ public final class ParserUtils {
 
   public static ParserRuleContext ruleByName(EffesParser parser, String ruleName) {
     try {
-      Method ruleMethod = parser.getClass().getMethod(ruleName);
+      // try to find ruleName(). If that doesn't exist, find ruleName__ForTest__().
+      Method ruleMethod;
+      try {
+        ruleMethod = parser.getClass().getMethod(ruleName);
+      } catch (NoSuchMethodException e) {
+        ruleMethod = parser.getClass().getMethod(ruleName + TEST_RULE_SUFFIX);
+      }
       return (ParserRuleContext) ruleMethod.invoke(parser);
     }  catch (InvocationTargetException e) {
       Throwable wrap;
@@ -74,10 +81,22 @@ public final class ParserUtils {
       out.append("!!!ERROR!!! ").append(tree);
     }
     if (tree instanceof RuleNode) {
-      writeIndent(out, indent);
       RuleNode rule = (RuleNode) tree;
       String ruleName = ruleNames[rule.getRuleContext().getRuleIndex()];
-      out.append(ruleName).append('\n');
+      if (ruleName.endsWith(TEST_RULE_SUFFIX)) {
+        --indent; // so that it stays at the same indent level when we recurse with indent + 1
+      } else {
+        StringBuilder expectedClassName = new StringBuilder(ruleName).append("Context");
+        expectedClassName.setCharAt(0, Character.toUpperCase(expectedClassName.charAt(0)));
+        if (!expectedClassName.toString().equals(ruleName)) {
+          StringBuilder labelName = new StringBuilder(tree.getClass().getSimpleName());
+          labelName.setLength(labelName.length() - "Context".length());
+          // This is a labeled alternative.
+          ruleName = labelName.toString();
+        }
+        writeIndent(out, indent);
+        out.append(ruleName).append('\n');
+      }
       for (int i = 0; i < rule.getChildCount(); ++i) {
         ParseTree child = rule.getChild(i);
         prettyPrint(out, indent + 1, child, ruleNames, tokenNames);
