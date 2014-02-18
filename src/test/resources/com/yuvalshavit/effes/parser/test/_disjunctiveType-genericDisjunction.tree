@@ -1,10 +1,10 @@
 disjunctiveType
-  atomicType
+  ConcreteAtom
     TYPE_NAME: List
     genericsDeclr
       genericDeclr
         TYPE_NAME: Foo
-  atomicType
+  ConcreteAtom
     TYPE_NAME: Set
     genericsDeclr
       genericDeclr

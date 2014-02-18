@@ -4,20 +4,20 @@ dataTypeDeclr
     dataTypeArg
       VAR_NAME: id
       disjunctiveType
-        atomicType
+        ConcreteAtom
           TYPE_NAME: PersonId
     dataTypeArg
       VAR_NAME: name
       disjunctiveType
-        atomicType
+        ConcreteAtom
           TYPE_NAME: String
     dataTypeArg
       VAR_NAME: siblings
       disjunctiveType
-        atomicType
+        ConcreteAtom
           TYPE_NAME: Set
           genericsDeclr
             genericDeclr
               TYPE_NAME: PersonId
-        atomicType
+        ConcreteAtom
           TYPE_NAME: Unknown

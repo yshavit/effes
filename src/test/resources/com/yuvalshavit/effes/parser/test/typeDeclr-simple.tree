@@ -2,7 +2,7 @@ typeDeclr
   TYPE_NAME: Boolean
   typeDef
     disjunctiveType
-      atomicType
+      ConcreteAtom
         TYPE_NAME: True
-      atomicType
+      ConcreteAtom
         TYPE_NAME: False

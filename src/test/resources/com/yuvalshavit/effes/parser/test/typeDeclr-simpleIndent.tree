@@ -9,10 +9,10 @@ typeDeclr
           methodArgs
           methodReturnDeclr
             disjunctiveType
-              atomicType
+              ConcreteAtom
                 TYPE_NAME: Int
           methodDef
             block
-              stat
-                expr
+              ReturnStat
+                IntLiteral
                   INT: 5

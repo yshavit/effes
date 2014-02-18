@@ -1,5 +1,5 @@
 disjunctiveType
-  atomicType
+  ConcreteAtom
     TYPE_NAME: True
-  atomicType
+  ConcreteAtom
     TYPE_NAME: False

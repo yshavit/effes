@@ -1,5 +1,5 @@
-stat
-  expr
+CaseStat
+  VarExpr
     VAR_NAME: foo
   caseStatPattern
     caseMatcher
@@ -12,9 +12,9 @@ stat
         casePatternArg
           VAR_NAME: c
     block
-      stat
+      AssignStat
         VAR_NAME: a
-        expr
+        IntLiteral
           INT: 123
   caseStatPattern
     caseMatcher
@@ -23,22 +23,22 @@ stat
           VAR_NAME: e
         casePatternArg
     block
-      stat
+      AssignStat
         VAR_NAME: b
-        expr
+        IntLiteral
           INT: 456
   caseStatPattern
     caseMatcher
       TYPE_NAME: Nothing
     block
-      stat
+      AssignStat
         VAR_NAME: c
-        expr
+        IntLiteral
           INT: 789
   caseStatPattern
     caseMatcher
     block
-      stat
+      AssignStat
         VAR_NAME: d
-        expr
+        IntLiteral
           INT: 120
