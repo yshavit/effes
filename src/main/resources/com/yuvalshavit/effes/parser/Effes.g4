@@ -45,7 +45,7 @@ methodDeclr: funcModifiers?
              methodDef?
            ;
 
-funcModifiers: OPEN_BRACE VAR_NAME+ CLOSE_BRACE;
+funcModifiers: OPEN_BRACKET VAR_NAME+ CLOSE_BRACKET;
 
 methodName: VAR_NAME
           | CMP_OPS
@@ -74,7 +74,7 @@ dataTypeArg: VAR_NAME COLON disjunctiveType;
 
 // generics and types
 
-genericsDeclr: OPEN_BRACE genericDeclr (COMMA genericDeclr)* CLOSE_BRACE;
+genericsDeclr: OPEN_BRACKET genericDeclr (COMMA genericDeclr)* CLOSE_BRACKET;
 
 genericDeclr: TYPE_NAME                                                         # ConcreteGeneric
             | GENERIC_NAME genericParamRestriction?                             # NamedGeneric
@@ -172,8 +172,8 @@ PATTERN: '@pattern';
 CREATE: '@create';
 OPEN_PAREN: '(';
 CLOSE_PAREN: ')';
-OPEN_BRACE: '[';
-CLOSE_BRACE: ']';
+OPEN_BRACKET: '[';
+CLOSE_BRACKET: ']';
 COMMA: ',';
 PIPE: '|';
 IF: 'if';
