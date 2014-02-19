@@ -17,7 +17,7 @@ dataTypeDeclr
         ConcreteAtom
           TYPE_NAME: Set
           genericsDeclr
-            genericDeclr
+            ConcreteGeneric
               TYPE_NAME: PersonId
         ConcreteAtom
           TYPE_NAME: Unknown

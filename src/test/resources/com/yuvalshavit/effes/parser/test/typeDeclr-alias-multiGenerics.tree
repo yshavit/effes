@@ -1,9 +1,9 @@
 typeDeclr
   TYPE_NAME: Either
   genericsDeclr
-    genericDeclr
+    NamedGeneric
       GENERIC_NAME: A
-    genericDeclr
+    NamedGeneric
       GENERIC_NAME: B
       genericParamRestriction
         disjunctiveType

@@ -2,10 +2,10 @@ disjunctiveType
   ConcreteAtom
     TYPE_NAME: List
     genericsDeclr
-      genericDeclr
+      ConcreteGeneric
         TYPE_NAME: Foo
   ConcreteAtom
     TYPE_NAME: Set
     genericsDeclr
-      genericDeclr
+      ConcreteGeneric
         TYPE_NAME: Bar

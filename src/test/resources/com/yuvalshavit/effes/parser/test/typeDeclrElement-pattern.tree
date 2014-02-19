@@ -5,7 +5,7 @@ TypePatternDeclr
     ConcreteAtom
       TYPE_NAME: List
       genericsDeclr
-        genericDeclr
+        NamedGeneric
           GENERIC_NAME: E
   methodDef
     block

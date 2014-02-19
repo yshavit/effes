@@ -76,8 +76,8 @@ dataTypeArg: VAR_NAME COLON disjunctiveType;
 
 genericsDeclr: OPEN_BRACE genericDeclr (COMMA genericDeclr)* CLOSE_BRACE;
 
-genericDeclr: TYPE_NAME
-            | GENERIC_NAME genericParamRestriction?
+genericDeclr: TYPE_NAME                                                         # ConcreteGeneric
+            | GENERIC_NAME genericParamRestriction?                             # NamedGeneric
             ;
 
 genericParamRestriction: COLON disjunctiveType;
@@ -96,10 +96,6 @@ tupleType: OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN;
 block: stat
      | INDENT stat+ DEDENT
      ;
-
-statOrExpr: stat
-          | expr
-          ;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
     | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
