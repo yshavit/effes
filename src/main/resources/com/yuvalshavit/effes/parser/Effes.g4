@@ -33,9 +33,9 @@ typeDef: COLON typeDeclrBody
 
 typeDeclrBody: INDENT typeDeclrElement+ DEDENT;
 
-typeDeclrElement: methodDeclr
-                | PATTERN ARROW disjunctiveType methodDef
-                | CREATE methodDef
+typeDeclrElement: methodDeclr # TypeMethodDeclr
+                | PATTERN ARROW tupleType COLON methodDef # TypePatternDeclr
+                | CREATE methodDef # TypeCreateDeclr
                 ;
 
 methodDeclr: funcModifiers?
@@ -86,8 +86,10 @@ disjunctiveType: atomicType (PIPE atomicType)*;
 
 atomicType: GENERIC_NAME genericParamRestriction?                 # GenericAtom
           | TYPE_NAME genericsDeclr?                              # ConcreteAtom
-          | OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN # TupleAtom
+          | tupleType                                             # TupleAtom
           ;
+
+tupleType: OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN;
 
 // blocks and statements
 
@@ -120,6 +122,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN   # ParenExpr
     | DOLLAR <assoc=right> expr     # DollarExpr
     | expr DUBSLASH                 # PipeExpr
     | INT                           # IntLiteral
+    | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN # TupleExpr
     | IF expr THEN expr ELSE expr   # IfExpr
     | CASE expr OF caseExprs        # CaseOfExpr
     | VAR_NAME                      # VarExpr

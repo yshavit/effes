@@ -1,0 +1,17 @@
+TypePatternDeclr
+  tupleType
+    GenericAtom
+      GENERIC_NAME: E
+    ConcreteAtom
+      TYPE_NAME: List
+      genericsDeclr
+        genericDeclr
+          GENERIC_NAME: E
+  methodDef
+    block
+      ReturnStat
+        TupleExpr
+          VarExpr
+            VAR_NAME: head
+          VarExpr
+            VAR_NAME: tail

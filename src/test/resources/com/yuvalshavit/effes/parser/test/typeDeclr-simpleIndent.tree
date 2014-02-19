@@ -2,7 +2,7 @@ typeDeclr
   TYPE_NAME: Foo
   typeDef
     typeDeclrBody
-      TypeMethodDeclr
+      typeDeclrElement
         methodDeclr
           methodName
             VAR_NAME: f
