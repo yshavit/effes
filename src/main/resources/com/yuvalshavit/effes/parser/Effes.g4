@@ -33,9 +33,9 @@ typeDef: COLON typeDeclrBody
 
 typeDeclrBody: INDENT typeDeclrElement+ DEDENT;
 
-typeDeclrElement: methodDeclr # TypeMethodDeclr
-                | PATTERN ARROW tupleType COLON methodDef # TypePatternDeclr
-                | CREATE methodDef # TypeCreateDeclr
+typeDeclrElement: methodDeclr                                                   # TypeMethodDeclr
+                | PATTERN ARROW tupleType COLON methodDef                       # TypePatternDeclr
+                | CREATE methodDef                                              # TypeCreateDeclr
                 ;
 
 methodDeclr: funcModifiers?
@@ -84,9 +84,9 @@ genericParamRestriction: COLON disjunctiveType;
 
 disjunctiveType: atomicType (PIPE atomicType)*;
 
-atomicType: GENERIC_NAME genericParamRestriction?                 # GenericAtom
-          | TYPE_NAME genericsDeclr?                              # ConcreteAtom
-          | tupleType                                             # TupleAtom
+atomicType: GENERIC_NAME genericParamRestriction?                               # GenericAtom
+          | TYPE_NAME genericsDeclr?                                            # ConcreteAtom
+          | tupleType                                                           # TupleAtom
           ;
 
 tupleType: OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN;
@@ -101,10 +101,10 @@ statOrExpr: stat
           | expr
           ;
 
-stat: ifStatFragment elseIfStatFragment* elseStatFragment? # IfElseStat
-    | CASE expr OF INDENT caseStatPattern+ DEDENT          # CaseStat
-    | VAR_NAME EQ expr NL                                  # AssignStat
-    | RETURN expr NL                                       # ReturnStat
+stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
+    | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
+    | VAR_NAME EQ expr NL                                                       # AssignStat
+    | RETURN expr NL                                                            # ReturnStat
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not
@@ -116,18 +116,18 @@ elseStatFragment: ELSE block;
 
 // expressions
 
-expr: OPEN_PAREN expr CLOSE_PAREN   # ParenExpr
-    | expr MULT_OPS expr            # MultOrDivExpr
-    | expr ADD_OPS expr             # AddOrSubExpr
-    | DOLLAR <assoc=right> expr     # DollarExpr
-    | expr DUBSLASH                 # PipeExpr
-    | INT                           # IntLiteral
-    | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN # TupleExpr
-    | IF expr THEN expr ELSE expr   # IfExpr
-    | CASE expr OF caseExprs        # CaseOfExpr
-    | VAR_NAME                      # VarExpr
-    | TYPE_NAME ctorInvokeArgs?     # CtorInvoke
-    | expr VAR_NAME methodInvokeArgs# MethodInvoke
+expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
+    | expr MULT_OPS expr                                                        # MultOrDivExpr
+    | expr ADD_OPS expr                                                         # AddOrSubExpr
+    | DOLLAR <assoc=right> expr                                                 # DollarExpr
+    | expr DUBSLASH                                                             # PipeExpr
+    | INT                                                                       # IntLiteral
+    | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN                                 # TupleExpr
+    | IF expr THEN expr ELSE expr                                               # IfExpr
+    | CASE expr OF caseExprs                                                    # CaseOfExpr
+    | VAR_NAME                                                                  # VarExpr
+    | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
+    | expr VAR_NAME methodInvokeArgs                                            # MethodInvoke
     ;
 
 /**
