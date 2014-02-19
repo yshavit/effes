@@ -14,6 +14,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -93,6 +95,13 @@ public final class EffesParserTest {
       StringBuilder sb = new StringBuilder();
       ParserUtils.prettyPrint(sb, rule, parser);
       actualTree = sb.toString();
+    }
+    if (Boolean.getBoolean("effesParserTest.write")) {
+      File outDir = new File("target/effesParserTest");
+      outDir.mkdirs();
+      try (FileWriter w = new FileWriter(new File(outDir, fileNameNoExt + ".tree"))) {
+        w.append(actualTree);
+      }
     }
     assertEquals(actualTree, expectedContent);
   }
