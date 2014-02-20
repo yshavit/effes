@@ -1,0 +1,10 @@
+AddOrSubExpr
+  PipeExpr
+    MethodInvoke
+      VarExpr
+        VAR_NAME: mylist
+      methodName
+        VAR_NAME: head
+  ADD_OPS: +
+  IntLiteral
+    INT: 5

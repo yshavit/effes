@@ -1,0 +1,5 @@
+MethodInvoke
+  VarExpr
+    VAR_NAME: mylist
+  methodName
+    VAR_NAME: head

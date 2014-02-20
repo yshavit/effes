@@ -38,8 +38,13 @@ public final class ParserUtils {
     lexer.addErrorListener(new ExceptionThrowingFailureListener());
     TokenStream tokens = new CommonTokenStream(lexer);
     EffesParser parser = new EffesParser(tokens);
-    parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-    parser.removeErrorListeners(); // don't spit to stderr
+//    parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
+    parser.setTrace(Boolean.getBoolean("antlr.trace"));
+    if (Boolean.getBoolean("antlr.trace")) {
+      parser.setTrace(true);
+    } else {
+      parser.removeErrorListeners(); // don't spit to stderr
+    }
     parser.addErrorListener(new TunableDiagnosticErrorListener());
     return parser;
   }
@@ -83,7 +88,7 @@ public final class ParserUtils {
     if (tree instanceof RuleNode) {
       RuleNode rule = (RuleNode) tree;
       String ruleName = ruleNames[rule.getRuleContext().getRuleIndex()];
-      if (ruleName.endsWith(TEST_RULE_SUFFIX)) {
+      if (ruleName.endsWith(TEST_RULE_SUFFIX) && rule.getChildCount() == 1) {
         --indent; // so that it stays at the same indent level when we recurse with indent + 1
       } else {
         StringBuilder expectedClassName = new StringBuilder(ruleName).append("Context");

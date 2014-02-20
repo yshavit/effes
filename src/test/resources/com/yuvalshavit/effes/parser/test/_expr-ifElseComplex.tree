@@ -2,17 +2,12 @@ IfExpr
   MethodInvoke
     VarExpr
       VAR_NAME: mylist
-    VAR_NAME: notEmpty
-    methodInvokeArgs
-  AddOrSubExpr
-    PipeExpr
-      MethodInvoke
-        VarExpr
-          VAR_NAME: mylist
-        VAR_NAME: pop
-        methodInvokeArgs
-    ADD_OPS: +
-    IntLiteral
-      INT: 5
+    methodName
+      VAR_NAME: notEmpty
+  MethodInvoke
+    VarExpr
+      VAR_NAME: mylist
+    methodName
+      VAR_NAME: head
   IntLiteral
-    INT: -1
+    INT: 0

@@ -38,7 +38,7 @@ public final class EffesParserTest {
   public Object[][] readParseFiles() {
     Set<String> files = Sets.newTreeSet();
     Collections.addAll(files, readFile(".").split("\n"));
-    String testCasePattern = System.getProperty("test.caseRegex");
+    String testCasePattern = System.getProperty("test.case.regex");
     if (testCasePattern != null) {
       files = Sets.filter(files, Predicates.containsPattern(testCasePattern));
     }

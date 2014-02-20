@@ -1,0 +1,10 @@
+MethodInvoke
+  VarExpr
+    VAR_NAME: mylist
+  methodName
+    VAR_NAME: sublist
+  TupleExpr
+    IntLiteral
+      INT: 2
+    IntLiteral
+      INT: 5

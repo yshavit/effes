@@ -123,7 +123,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | CASE expr OF caseExprs                                                    # CaseOfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
-    | expr VAR_NAME methodInvokeArgs                                            # MethodInvoke
+    | expr methodName (expr (OPEN_BRACE expr (COMMA expr)* CLOSE_BRACE)?)?      # MethodInvoke
     ;
 
 /**
@@ -174,6 +174,8 @@ OPEN_PAREN: '(';
 CLOSE_PAREN: ')';
 OPEN_BRACKET: '[';
 CLOSE_BRACKET: ']';
+OPEN_BRACE: '{';
+CLOSE_BRACE: '}';
 COMMA: ',';
 PIPE: '|';
 IF: 'if';
@@ -193,7 +195,7 @@ VAR_NAME: [a-z]+ [a-zA-Z0-9_]*;
 CMP_OPS: '==' | '!=' | '<' | '<=' | '>' | '>=';
 MULT_OPS: '*' | '/';
 ADD_OPS: '+' | '-';
-INT: '-'? [1-9] [0-9]*;
+INT: '0' | '-'? [1-9] [0-9]*;
 
 NL: ('\r'? '\n' ' '*) | EOF;
 WS: [ \t]+ -> skip;
