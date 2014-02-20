@@ -5,6 +5,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.yuvalshavit.effes.parser.AntlrParseException;
 import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -91,10 +92,14 @@ public final class EffesParserTest {
         effesLexer.getDenterOptions().ignoreEOF();
       }
 
-      RuleContext rule = ParserUtils.ruleByName(parser, ruleName);
-      StringBuilder sb = new StringBuilder();
-      ParserUtils.prettyPrint(sb, rule, parser);
-      actualTree = sb.toString();
+      try {
+        RuleContext rule = ParserUtils.ruleByName(parser, ruleName);
+        StringBuilder sb = new StringBuilder();
+        ParserUtils.prettyPrint(sb, rule, parser);
+        actualTree = sb.toString();
+      } catch (Exception e) {
+        actualTree = String.format("!!! %s: %s", e.getClass().getSimpleName(), e.getMessage());
+      }
     }
     if (Boolean.getBoolean("effesParserTest.write")) {
       File outDir = new File("target/effesParserTest");

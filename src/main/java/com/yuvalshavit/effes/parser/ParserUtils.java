@@ -12,7 +12,6 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Nullable;
@@ -63,12 +62,11 @@ public final class ParserUtils {
         ruleMethod = parser.getClass().getMethod(ruleName + TEST_RULE_SUFFIX);
       }
       return (ParserRuleContext) ruleMethod.invoke(parser);
-    }  catch (InvocationTargetException e) {
-      Throwable wrap;
-      wrap = (e.getCause() instanceof AntlrParseException)
-        ? e.getCause()
-        : e;
-      throw new RuleInvocationException(wrap);
+    } catch (InvocationTargetException e) {
+      if (e.getCause() instanceof AntlrParseException) {
+        throw (AntlrParseException) e.getCause();
+      }
+      throw new RuleInvocationException(e);
     } catch (Exception e) {
       throw new RuleInvocationException(e);
     }

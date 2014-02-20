@@ -118,6 +118,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | DOLLAR <assoc=right> expr                                                 # DollarExpr
     | expr DUBSLASH                                                             # PipeExpr
     | INT                                                                       # IntLiteral
+    | DECIMAL                                                                   # DecimalLiteral
     | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN                                 # TupleExpr
     | IF expr THEN expr ELSE expr                                               # IfExpr
     | CASE expr OF caseExprs                                                    # CaseOfExpr
@@ -189,13 +190,16 @@ UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
 
+INT: '0' | ('-'|'+')? [1-9] [0-9]*;
+DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
+        | INT DECIMAL_EXPONENT;
+fragment DECIMAL_EXPONENT: ([eE] ('-'|'+')? [1-9][0-9]*)?;
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
 VAR_NAME: [a-z]+ [a-zA-Z0-9_]*;
+ADD_OPS: '+' | '-';
 CMP_OPS: '==' | '!=' | '<' | '<=' | '>' | '>=';
 MULT_OPS: '*' | '/';
-ADD_OPS: '+' | '-';
-INT: '0' | '-'? [1-9] [0-9]*;
 
 NL: ('\r'? '\n' ' '*) | EOF;
 WS: [ \t]+ -> skip;

@@ -1,8 +1,0 @@
-typeDeclr
-  TYPE_NAME: Boolean
-  typeDef
-    disjunctiveType
-      ConcreteAtom
-        TYPE_NAME: True
-      ConcreteAtom
-        TYPE_NAME: False
