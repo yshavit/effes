@@ -1,2 +1,2 @@
-myWhatever someMethod argA { argB, argC }
+myWhatever someMethod argA: argB, argC
 

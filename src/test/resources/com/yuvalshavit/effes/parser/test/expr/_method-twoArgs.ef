@@ -1,2 +1,2 @@
-mynum dividedBy divisor { HalfUp }
+mynum dividedBy divisor: HalfUp
 

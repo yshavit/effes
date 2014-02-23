@@ -53,7 +53,7 @@ methodName: VAR_NAME
           | ADD_OPS
           ;
 
-methodArgs: ( methodArg (OPEN_BRACE methodArg (COMMA methodArg)* CLOSE_BRACE)? )?;
+methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
 methodArg: VAR_NAME (COLON disjunctiveType)?;
 
@@ -126,7 +126,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | CASE expr OF caseExprs                                                    # CaseOfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
-    | expr methodName (expr (OPEN_BRACE expr (COMMA expr)* CLOSE_BRACE)?)?      # MethodInvoke
+    | expr methodName (expr (COLON expr (COMMA expr)*)?)?                       # MethodInvoke
     ;
 
 /**
