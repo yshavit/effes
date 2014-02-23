@@ -1,0 +1,23 @@
+IfElseStat
+  ifStatFragment
+    VarExpr
+      VAR_NAME: cond0
+    block
+      AssignStat
+        VAR_NAME: a
+        IntLiteral
+          INT: 1
+  elseIfStatFragment
+    VarExpr
+      VAR_NAME: cond1
+    block
+      AssignStat
+        VAR_NAME: b
+        IntLiteral
+          INT: 2
+  elseStatFragment
+    block
+      AssignStat
+        VAR_NAME: c
+        IntLiteral
+          INT: 3

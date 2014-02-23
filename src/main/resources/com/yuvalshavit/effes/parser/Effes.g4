@@ -59,7 +59,7 @@ methodArg: VAR_NAME disjunctiveType?;
 
 methodReturnDeclr: ARROW disjunctiveType;
 
-methodDef: block; // TODO expr directly, without the "return"?
+methodDef: inlinableBlock; // TODO expr directly, without the "return"?
 
 // data type declr
 
@@ -93,13 +93,15 @@ tupleType: OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN;
 
 // blocks and statements
 
-block: stat
-     | INDENT stat+ DEDENT
-     ;
+inlinableBlock: stat
+              | INDENT stat+ DEDENT
+              ;
+
+block: INDENT stat+ DEDENT;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
     | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
-    | VAR_NAME EQ expr NL                                                       # AssignStat
+    | VAR_NAME disjunctiveType? EQ expr NL                                      # AssignStat
     | RETURN expr NL                                                            # ReturnStat
     ;
 

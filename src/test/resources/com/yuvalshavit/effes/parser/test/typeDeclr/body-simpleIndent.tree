@@ -12,7 +12,7 @@ typeDeclr
               ConcreteAtom
                 TYPE_NAME: Int
           methodDef
-            block
+            inlinableBlock
               ReturnStat
                 IntLiteral
                   INT: 5

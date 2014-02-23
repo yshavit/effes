@@ -5,7 +5,7 @@ methodDeclr
     VAR_NAME: foo
   methodArgs
   methodDef
-    block
+    inlinableBlock
       ReturnStat
         IntLiteral
           INT: 7

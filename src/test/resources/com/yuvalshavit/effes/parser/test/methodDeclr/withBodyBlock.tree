@@ -1,0 +1,13 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+  methodDef
+    inlinableBlock
+      AssignStat
+        VAR_NAME: a
+        IntLiteral
+          INT: 2
+      ReturnStat
+        VarExpr
+          VAR_NAME: a
