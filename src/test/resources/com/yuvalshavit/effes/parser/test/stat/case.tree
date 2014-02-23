@@ -40,6 +40,35 @@ CaseStat
             INT: 789
   caseStatPattern
     caseMatcher
+      INT: 4
+    block
+      AssignStat
+        VAR_NAME: hello
+        exprLine
+          IntLiteral
+            INT: 444
+  caseStatPattern
+    caseMatcher
+      ADD_OPS: +
+      INT: 5
+    block
+      AssignStat
+        VAR_NAME: plus
+        exprLine
+          IntLiteral
+            INT: 555
+  caseStatPattern
+    caseMatcher
+      ADD_OPS: -
+      INT: 6
+    block
+      AssignStat
+        VAR_NAME: minus
+        exprLine
+          IntLiteral
+            INT: 666
+  caseStatPattern
+    caseMatcher
     block
       AssignStat
         VAR_NAME: d

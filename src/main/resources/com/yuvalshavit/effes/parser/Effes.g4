@@ -177,6 +177,7 @@ caseExprPattern: caseMatcher COLON exprBlock;
 caseMatcher: TYPE_NAME casePatternArgs?
            | casePatternArgs
            | UNDERSCORE
+           | ADD_OPS? INT
            ;
 
 

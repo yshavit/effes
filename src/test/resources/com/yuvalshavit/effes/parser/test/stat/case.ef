@@ -5,5 +5,11 @@ case foo of
     b = 456
   Nothing:
     c = 789
+  4:
+    hello = 444
+  +5:
+    plus = 555
+  -6:
+    minus = 666
   _:
     d = 120
