@@ -133,6 +133,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
     | expr methodName (expr (COLON expr (COMMA expr)*)?)?                       # MethodInvoke
+    | expr LCOMPOSE expr                                                        # LeftCompose
     ;
 
 /**
@@ -198,6 +199,7 @@ UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
 AT: '@';
+LCOMPOSE: '</';
 
 INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
