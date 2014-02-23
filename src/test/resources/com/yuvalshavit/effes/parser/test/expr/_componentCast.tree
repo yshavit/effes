@@ -1,0 +1,13 @@
+AddOrSubExpr
+  VarExpr
+    VAR_NAME: bar
+  ADD_OPS: +
+  ComponentCastExpr
+    VarExpr
+      VAR_NAME: foo
+    disjunctiveType
+      ConcreteAtom
+        TYPE_NAME: List
+        genericsDeclr
+          NamedGeneric
+            GENERIC_NAME: A

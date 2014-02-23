@@ -113,6 +113,7 @@ elseStatFragment: ELSE block;
 // expressions
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
+    | expr AT disjunctiveType                                                   # ComponentCastExpr
     | expr MULT_OPS expr                                                        # MultOrDivExpr
     | expr ADD_OPS expr                                                         # AddOrSubExpr
     | ADD_OPS expr                                                              # UnaryExpr
@@ -190,6 +191,7 @@ WHERE: 'where';
 UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
+AT: '@';
 
 INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
