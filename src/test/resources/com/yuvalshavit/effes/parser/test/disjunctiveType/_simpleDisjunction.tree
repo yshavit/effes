@@ -1,5 +1,6 @@
 disjunctiveType
   ConcreteAtom
     TYPE_NAME: True
-  ConcreteAtom
-    TYPE_NAME: False
+  conjunctiveType
+    ConcreteAtom
+      TYPE_NAME: False

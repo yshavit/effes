@@ -7,9 +7,11 @@ methodDeclr
       disjunctiveType
         TupleAtom
           tupleType
-            GenericAtom
-              GENERIC_NAME: A
-            GenericAtom
-              GENERIC_NAME: B
+            disjunctiveType
+              GenericAtom
+                GENERIC_NAME: A
+            disjunctiveType
+              GenericAtom
+                GENERIC_NAME: B
     NormalMethodArg
       VAR_NAME: c

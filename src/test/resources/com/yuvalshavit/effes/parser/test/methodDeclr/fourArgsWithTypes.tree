@@ -12,11 +12,12 @@ methodDeclr
       disjunctiveType
         ConcreteAtom
           TYPE_NAME: Second
-        ConcreteAtom
-          TYPE_NAME: List
-          genericsDeclr
-            NamedGeneric
-              GENERIC_NAME: A
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: List
+            genericsDeclr
+              NamedGeneric
+                GENERIC_NAME: A
     NormalMethodArg
       VAR_NAME: arg2
     NormalMethodArg

@@ -4,8 +4,9 @@ disjunctiveType
     genericsDeclr
       ConcreteGeneric
         TYPE_NAME: Foo
-  ConcreteAtom
-    TYPE_NAME: Set
-    genericsDeclr
-      ConcreteGeneric
-        TYPE_NAME: Bar
+  conjunctiveType
+    ConcreteAtom
+      TYPE_NAME: Set
+      genericsDeclr
+        ConcreteGeneric
+          TYPE_NAME: Bar

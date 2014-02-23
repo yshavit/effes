@@ -19,5 +19,6 @@ dataTypeDeclr
           genericsDeclr
             ConcreteGeneric
               TYPE_NAME: PersonId
-        ConcreteAtom
-          TYPE_NAME: Unknown
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: Unknown

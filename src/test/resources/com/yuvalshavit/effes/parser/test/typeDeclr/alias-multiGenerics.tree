@@ -13,5 +13,6 @@ typeDeclr
     disjunctiveType
       GenericAtom
         GENERIC_NAME: A
-      GenericAtom
-        GENERIC_NAME: B
+      conjunctiveType
+        GenericAtom
+          GENERIC_NAME: B

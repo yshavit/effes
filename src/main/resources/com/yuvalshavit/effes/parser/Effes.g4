@@ -86,14 +86,16 @@ genericDeclr: TYPE_NAME                                                         
 
 genericParamRestriction: COLON disjunctiveType;
 
-disjunctiveType: atomicType (PIPE atomicType)*;
+disjunctiveType: atomicType (PIPE conjunctiveType)*;
 
 atomicType: GENERIC_NAME genericParamRestriction?                               # GenericAtom
           | TYPE_NAME genericsDeclr?                                            # ConcreteAtom
           | tupleType                                                           # TupleAtom
           ;
 
-tupleType: OPEN_PAREN VAR_NAME? atomicType (COMMA VAR_NAME? atomicType)* CLOSE_PAREN;
+conjunctiveType: atomicType+;
+
+tupleType: OPEN_PAREN VAR_NAME? disjunctiveType (COMMA VAR_NAME? disjunctiveType)* CLOSE_PAREN;
 
 // blocks and statements
 

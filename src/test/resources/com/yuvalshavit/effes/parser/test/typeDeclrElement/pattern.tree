@@ -1,12 +1,14 @@
 TypePatternDeclr
   tupleType
-    GenericAtom
-      GENERIC_NAME: E
-    ConcreteAtom
-      TYPE_NAME: List
-      genericsDeclr
-        NamedGeneric
-          GENERIC_NAME: E
+    disjunctiveType
+      GenericAtom
+        GENERIC_NAME: E
+    disjunctiveType
+      ConcreteAtom
+        TYPE_NAME: List
+        genericsDeclr
+          NamedGeneric
+            GENERIC_NAME: E
   methodDef
     inlinableBlock
       ReturnStat
