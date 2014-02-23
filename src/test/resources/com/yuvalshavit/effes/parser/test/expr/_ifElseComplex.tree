@@ -1,5 +1,5 @@
 IfExpr
-  MethodInvoke
+  cond= MethodInvoke
     VarExpr
       VAR_NAME: mylist
     methodName

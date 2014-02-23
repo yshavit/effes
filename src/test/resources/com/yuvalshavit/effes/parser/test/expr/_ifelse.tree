@@ -1,5 +1,5 @@
 IfExpr
-  VarExpr
+  cond= VarExpr
     VAR_NAME: someCondition
   AddOrSubExpr
     IntLiteral

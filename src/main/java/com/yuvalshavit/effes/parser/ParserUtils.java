@@ -85,7 +85,7 @@ public final class ParserUtils {
   }
 
   public static void prettyPrint(StringBuilder sb, ParseTree tree, Parser parser) {
-    prettyPrint(sb, 0, tree, parser.getRuleNames(), parser.getTokenNames());
+    prettyPrint(sb, 0, tree, null, parser.getRuleNames(), parser.getTokenNames());
   }
 
   public static class LiteralsInvoker {
@@ -157,7 +157,7 @@ public final class ParserUtils {
     }
   }
 
-  private static void prettyPrint(StringBuilder out, int indent, ParseTree tree, String[] ruleNames, String[] tokenNames) {
+  private static void prettyPrint(StringBuilder out, int indent, ParseTree tree, String label, String[] ruleNames, String[] tokenNames) {
     if (tree == null) {
       throw new NullPointerException("null tree");
     }
@@ -180,11 +180,16 @@ public final class ParserUtils {
           ruleName = labelName.toString();
         }
         writeIndent(out, indent);
+        if (label != null) {
+          out.append(label).append("= ");
+        }
         out.append(ruleName).append('\n');
       }
+
+      Map<ParseTree, String> labelsByChild = getLabelsByChildren(tree);
       for (int i = 0; i < rule.getChildCount(); ++i) {
         ParseTree child = rule.getChild(i);
-        prettyPrint(out, indent + 1, child, ruleNames, tokenNames);
+        prettyPrint(out, indent + 1, child, labelsByChild.get(child), ruleNames, tokenNames);
       }
     } else if (tree instanceof TerminalNode) {
       TerminalNode terminal = (TerminalNode) tree;
@@ -196,6 +201,30 @@ public final class ParserUtils {
     } else {
       throw new IllegalStateException("unrecognized tree class: " + tree.getClass());
     }
+  }
+
+  private static Map<ParseTree, String> getLabelsByChildren(ParseTree tree) {
+    Map<ParseTree, String> labelsByContent = Maps.newHashMap();
+    for (Field f : tree.getClass().getDeclaredFields()) {
+      int mod = f.getModifiers();
+      if (Modifier.isPublic(mod)
+        && !Modifier.isStatic(mod)
+        && !Modifier.isFinal(mod)
+        && ParserRuleContext.class.isAssignableFrom(f.getType()))
+      {
+        try {
+          ParserRuleContext val = (ParserRuleContext) f.get(tree);
+          String name = labelsByContent.get(val);
+          name = (name != null)
+            ? name + "," + f.getName()
+            : f.getName();
+          labelsByContent.put(val, name);
+        } catch (IllegalAccessException e) {
+          throw new AssertionError(e);
+        }
+      }
+    }
+    return labelsByContent;
   }
 
   public static String tokenName(String[] tokenNames, int tokenType) {
