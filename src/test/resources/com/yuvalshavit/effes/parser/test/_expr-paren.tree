@@ -1,0 +1,12 @@
+ParenExpr
+  MethodInvoke
+    PipeExpr
+      MethodInvoke
+        VarExpr
+          VAR_NAME: mylist
+        methodName
+          VAR_NAME: pop
+    methodName
+      VAR_NAME: apply
+    IntLiteral
+      INT: 5

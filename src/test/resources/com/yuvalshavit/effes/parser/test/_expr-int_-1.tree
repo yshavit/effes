@@ -1,2 +1,4 @@
-IntLiteral
-  INT: -1
+UnaryExpr
+  ADD_OPS: -
+  IntLiteral
+    INT: 1

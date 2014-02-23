@@ -1,0 +1,12 @@
+IfExpr
+  VarExpr
+    VAR_NAME: someCondition
+  AddOrSubExpr
+    IntLiteral
+      INT: 1
+    ADD_OPS: +
+    IntLiteral
+      INT: 2
+  DollarExpr
+    VarExpr
+      VAR_NAME: elseCond

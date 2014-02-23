@@ -1,0 +1,16 @@
+MethodInvoke
+  VarExpr
+    VAR_NAME: mylist
+  methodName
+    VAR_NAME: push
+  DollarExpr
+    AddOrSubExpr
+      IntLiteral
+        INT: 5
+      ADD_OPS: +
+      MultOrDivExpr
+        IntLiteral
+          INT: 3
+        MULT_OPS: *
+        IntLiteral
+          INT: 2

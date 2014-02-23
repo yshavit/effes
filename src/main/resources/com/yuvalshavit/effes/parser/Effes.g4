@@ -115,6 +115,7 @@ elseStatFragment: ELSE block;
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | expr MULT_OPS expr                                                        # MultOrDivExpr
     | expr ADD_OPS expr                                                         # AddOrSubExpr
+    | ADD_OPS expr                                                              # UnaryExpr
     | DOLLAR <assoc=right> expr                                                 # DollarExpr
     | expr DUBSLASH                                                             # PipeExpr
     | INT                                                                       # IntLiteral
@@ -158,8 +159,8 @@ casePatternArg: VAR_NAME
               | UNDERSCORE
               ;
 
-exprBlock: expr
-           (WHERE INDENT stat+ DEDENT)?
+exprBlock: expr NL
+         | expr WHERE INDENT stat+ DEDENT
          ;
 
 // tokens
@@ -190,7 +191,7 @@ UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
 
-INT: '0' | ('-'|'+')? [1-9] [0-9]*;
+INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
         | INT DECIMAL_EXPONENT;
 fragment DECIMAL_EXPONENT: ([eE] ('-'|'+')? [1-9][0-9]*)?;
