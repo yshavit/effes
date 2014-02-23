@@ -1,5 +1,9 @@
 package com.yuvalshavit.effes.parser;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -23,8 +27,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.Set;
 
 public final class ParserUtils {
@@ -74,6 +81,75 @@ public final class ParserUtils {
 
   public static void prettyPrint(StringBuilder sb, ParseTree tree, Parser parser) {
     prettyPrint(sb, 0, tree, parser.getRuleNames(), parser.getTokenNames());
+  }
+
+  public static class LiteralsInvoker {
+    private final Set<String> literalTokens;
+    private final Set<Method> seenMethods = Sets.newHashSet();
+
+    public LiteralsInvoker(Class<? extends Recognizer<?,?>> recognizerClass) {
+      literalTokens = literalTokens(recognizerClass);
+    }
+
+    public void invokeLiteralTokenMethods(ParseTree tree) {
+      for (Method m : tree.getClass().getDeclaredMethods()) {
+        if (!seenMethods.add(m)) {
+          continue;
+        }
+        String name = m.getName();
+        if (Character.isUpperCase(name.charAt(0)) && literalTokens.contains(name)) {
+          invoke(tree, m);
+        }
+      }
+      for (int i = 0, max = tree.getChildCount(); i < max; ++i) {
+        invokeLiteralTokenMethods(tree.getChild(i));
+      }
+    }
+
+    private void invoke(ParseTree tree, Method m) {
+      Class<?>[] params = m.getParameterTypes();
+      int nParams = params.length;
+      if (nParams == 0) {
+        quietInvoke(tree, m);
+      } else if (nParams == 1 && params[0] == int.class) {
+        quietInvoke(tree, m, 0);
+      }
+    }
+
+    private static Set<String> literalTokens(Class<?> recognizerClass) {
+      Map<Integer, String> intConstsByValue = Maps.newHashMap();
+      for (Field field : recognizerClass.getDeclaredFields()) {
+        String name = field.getName();
+        String rulePrefix = "RULE_";
+        int prefixLen = rulePrefix.length();
+        if (name.startsWith(rulePrefix) && name.length() > prefixLen && Character.isLowerCase(name.charAt(prefixLen))) {
+          continue;
+        }
+        int m = field.getModifiers();
+        if (Modifier.isPublic(m) && Modifier.isStatic(m) && Modifier.isFinal(m) && field.getType() == int.class) {
+          Integer value;
+          try {
+            value = field.getInt(null);
+          } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+          }
+          if (intConstsByValue.containsKey(value)) {
+            intConstsByValue.put(value, null);
+          } else {
+            intConstsByValue.put(value, name);
+          }
+        }
+      }
+      return ImmutableSet.copyOf(Collections2.filter(intConstsByValue.values(), Predicates.notNull()));
+    }
+  }
+
+  private static Object quietInvoke(ParseTree tree, Method m, Object... args) {
+    try {
+      return m.invoke(tree, args);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static void prettyPrint(StringBuilder out, int indent, ParseTree tree, String[] ruleNames, String[] tokenNames) {

@@ -31,6 +31,7 @@ import static org.testng.Assert.assertEquals;
 
 public final class EffesParserTest {
   private static final String pathBase = EffesParserTest.class.getPackage().getName().replace('.', '/');
+  private static final ParserUtils.LiteralsInvoker literalsInvoker = new ParserUtils.LiteralsInvoker(EffesParser.class);
 
   public static final String PARSE_TESTS = "test1";
 
@@ -112,6 +113,7 @@ public final class EffesParserTest {
         StringBuilder sb = new StringBuilder();
         ParserUtils.prettyPrint(sb, rule, parser);
         actualTree = sb.toString();
+        literalsInvoker.invokeLiteralTokenMethods(rule);
       } catch (Exception e) {
         actualTree = String.format("!!! %s: %s", e.getClass().getSimpleName(), e.getMessage());
       }
