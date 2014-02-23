@@ -1,6 +1,5 @@
 CtorInvoke
   TYPE_NAME: One
   ctorInvokeArgs
-    methodInvokeArgs
-      VarExpr
-        VAR_NAME: elephant
+    VarExpr
+      VAR_NAME: elephant

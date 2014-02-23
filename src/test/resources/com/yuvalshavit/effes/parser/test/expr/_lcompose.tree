@@ -9,10 +9,9 @@ LeftCompose
     CtorInvoke
       TYPE_NAME: List
       ctorInvokeArgs
-        methodInvokeArgs
-          VarExpr
-            VAR_NAME: a
-          VarExpr
-            VAR_NAME: bs
+        VarExpr
+          VAR_NAME: a
+        VarExpr
+          VAR_NAME: bs
   CtorInvoke
     TYPE_NAME: Whatever

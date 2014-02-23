@@ -163,11 +163,7 @@ expr__ForTest__: expr | multilineExpr;
 
 type__ForTest__: type;
 
-ctorInvokeArgs: OPEN_PAREN methodInvokeArgs CLOSE_PAREN;
-
-methodInvokeArgs:
-                | expr (COMMA expr)*
-                ;
+ctorInvokeArgs: OPEN_PAREN (expr (COMMA expr)*)? CLOSE_PAREN;
 
 caseExprs: INDENT caseExprPattern+ DEDENT;
 
