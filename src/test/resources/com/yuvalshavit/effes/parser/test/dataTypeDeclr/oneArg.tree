@@ -4,5 +4,6 @@ dataTypeDeclr
     dataTypeArg
       VAR_NAME: item
       disjunctiveType
-        GenericAtom
-          GENERIC_NAME: A
+        conjunctiveType
+          GenericAtom
+            GENERIC_NAME: A

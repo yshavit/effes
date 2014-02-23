@@ -6,5 +6,6 @@ methodDeclr
       VAR_NAME: arg0
   methodReturnDeclr
     disjunctiveType
-      ConcreteAtom
-        TYPE_NAME: Int
+      conjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Int

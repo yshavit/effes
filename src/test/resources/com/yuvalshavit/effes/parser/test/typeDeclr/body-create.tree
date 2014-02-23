@@ -7,13 +7,15 @@ typeDeclr
           NormalMethodArg
             VAR_NAME: a
             disjunctiveType
-              GenericAtom
-                GENERIC_NAME: A
+              conjunctiveType
+                GenericAtom
+                  GENERIC_NAME: A
           NormalMethodArg
             VAR_NAME: b
             disjunctiveType
-              GenericAtom
-                GENERIC_NAME: B
+              conjunctiveType
+                GenericAtom
+                  GENERIC_NAME: B
         methodDef
           inlinableBlock
             AssignStat

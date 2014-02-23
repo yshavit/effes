@@ -4,21 +4,24 @@ dataTypeDeclr
     dataTypeArg
       VAR_NAME: id
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: PersonId
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: PersonId
     dataTypeArg
       VAR_NAME: name
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: String
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: String
     dataTypeArg
       VAR_NAME: siblings
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: Set
-          genericsDeclr
-            ConcreteGeneric
-              TYPE_NAME: PersonId
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: Set
+            genericsDeclr
+              ConcreteGeneric
+                TYPE_NAME: PersonId
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: Unknown

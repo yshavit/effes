@@ -7,12 +7,14 @@ typeDeclr
       GENERIC_NAME: B
       genericParamRestriction
         disjunctiveType
-          ConcreteAtom
-            TYPE_NAME: Hashable
+          conjunctiveType
+            ConcreteAtom
+              TYPE_NAME: Hashable
   typeDef
     disjunctiveType
-      GenericAtom
-        GENERIC_NAME: A
+      conjunctiveType
+        GenericAtom
+          GENERIC_NAME: A
       conjunctiveType
         GenericAtom
           GENERIC_NAME: B

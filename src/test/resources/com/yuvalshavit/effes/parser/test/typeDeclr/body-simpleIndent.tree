@@ -9,8 +9,9 @@ typeDeclr
           methodArgs
           methodReturnDeclr
             disjunctiveType
-              ConcreteAtom
-                TYPE_NAME: Int
+              conjunctiveType
+                ConcreteAtom
+                  TYPE_NAME: Int
           methodDef
             inlinableBlock
               ReturnStat

@@ -5,13 +5,15 @@ methodDeclr
     NormalMethodArg
       VAR_NAME: arg0
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: First
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: First
     NormalMethodArg
       VAR_NAME: arg1
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: Second
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: Second
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: List
@@ -23,5 +25,6 @@ methodDeclr
     NormalMethodArg
       VAR_NAME: arg3
       disjunctiveType
-        ConcreteAtom
-          TYPE_NAME: Third
+        conjunctiveType
+          ConcreteAtom
+            TYPE_NAME: Third

@@ -5,13 +5,16 @@ methodDeclr
     NormalMethodArg
       VAR_NAME: tup
       disjunctiveType
-        TupleAtom
-          tupleType
-            disjunctiveType
-              GenericAtom
-                GENERIC_NAME: A
-            disjunctiveType
-              GenericAtom
-                GENERIC_NAME: B
+        conjunctiveType
+          TupleAtom
+            tupleType
+              disjunctiveType
+                conjunctiveType
+                  GenericAtom
+                    GENERIC_NAME: A
+              disjunctiveType
+                conjunctiveType
+                  GenericAtom
+                    GENERIC_NAME: B
     NormalMethodArg
       VAR_NAME: c
