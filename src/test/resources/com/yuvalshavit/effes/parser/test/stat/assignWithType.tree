@@ -1,6 +1,6 @@
 AssignStat
   VAR_NAME: foo
-  disjunctiveType
+  StraightDisjunctiveType
     conjunctiveType
       ConcreteAtom
         TYPE_NAME: Foo

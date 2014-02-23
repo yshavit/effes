@@ -6,13 +6,13 @@ typeDeclr
         ctorDeclrArgs
           NormalMethodArg
             VAR_NAME: a
-            disjunctiveType
+            StraightDisjunctiveType
               conjunctiveType
                 GenericAtom
                   GENERIC_NAME: A
           NormalMethodArg
             VAR_NAME: b
-            disjunctiveType
+            StraightDisjunctiveType
               conjunctiveType
                 GenericAtom
                   GENERIC_NAME: B

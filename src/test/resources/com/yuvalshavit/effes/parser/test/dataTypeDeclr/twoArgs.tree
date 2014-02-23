@@ -3,19 +3,19 @@ dataTypeDeclr
   dataTypeArgs
     dataTypeArg
       VAR_NAME: id
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: PersonId
     dataTypeArg
       VAR_NAME: name
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: String
     dataTypeArg
       VAR_NAME: siblings
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: Set

@@ -1,4 +1,4 @@
-disjunctiveType
+StraightDisjunctiveType
   conjunctiveType
     ConcreteAtom
       TYPE_NAME: Set

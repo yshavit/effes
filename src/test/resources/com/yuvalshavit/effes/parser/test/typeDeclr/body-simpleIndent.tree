@@ -8,7 +8,7 @@ typeDeclr
             VAR_NAME: f
           methodArgs
           methodReturnDeclr
-            disjunctiveType
+            StraightDisjunctiveType
               conjunctiveType
                 ConcreteAtom
                   TYPE_NAME: Int

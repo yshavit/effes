@@ -4,13 +4,13 @@ methodDeclr
   methodArgs
     NormalMethodArg
       VAR_NAME: arg0
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: First
     NormalMethodArg
       VAR_NAME: arg1
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: Second
@@ -24,7 +24,7 @@ methodDeclr
       VAR_NAME: arg2
     NormalMethodArg
       VAR_NAME: arg3
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           ConcreteAtom
             TYPE_NAME: Third

@@ -6,12 +6,12 @@ typeDeclr
     NamedGeneric
       GENERIC_NAME: B
       genericParamRestriction
-        disjunctiveType
+        StraightDisjunctiveType
           conjunctiveType
             ConcreteAtom
               TYPE_NAME: Hashable
   typeDef
-    disjunctiveType
+    StraightDisjunctiveType
       conjunctiveType
         GenericAtom
           GENERIC_NAME: A

@@ -4,7 +4,7 @@ dataTypeDeclr
     NamedGeneric
       GENERIC_NAME: A
       genericParamRestriction
-        disjunctiveType
+        StraightDisjunctiveType
           conjunctiveType
             ConcreteAtom
               TYPE_NAME: Eq
@@ -13,13 +13,13 @@ dataTypeDeclr
   dataTypeArgs
     dataTypeArg
       VAR_NAME: first
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           GenericAtom
             GENERIC_NAME: A
     dataTypeArg
       VAR_NAME: second
-      disjunctiveType
+      StraightDisjunctiveType
         conjunctiveType
           GenericAtom
             GENERIC_NAME: B

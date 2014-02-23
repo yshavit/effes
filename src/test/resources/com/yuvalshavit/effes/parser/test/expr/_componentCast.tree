@@ -5,7 +5,7 @@ AddOrSubExpr
   ComponentCastExpr
     VarExpr
       VAR_NAME: foo
-    disjunctiveType
+    StraightDisjunctiveType
       conjunctiveType
         ConcreteAtom
           TYPE_NAME: List

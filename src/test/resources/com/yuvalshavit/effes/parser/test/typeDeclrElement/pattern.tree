@@ -1,10 +1,10 @@
 TypePatternDeclr
   tupleType
-    disjunctiveType
+    StraightDisjunctiveType
       conjunctiveType
         GenericAtom
           GENERIC_NAME: E
-    disjunctiveType
+    StraightDisjunctiveType
       conjunctiveType
         ConcreteAtom
           TYPE_NAME: List

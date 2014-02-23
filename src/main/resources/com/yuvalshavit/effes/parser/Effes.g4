@@ -86,7 +86,9 @@ genericDeclr: TYPE_NAME                                                         
 
 genericParamRestriction: COLON disjunctiveType;
 
-disjunctiveType: conjunctiveType (PIPE conjunctiveType)*;
+disjunctiveType: conjunctiveType (PIPE conjunctiveType)*                        # StraightDisjunctiveType
+               | OPEN_PAREN disjunctiveType CLOSE_PAREN                         # GroupedDisjunctiveType
+               ;
 
 atomicType: GENERIC_NAME genericParamRestriction?                               # GenericAtom
           | TYPE_NAME genericsDeclr?                                            # ConcreteAtom
