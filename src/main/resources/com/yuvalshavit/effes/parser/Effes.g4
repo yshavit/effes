@@ -41,8 +41,8 @@ typeDeclrElement: methodDeclr                                                   
 methodDeclr: funcModifiers?
              methodName
              methodArgs
-             (methodReturnDeclr COLON)?
-             methodDef?
+             (methodReturnDeclr)?
+             (NL | COLON methodDef)
            ;
 
 funcModifiers: OPEN_BRACKET VAR_NAME+ CLOSE_BRACKET;
@@ -53,9 +53,9 @@ methodName: VAR_NAME
           | ADD_OPS
           ;
 
-methodArgs: methodArg*;
+methodArgs: ( methodArg (OPEN_BRACE methodArg (COMMA methodArg)* CLOSE_BRACE)? )?;
 
-methodArg: (VAR_NAME COLON)? disjunctiveType;
+methodArg: VAR_NAME (COLON disjunctiveType)?;
 
 methodReturnDeclr: ARROW disjunctiveType;
 

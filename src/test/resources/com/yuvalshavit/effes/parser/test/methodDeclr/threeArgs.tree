@@ -1,0 +1,10 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+    methodArg
+      VAR_NAME: arg0
+    methodArg
+      VAR_NAME: arg1
+    methodArg
+      VAR_NAME: arg2

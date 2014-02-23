@@ -150,6 +150,11 @@ public final class ParserUtils {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
                             int charPositionInLine, String msg, @Nullable RecognitionException e) {
+      if (recognizer instanceof EffesParser) {
+        EffesParser parser = (EffesParser) recognizer;
+        ParserRuleContext rule = parser.getRuleContext();
+        msg = String.format("%s at \"%s\" (rule '%s')", msg, rule.getText(), parser.getRuleNames()[rule.getRuleIndex()]);
+      }
       throw new AntlrParseException(line, charPositionInLine, msg, e);
     }
   }

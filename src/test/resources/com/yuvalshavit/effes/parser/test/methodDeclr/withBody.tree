@@ -1,0 +1,9 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+  methodDef
+    block
+      ReturnStat
+        IntLiteral
+          INT: 5
