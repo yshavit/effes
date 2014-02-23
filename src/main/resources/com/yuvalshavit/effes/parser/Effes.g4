@@ -35,8 +35,10 @@ typeDeclrBody: INDENT typeDeclrElement+ DEDENT;
 
 typeDeclrElement: methodDeclr                                                   # TypeMethodDeclr
                 | PATTERN ARROW tupleType COLON methodDef                       # TypePatternDeclr
-                | CREATE methodDef                                              # TypeCreateDeclr
+                | CREATE ctorDeclrArgs COLON methodDef                          # TypeCreateDeclr
                 ;
+
+ctorDeclrArgs: OPEN_PAREN methodArg (COMMA methodArg)* CLOSE_PAREN;
 
 methodDeclr: funcModifiers?
              methodName
@@ -55,7 +57,9 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: VAR_NAME disjunctiveType?;
+methodArg: VAR_NAME disjunctiveType?                                            # NormalMethodArg
+         | OPEN_PAREN methodArg (COMMA methodArg)* CLOSE_PAREN                  # MethodTupleArg
+         ;
 
 methodReturnDeclr: ARROW disjunctiveType;
 
@@ -89,7 +93,7 @@ atomicType: GENERIC_NAME genericParamRestriction?                               
           | tupleType                                                           # TupleAtom
           ;
 
-tupleType: OPEN_PAREN atomicType (COMMA atomicType)* CLOSE_PAREN;
+tupleType: OPEN_PAREN VAR_NAME? atomicType (COMMA VAR_NAME? atomicType)* CLOSE_PAREN;
 
 // blocks and statements
 

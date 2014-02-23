@@ -1,0 +1,26 @@
+typeDeclr
+  TYPE_NAME: Foo
+  typeDef
+    typeDeclrBody
+      TypeCreateDeclr
+        ctorDeclrArgs
+          NormalMethodArg
+            VAR_NAME: a
+            disjunctiveType
+              GenericAtom
+                GENERIC_NAME: A
+          NormalMethodArg
+            VAR_NAME: b
+            disjunctiveType
+              GenericAtom
+                GENERIC_NAME: B
+        methodDef
+          inlinableBlock
+            AssignStat
+              VAR_NAME: myA
+              VarExpr
+                VAR_NAME: a
+            AssignStat
+              VAR_NAME: myB
+              VarExpr
+                VAR_NAME: b

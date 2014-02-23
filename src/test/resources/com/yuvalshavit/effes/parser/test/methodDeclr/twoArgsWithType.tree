@@ -2,12 +2,12 @@ methodDeclr
   methodName
     VAR_NAME: foo
   methodArgs
-    methodArg
+    NormalMethodArg
       VAR_NAME: arg0
       disjunctiveType
         ConcreteAtom
           TYPE_NAME: First
-    methodArg
+    NormalMethodArg
       VAR_NAME: arg1
       disjunctiveType
         ConcreteAtom

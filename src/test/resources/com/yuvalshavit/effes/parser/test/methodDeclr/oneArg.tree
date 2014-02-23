@@ -2,5 +2,5 @@ methodDeclr
   methodName
     VAR_NAME: foo
   methodArgs
-    methodArg
+    NormalMethodArg
       VAR_NAME: arg0
