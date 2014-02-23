@@ -12,7 +12,7 @@ CaseOfExpr
             VAR_NAME: ts
       exprBlock
         MethodInvoke
-          VarExpr
+          target= VarExpr
             VAR_NAME: h
           methodName
             VAR_NAME: color

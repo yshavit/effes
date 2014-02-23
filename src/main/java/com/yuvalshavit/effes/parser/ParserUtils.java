@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.parser;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -31,6 +32,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -210,21 +214,53 @@ public final class ParserUtils {
       if (Modifier.isPublic(mod)
         && !Modifier.isStatic(mod)
         && !Modifier.isFinal(mod)
-        && ParserRuleContext.class.isAssignableFrom(f.getType()))
+        && fieldHoldsChildren(f))
       {
         try {
-          ParserRuleContext val = (ParserRuleContext) f.get(tree);
-          String name = labelsByContent.get(val);
-          name = (name != null)
-            ? name + "," + f.getName()
-            : f.getName();
-          labelsByContent.put(val, name);
+          Object value = f.get(tree);
+          List<ParseTree> children;
+          String label = f.getName();
+          if (value instanceof List<?>) {
+            label += "[]";
+            List<?> list = (List<?>) value;
+            children = Lists.newArrayListWithCapacity(list.size());
+            for (Object o : list) {
+              children.add((ParseTree) o);
+            }
+          } else {
+            children = Lists.newArrayList((ParseTree) value);
+          }
+          for (ParseTree child : children) {
+            String name = labelsByContent.get(child);
+            name = (name != null)
+              ? name + "," + label
+              : label;
+            labelsByContent.put(child, name);
+          }
         } catch (IllegalAccessException e) {
           throw new AssertionError(e);
         }
       }
     }
     return labelsByContent;
+  }
+
+  private static boolean fieldHoldsChildren(Field f) {
+    if (ParserRuleContext.class.isAssignableFrom(f.getType())) {
+      return true;
+    }
+    Type genericType = f.getGenericType();
+    if (genericType instanceof ParameterizedType) {
+      ParameterizedType paramType = (ParameterizedType) genericType;
+      Type[] params = paramType.getActualTypeArguments();
+      if (paramType.getRawType() == List.class
+        && params.length == 1
+        && (params[0] instanceof Class<?>)
+        && ParserRuleContext.class.isAssignableFrom((Class<?>) params[0])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static String tokenName(String[] tokenNames, int tokenType) {

@@ -1,11 +1,11 @@
 MethodInvoke
-  VarExpr
+  target= VarExpr
     VAR_NAME: myWhatever
   methodName
     VAR_NAME: someMethod
-  VarExpr
+  args[]= VarExpr
     VAR_NAME: argA
-  VarExpr
+  args[]= VarExpr
     VAR_NAME: argB
-  VarExpr
+  expr,args[]= VarExpr
     VAR_NAME: argC

@@ -1,9 +1,9 @@
 MethodInvoke
-  VarExpr
+  target= VarExpr
     VAR_NAME: mylist
   methodName
     VAR_NAME: push
-  DollarExpr
+  expr,args[]= DollarExpr
     AddOrSubExpr
       IntLiteral
         INT: 5

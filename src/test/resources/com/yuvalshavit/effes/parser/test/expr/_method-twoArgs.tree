@@ -1,9 +1,9 @@
 MethodInvoke
-  VarExpr
+  target= VarExpr
     VAR_NAME: mynum
   methodName
     VAR_NAME: dividedBy
-  VarExpr
+  args[]= VarExpr
     VAR_NAME: divisor
-  CtorInvoke
+  expr,args[]= CtorInvoke
     TYPE_NAME: HalfUp

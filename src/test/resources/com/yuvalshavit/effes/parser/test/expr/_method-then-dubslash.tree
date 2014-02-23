@@ -1,7 +1,7 @@
 AddOrSubExpr
   PipeExpr
     MethodInvoke
-      VarExpr
+      target= VarExpr
         VAR_NAME: mylist
       methodName
         VAR_NAME: head

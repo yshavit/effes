@@ -1,11 +1,11 @@
 IfExpr
   cond= MethodInvoke
-    VarExpr
+    target= VarExpr
       VAR_NAME: mylist
     methodName
       VAR_NAME: notEmpty
   MethodInvoke
-    VarExpr
+    target= VarExpr
       VAR_NAME: mylist
     methodName
       VAR_NAME: head

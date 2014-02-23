@@ -1,7 +1,7 @@
 MethodInvoke
-  VarExpr
+  target= VarExpr
     VAR_NAME: mylist
   methodName
     VAR_NAME: push
-  IntLiteral
+  expr,args[]= IntLiteral
     INT: 5

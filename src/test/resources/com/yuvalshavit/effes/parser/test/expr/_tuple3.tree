@@ -8,7 +8,7 @@ TupleExpr
     IntLiteral
       INT: 2
   MethodInvoke
-    VarExpr
+    target= VarExpr
       VAR_NAME: foo
     methodName
       VAR_NAME: head
