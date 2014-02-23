@@ -55,7 +55,7 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: VAR_NAME (COLON disjunctiveType)?;
+methodArg: VAR_NAME disjunctiveType?;
 
 methodReturnDeclr: ARROW disjunctiveType;
 

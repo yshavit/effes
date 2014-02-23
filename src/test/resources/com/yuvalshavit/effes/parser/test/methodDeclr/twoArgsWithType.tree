@@ -1,0 +1,14 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+    methodArg
+      VAR_NAME: arg0
+      disjunctiveType
+        ConcreteAtom
+          TYPE_NAME: First
+    methodArg
+      VAR_NAME: arg1
+      disjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Second
