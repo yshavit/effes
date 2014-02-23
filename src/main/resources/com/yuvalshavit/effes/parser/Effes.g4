@@ -224,7 +224,7 @@ LCOMPOSE: '</';
 
 INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
-        | INT DECIMAL_EXPONENT;
+       | INT DECIMAL_EXPONENT;
 fragment DECIMAL_EXPONENT: ([eE] ('-'|'+')? [1-9][0-9]*)?;
 TYPE_NAME: [A-Z]+ [A-Z0-9]* [a-z] [a-zA-Z0-9]*;
 GENERIC_NAME: [A-Z]+ [A-Z0-9]*;
