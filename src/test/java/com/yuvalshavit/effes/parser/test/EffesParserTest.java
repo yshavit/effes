@@ -5,7 +5,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.yuvalshavit.effes.parser.AntlrParseException;
 import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -37,25 +36,37 @@ public final class EffesParserTest {
 
   @DataProvider(name = "test1")
   public Object[][] readParseFiles() {
-    Set<String> files = Sets.newTreeSet();
-    Collections.addAll(files, readFile(".").split("\n"));
     String testCasePattern = System.getProperty("test.case.regex");
-    if (testCasePattern != null) {
-      files = Sets.filter(files, Predicates.containsPattern(testCasePattern));
-    }
+    Set<String> dirs = Sets.newTreeSet();
+    Collections.addAll(dirs, readFile(".").split("\n"));
+
     List<Object[]> parseTests = Lists.newArrayList();
-    for (String efFile : files) {
-      if (efFile.endsWith(".ef")) {
-        String plainFile = efFile.substring(0, efFile.length() - ".ef".length());
-        parseTests.add(new Object[] { plainFile });
+    for (String dir : dirs) {
+      URL dirUrl = url(dir);
+      if (new File(dirUrl.getFile()).isDirectory()) {
+        Set<String> files = Sets.newTreeSet();
+        for (String file : readFile(dirUrl).split("\n")) {
+          if (file.endsWith(".ef")) {
+            String fullFile = dir + File.separator + file;
+            if (testCasePattern == null || fullFile.matches(testCasePattern)) {
+              String plainFile = fullFile.substring(0, fullFile.length() - ".ef".length());
+              parseTests.add(new Object[]{ plainFile });
+            }
+          }
+          files.add(String.format("%s/%s", dir, file));
+        }
       }
     }
     return parseTests.toArray(new Object[parseTests.size()][]);
   }
 
   private String readFile(String relativePath) {
+    return readFile(url(relativePath));
+  }
+
+  private String readFile(URL url) {
     try {
-      return Resources.toString(url(relativePath), Charsets.UTF_8);
+      return Resources.toString(url, Charsets.UTF_8);
     } catch (IOException e) {
       throw new AssertionError(e);
     }
@@ -63,7 +74,7 @@ public final class EffesParserTest {
 
   @Test(dataProvider = PARSE_TESTS)
   public void parse(String fileNameNoExt) throws IOException, ReflectiveOperationException {
-    assertThat("file name", fileNameNoExt, containsString("-"));
+    assertThat("file name", fileNameNoExt, containsString(File.separator));
     String expectedContent;
     try {
       expectedContent = readFile(fileNameNoExt + ".tree");
@@ -76,7 +87,9 @@ public final class EffesParserTest {
       }
     }
 
-    String ruleName = fileNameNoExt.split("-", 2)[0];
+    String[] fileSplits = fileNameNoExt.split(File.separator, 2);
+    String ruleName = fileSplits[0];
+    String testCaseName = fileSplits[1];
 
     String actualTree;
     try (InputStream efInputStream = new BufferedInputStream(url(fileNameNoExt + ".ef").openStream());
@@ -84,9 +97,8 @@ public final class EffesParserTest {
       EffesParser parser = ParserUtils.createParser(efReader);
       parser.setTrace(Boolean.getBoolean("test.antlr.trace"));
       parser.addErrorListener(new ParserUtils.ExceptionThrowingFailureListener());
-      if (ruleName.startsWith("_")) {
+      if (testCaseName.startsWith("_")) {
         // signifies a fragment
-        ruleName = ruleName.substring(1);
         TokenSource lexer = parser.getTokenStream().getTokenSource();
         EffesLexer effesLexer = (EffesLexer) lexer;
         effesLexer.getDenterOptions().ignoreEOF();
@@ -102,9 +114,9 @@ public final class EffesParserTest {
       }
     }
     if (Boolean.getBoolean("effesParserTest.write")) {
-      File outDir = new File("target/effesParserTest");
+      File outDir = new File("target/effesParserTest/" + ruleName);
       outDir.mkdirs();
-      try (FileWriter w = new FileWriter(new File(outDir, fileNameNoExt + ".tree"))) {
+      try (FileWriter w = new FileWriter(new File(outDir, testCaseName + ".tree"))) {
         w.append(actualTree);
       }
     }
