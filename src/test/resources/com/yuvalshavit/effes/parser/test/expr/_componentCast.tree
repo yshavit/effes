@@ -5,10 +5,8 @@ AddOrSubExpr
   ComponentCastExpr
     VarExpr
       VAR_NAME: foo
-    StraightDisjunctiveType
-      conjunctiveType
-        ConcreteAtom
-          TYPE_NAME: List
-          genericsDeclr
-            NamedGeneric
-              GENERIC_NAME: A
+    ConcreteAtom
+      TYPE_NAME: List
+      genericsDeclr
+        NamedGeneric
+          GENERIC_NAME: A

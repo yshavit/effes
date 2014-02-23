@@ -5,7 +5,5 @@ methodDeclr
     NormalMethodArg
       VAR_NAME: arg0
   methodReturnDeclr
-    StraightDisjunctiveType
-      conjunctiveType
-        ConcreteAtom
-          TYPE_NAME: Int
+    ConcreteAtom
+      TYPE_NAME: Int

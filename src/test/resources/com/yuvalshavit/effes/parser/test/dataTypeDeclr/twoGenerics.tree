@@ -4,22 +4,16 @@ dataTypeDeclr
     NamedGeneric
       GENERIC_NAME: A
       genericParamRestriction
-        StraightDisjunctiveType
-          conjunctiveType
-            ConcreteAtom
-              TYPE_NAME: Eq
+        ConcreteAtom
+          TYPE_NAME: Eq
     NamedGeneric
       GENERIC_NAME: B
   dataTypeArgs
     dataTypeArg
       VAR_NAME: first
-      StraightDisjunctiveType
-        conjunctiveType
-          GenericAtom
-            GENERIC_NAME: A
+      GenericAtom
+        GENERIC_NAME: A
     dataTypeArg
       VAR_NAME: second
-      StraightDisjunctiveType
-        conjunctiveType
-          GenericAtom
-            GENERIC_NAME: B
+      GenericAtom
+        GENERIC_NAME: B

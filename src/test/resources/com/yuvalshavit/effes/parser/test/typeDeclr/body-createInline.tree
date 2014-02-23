@@ -9,10 +9,8 @@ typeDeclr
         ctorDeclrArgs
           NormalMethodArg
             VAR_NAME: v
-            StraightDisjunctiveType
-              conjunctiveType
-                GenericAtom
-                  GENERIC_NAME: A
+            GenericAtom
+              GENERIC_NAME: A
         methodDef
           inlinableBlock
             AssignStat

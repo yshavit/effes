@@ -28,7 +28,7 @@ tokens {INDENT, DEDENT }
 typeDeclr: TYPE TYPE_NAME genericsDeclr? typeDef;
 
 typeDef: COLON typeDeclrBody
-       | EQ disjunctiveType NL
+       | EQ type NL
        ;
 
 typeDeclrBody: INDENT typeDeclrElement+ DEDENT;
@@ -57,11 +57,11 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: VAR_NAME disjunctiveType?                                            # NormalMethodArg
+methodArg: VAR_NAME type?                                                       # NormalMethodArg
          | OPEN_PAREN methodArg (COMMA methodArg)* CLOSE_PAREN                  # MethodTupleArg
          ;
 
-methodReturnDeclr: ARROW disjunctiveType;
+methodReturnDeclr: ARROW type;
 
 methodDef: inlinableBlock; // TODO expr directly, without the "return"?
 
@@ -74,7 +74,7 @@ dataTypeDeclr: DATA TYPE
 
 dataTypeArgs: OPEN_PAREN dataTypeArg (COMMA dataTypeArg)* CLOSE_PAREN;
 
-dataTypeArg: VAR_NAME COLON disjunctiveType;
+dataTypeArg: VAR_NAME COLON type;
 
 // generics and types
 
@@ -84,20 +84,17 @@ genericDeclr: TYPE_NAME                                                         
             | GENERIC_NAME genericParamRestriction?                             # NamedGeneric
             ;
 
-genericParamRestriction: COLON disjunctiveType;
+genericParamRestriction: COLON type;
 
-disjunctiveType: conjunctiveType (PIPE conjunctiveType)*                        # StraightDisjunctiveType
-               | OPEN_PAREN disjunctiveType CLOSE_PAREN                         # GroupedDisjunctiveType
-               ;
+type: OPEN_PAREN type CLOSE_PAREN                                               # GroupedType
+    | type type                                                                 # ConjunciveType
+    | type PIPE type                                                            # DisjunctiveType
+    | GENERIC_NAME genericParamRestriction?                                     # GenericAtom
+    | TYPE_NAME genericsDeclr?                                                  # ConcreteAtom
+    | tupleType                                                                 # TupleAtom
+    ;
 
-atomicType: GENERIC_NAME genericParamRestriction?                               # GenericAtom
-          | TYPE_NAME genericsDeclr?                                            # ConcreteAtom
-          | tupleType                                                           # TupleAtom
-          ;
-
-conjunctiveType: atomicType+;
-
-tupleType: OPEN_PAREN VAR_NAME? disjunctiveType (COMMA VAR_NAME? disjunctiveType)+ CLOSE_PAREN;
+tupleType: OPEN_PAREN VAR_NAME? type (COMMA VAR_NAME? type)+ CLOSE_PAREN;
 
 // blocks and statements
 
@@ -109,7 +106,7 @@ block: INDENT stat+ DEDENT;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
     | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
-    | VAR_NAME disjunctiveType? EQ expr NL                                      # AssignStat
+    | VAR_NAME type? EQ expr NL                                      # AssignStat
     | RETURN expr NL                                                            # ReturnStat
     ;
 
@@ -123,7 +120,7 @@ elseStatFragment: ELSE block;
 // expressions
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
-    | expr AT disjunctiveType                                                   # ComponentCastExpr
+    | expr AT type                                                   # ComponentCastExpr
     | expr MULT_OPS expr                                                        # MultOrDivExpr
     | expr ADD_OPS expr                                                         # AddOrSubExpr
     | ADD_OPS expr                                                              # UnaryExpr
@@ -146,6 +143,8 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
  * that can be called "plain".
  */
 expr__ForTest__: expr;
+
+type__ForTest__: type;
 
 ctorInvokeArgs: OPEN_PAREN methodInvokeArgs CLOSE_PAREN;
 

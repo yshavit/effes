@@ -4,27 +4,21 @@ methodDeclr
   methodArgs
     NormalMethodArg
       VAR_NAME: arg0
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: First
+      ConcreteAtom
+        TYPE_NAME: First
     NormalMethodArg
       VAR_NAME: arg1
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: Second
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: List
-            genericsDeclr
-              NamedGeneric
-                GENERIC_NAME: A
+      DisjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Second
+        ConcreteAtom
+          TYPE_NAME: List
+          genericsDeclr
+            NamedGeneric
+              GENERIC_NAME: A
     NormalMethodArg
       VAR_NAME: arg2
     NormalMethodArg
       VAR_NAME: arg3
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: Third
+      ConcreteAtom
+        TYPE_NAME: Third

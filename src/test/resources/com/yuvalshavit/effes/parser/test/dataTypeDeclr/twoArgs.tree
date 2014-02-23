@@ -3,25 +3,19 @@ dataTypeDeclr
   dataTypeArgs
     dataTypeArg
       VAR_NAME: id
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: PersonId
+      ConcreteAtom
+        TYPE_NAME: PersonId
     dataTypeArg
       VAR_NAME: name
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: String
+      ConcreteAtom
+        TYPE_NAME: String
     dataTypeArg
       VAR_NAME: siblings
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: Set
-            genericsDeclr
-              ConcreteGeneric
-                TYPE_NAME: PersonId
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: Unknown
+      DisjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Set
+          genericsDeclr
+            ConcreteGeneric
+              TYPE_NAME: PersonId
+        ConcreteAtom
+          TYPE_NAME: Unknown

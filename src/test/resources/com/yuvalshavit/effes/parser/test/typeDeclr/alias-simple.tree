@@ -1,10 +1,8 @@
 typeDeclr
   TYPE_NAME: Boolean
   typeDef
-    StraightDisjunctiveType
-      conjunctiveType
-        ConcreteAtom
-          TYPE_NAME: True
-      conjunctiveType
-        ConcreteAtom
-          TYPE_NAME: False
+    DisjunctiveType
+      ConcreteAtom
+        TYPE_NAME: True
+      ConcreteAtom
+        TYPE_NAME: False

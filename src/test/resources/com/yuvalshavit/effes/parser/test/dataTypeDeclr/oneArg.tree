@@ -3,7 +3,5 @@ dataTypeDeclr
   dataTypeArgs
     dataTypeArg
       VAR_NAME: item
-      StraightDisjunctiveType
-        conjunctiveType
-          GenericAtom
-            GENERIC_NAME: A
+      GenericAtom
+        GENERIC_NAME: A

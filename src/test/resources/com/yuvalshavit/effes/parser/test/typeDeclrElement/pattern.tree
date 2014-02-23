@@ -1,16 +1,12 @@
 TypePatternDeclr
   tupleType
-    StraightDisjunctiveType
-      conjunctiveType
-        GenericAtom
+    GenericAtom
+      GENERIC_NAME: E
+    ConcreteAtom
+      TYPE_NAME: List
+      genericsDeclr
+        NamedGeneric
           GENERIC_NAME: E
-    StraightDisjunctiveType
-      conjunctiveType
-        ConcreteAtom
-          TYPE_NAME: List
-          genericsDeclr
-            NamedGeneric
-              GENERIC_NAME: E
   methodDef
     inlinableBlock
       ReturnStat

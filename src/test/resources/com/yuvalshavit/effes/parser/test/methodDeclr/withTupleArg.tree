@@ -5,16 +5,12 @@ methodDeclr
     MethodTupleArg
       NormalMethodArg
         VAR_NAME: a
-        StraightDisjunctiveType
-          conjunctiveType
-            GenericAtom
-              GENERIC_NAME: A
+        GenericAtom
+          GENERIC_NAME: A
       MethodTupleArg
         NormalMethodArg
           VAR_NAME: b
-          StraightDisjunctiveType
-            conjunctiveType
-              GenericAtom
-                GENERIC_NAME: B
+          GenericAtom
+            GENERIC_NAME: B
         NormalMethodArg
           VAR_NAME: c

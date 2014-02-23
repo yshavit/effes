@@ -1,8 +1,6 @@
 AssignStat
   VAR_NAME: foo
-  StraightDisjunctiveType
-    conjunctiveType
-      ConcreteAtom
-        TYPE_NAME: Foo
+  ConcreteAtom
+    TYPE_NAME: Foo
   IntLiteral
     INT: 5

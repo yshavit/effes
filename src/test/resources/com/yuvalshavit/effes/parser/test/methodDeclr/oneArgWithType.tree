@@ -4,7 +4,5 @@ methodDeclr
   methodArgs
     NormalMethodArg
       VAR_NAME: arg0
-      StraightDisjunctiveType
-        conjunctiveType
-          ConcreteAtom
-            TYPE_NAME: First
+      ConcreteAtom
+        TYPE_NAME: First

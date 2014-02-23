@@ -6,15 +6,11 @@ typeDeclr
     NamedGeneric
       GENERIC_NAME: B
       genericParamRestriction
-        StraightDisjunctiveType
-          conjunctiveType
-            ConcreteAtom
-              TYPE_NAME: Hashable
+        ConcreteAtom
+          TYPE_NAME: Hashable
   typeDef
-    StraightDisjunctiveType
-      conjunctiveType
-        GenericAtom
-          GENERIC_NAME: A
-      conjunctiveType
-        GenericAtom
-          GENERIC_NAME: B
+    DisjunctiveType
+      GenericAtom
+        GENERIC_NAME: A
+      GenericAtom
+        GENERIC_NAME: B
