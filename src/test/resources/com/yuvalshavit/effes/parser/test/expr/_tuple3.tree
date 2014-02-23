@@ -12,3 +12,4 @@ TupleExpr
       VAR_NAME: foo
     methodName
       VAR_NAME: head
+    methodInvokeArgs

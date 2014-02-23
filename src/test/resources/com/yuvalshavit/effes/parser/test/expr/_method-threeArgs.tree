@@ -3,9 +3,10 @@ MethodInvoke
     VAR_NAME: myWhatever
   methodName
     VAR_NAME: someMethod
-  args[]= VarExpr
-    VAR_NAME: argA
-  args[]= VarExpr
-    VAR_NAME: argB
-  expr,args[]= VarExpr
-    VAR_NAME: argC
+  methodInvokeArgs
+    VarExpr
+      VAR_NAME: argA
+    VarExpr
+      VAR_NAME: argB
+    VarExpr
+      VAR_NAME: argC

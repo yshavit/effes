@@ -4,10 +4,12 @@ IfExpr
       VAR_NAME: mylist
     methodName
       VAR_NAME: notEmpty
+    methodInvokeArgs
   MethodInvoke
     target= VarExpr
       VAR_NAME: mylist
     methodName
       VAR_NAME: head
+    methodInvokeArgs
   IntLiteral
     INT: 0

@@ -3,8 +3,9 @@ MethodInvoke
     VAR_NAME: mylist
   methodName
     VAR_NAME: sublist
-  expr,args[]= TupleExpr
-    IntLiteral
-      INT: 2
-    IntLiteral
-      INT: 5
+  methodInvokeArgs
+    TupleExpr
+      IntLiteral
+        INT: 2
+      IntLiteral
+        INT: 5

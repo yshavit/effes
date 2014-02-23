@@ -3,5 +3,6 @@ MethodInvoke
     VAR_NAME: mylist
   methodName
     VAR_NAME: push
-  expr,args[]= IntLiteral
-    INT: 5
+  methodInvokeArgs
+    IntLiteral
+      INT: 5

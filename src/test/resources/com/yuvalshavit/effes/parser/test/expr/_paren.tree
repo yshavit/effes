@@ -6,7 +6,9 @@ ParenExpr
           VAR_NAME: mylist
         methodName
           VAR_NAME: pop
+        methodInvokeArgs
     methodName
       VAR_NAME: apply
-    expr,args[]= IntLiteral
-      INT: 5
+    methodInvokeArgs
+      IntLiteral
+        INT: 5

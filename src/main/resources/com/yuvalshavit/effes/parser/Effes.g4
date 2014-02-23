@@ -147,9 +147,11 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | IF cond=expr THEN expr ELSE expr                                          # IfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
-    | target=expr methodName (args+=expr (COLON args+=expr (COMMA args+=expr)*)?)? # MethodInvoke
+    | target=expr methodName methodInvokeArgs                                   # MethodInvoke
     | expr LCOMPOSE expr                                                        # LeftCompose
     ;
+
+methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
 multilineExpr: CASE expr OF caseExprs                                           # CaseOfExpr
              ;

@@ -16,6 +16,7 @@ CaseOfExpr
             VAR_NAME: h
           methodName
             VAR_NAME: color
+          methodInvokeArgs
     caseExprPattern
       caseMatcher
         TYPE_NAME: Nothing

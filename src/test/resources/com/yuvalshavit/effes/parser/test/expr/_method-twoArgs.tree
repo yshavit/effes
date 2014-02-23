@@ -3,7 +3,8 @@ MethodInvoke
     VAR_NAME: mynum
   methodName
     VAR_NAME: dividedBy
-  args[]= VarExpr
-    VAR_NAME: divisor
-  expr,args[]= CtorInvoke
-    TYPE_NAME: HalfUp
+  methodInvokeArgs
+    VarExpr
+      VAR_NAME: divisor
+    CtorInvoke
+      TYPE_NAME: HalfUp
