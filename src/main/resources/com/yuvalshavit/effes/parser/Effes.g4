@@ -147,6 +147,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | IF cond=expr THEN expr ELSE expr                                          # IfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
+    | THIS methodName methodInvokeArgs                                          # ThisMethodInvoke
     | target=expr methodName methodInvokeArgs                                   # MethodInvoke
     | expr LCOMPOSE expr                                                        # LeftCompose
     ;
@@ -210,6 +211,7 @@ PIPE: '|';
 IF: 'if';
 THEN: 'then';
 ELSE: 'else';
+THIS: 'this';
 CASE: 'case';
 OF: 'of';
 RETURN: 'return';
