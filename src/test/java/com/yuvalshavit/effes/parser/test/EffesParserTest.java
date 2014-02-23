@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.parser.test;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.parser.EffesLexer;
@@ -24,6 +23,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -36,7 +36,10 @@ public final class EffesParserTest {
 
   @DataProvider(name = "test1")
   public Object[][] readParseFiles() {
-    String testCasePattern = System.getProperty("test.case.regex");
+    String testCasePatternStr = System.getProperty("test.case.regex");
+    Pattern testCasePattern = testCasePatternStr != null
+      ? Pattern.compile(testCasePatternStr)
+      : null;
     Set<String> dirs = Sets.newTreeSet();
     Collections.addAll(dirs, readFile(".").split("\n"));
 
@@ -48,7 +51,7 @@ public final class EffesParserTest {
         for (String file : readFile(dirUrl).split("\n")) {
           if (file.endsWith(".ef")) {
             String fullFile = dir + File.separator + file;
-            if (testCasePattern == null || fullFile.matches(testCasePattern)) {
+            if (testCasePattern == null || testCasePattern.matcher(fullFile).find()) {
               String plainFile = fullFile.substring(0, fullFile.length() - ".ef".length());
               parseTests.add(new Object[]{ plainFile });
             }
