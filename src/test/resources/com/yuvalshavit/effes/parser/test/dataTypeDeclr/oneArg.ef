@@ -1,1 +1,1 @@
-data type Just(item: A)
+data type Just(item A)

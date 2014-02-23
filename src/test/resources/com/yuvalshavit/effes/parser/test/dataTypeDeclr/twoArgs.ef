@@ -1,1 +1,1 @@
-data type Person(id: PersonId, name: String, siblings: Set[PersonId] | Unknown)
+data type Person(id PersonId, name String, siblings Set[PersonId] | Unknown)

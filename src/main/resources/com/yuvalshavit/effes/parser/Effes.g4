@@ -85,7 +85,7 @@ dataTypeDeclr: DATA TYPE
 
 dataTypeArgs: OPEN_PAREN dataTypeArg (COMMA dataTypeArg)* CLOSE_PAREN;
 
-dataTypeArg: VAR_NAME COLON type;
+dataTypeArg: VAR_NAME type;
 
 // generics and types
 

@@ -1,1 +1,1 @@
-data type Pair[A:Eq,B](first: A, second: B)
+data type Pair[A:Eq,B](first A, second B)
