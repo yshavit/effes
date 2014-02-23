@@ -23,6 +23,16 @@ tokens {INDENT, DEDENT }
   }
 }
 
+// top level
+
+compilationUnit: NL
+               | compilationBodyElement* EOF
+               ;
+
+compilationBodyElement: typeDeclr
+                      | dataTypeDeclr
+                      ;
+
 // type declr
 
 typeDeclr: TYPE TYPE_NAME genericsDeclr? typeDef;
@@ -70,6 +80,7 @@ methodDef: inlinableBlock; // TODO expr directly, without the "return"?
 dataTypeDeclr: DATA TYPE
                TYPE_NAME genericsDeclr?
                dataTypeArgs?
+               NL
              ;
 
 dataTypeArgs: OPEN_PAREN dataTypeArg (COMMA dataTypeArg)* CLOSE_PAREN;
@@ -106,8 +117,8 @@ block: INDENT stat+ DEDENT;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
     | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
-    | VAR_NAME type? EQ expr NL                                      # AssignStat
-    | RETURN expr NL                                                            # ReturnStat
+    | VAR_NAME type? EQ expr NL?                                                # AssignStat
+    | RETURN expr NL?                                                           # ReturnStat
     ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not

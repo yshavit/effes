@@ -39,9 +39,7 @@ public final class ParserUtils {
   private static final Set<String> tokensToIgnoreOnOutput = Sets.newHashSet("INDENT", "DEDENT", "NL");
 
   public static EffesParser createParser(Reader input) throws IOException {
-    CharStream charStream = new ANTLRInputStream(input);
-    EffesLexer lexer = new EffesLexer(charStream);
-    lexer.addErrorListener(new ExceptionThrowingFailureListener());
+    EffesLexer lexer = createLexer(input);
     TokenStream tokens = new CommonTokenStream(lexer);
     EffesParser parser = new EffesParser(tokens);
 //    parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
@@ -53,6 +51,13 @@ public final class ParserUtils {
     }
     parser.addErrorListener(new TunableDiagnosticErrorListener());
     return parser;
+  }
+
+  public static EffesLexer createLexer(Reader input) throws IOException {
+    CharStream charStream = new ANTLRInputStream(input);
+    EffesLexer lexer = new EffesLexer(charStream);
+    lexer.addErrorListener(new ExceptionThrowingFailureListener());
+    return lexer;
   }
 
   public static EffesParser createParser(String input) throws IOException {
@@ -183,7 +188,7 @@ public final class ParserUtils {
       }
     } else if (tree instanceof TerminalNode) {
       TerminalNode terminal = (TerminalNode) tree;
-      String tokenName = tokenNames[terminal.getSymbol().getType()];
+      String tokenName = tokenName(tokenNames, terminal.getSymbol().getType());
       if (tokenIsInteresting(tokenName)) {
         writeIndent(out, indent);
         out.append(tokenName).append(": ").append(terminal.getText()).append('\n');
@@ -191,6 +196,10 @@ public final class ParserUtils {
     } else {
       throw new IllegalStateException("unrecognized tree class: " + tree.getClass());
     }
+  }
+
+  public static String tokenName(String[] tokenNames, int tokenType) {
+    return tokenType == -1 ? "EOF" : tokenNames[tokenType];
   }
 
   private static boolean tokenIsInteresting(String tokenName) {

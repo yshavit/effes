@@ -7,7 +7,9 @@ import com.google.common.io.Resources;
 import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenSource;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -125,7 +127,31 @@ public final class EffesParserTest {
         w.append(actualTree);
       }
     }
-    assertEquals(actualTree, expectedContent);
+    try {
+      assertEquals(actualTree, expectedContent);
+    } catch (AssertionError e) {
+      if (Boolean.getBoolean("test.antlr.trace")) {
+        dumpTokens(fileNameNoExt + ".ef");
+      }
+      throw e;
+    }
+  }
+
+  private void dumpTokens(String fileName) {
+    try (InputStream efInputStream = new BufferedInputStream(url(fileName).openStream());
+         Reader efReader = new InputStreamReader(efInputStream, Charsets.UTF_8)) {
+      EffesLexer lexer = ParserUtils.createLexer(efReader);
+      String[] tokenNames = EffesParser.tokenNames;
+      int tokenType;
+      do {
+        Token token = lexer.nextToken();
+        tokenType = token.getType();
+        String tokenName = ParserUtils.tokenName(tokenNames, tokenType);
+        System.err.printf("%s: %s%n", token, tokenName);
+      } while (tokenType != Lexer.EOF);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private URL url(String fileName) {

@@ -1,0 +1,25 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+  methodDef
+    inlinableBlock
+      ReturnStat
+        CaseOfExpr
+          VarExpr
+            VAR_NAME: object0
+          caseExprs
+            caseExprPattern
+              caseMatcher
+                TYPE_NAME: One
+                casePatternArgs
+                  casePatternArg
+                    VAR_NAME: a
+              exprBlock
+                IntLiteral
+                  INT: 1
+            caseExprPattern
+              caseMatcher
+              exprBlock
+                IntLiteral
+                  INT: 0

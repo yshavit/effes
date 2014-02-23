@@ -1,0 +1,14 @@
+type List[A]:
+  head -> A
+  tails -> List[A]
+  size -> Int
+  isEmpty -> Boolean: return case size of
+    Zero: True
+    _: False
+
+data type True
+data type False
+type Boolean = True | False
+
+data type One(value: A)
+
