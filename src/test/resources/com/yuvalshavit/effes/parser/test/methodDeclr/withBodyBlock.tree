@@ -6,8 +6,10 @@ methodDeclr
     inlinableBlock
       AssignStat
         VAR_NAME: a
-        IntLiteral
-          INT: 2
+        exprLine
+          IntLiteral
+            INT: 2
       ReturnStat
-        VarExpr
-          VAR_NAME: a
+        exprLine
+          VarExpr
+            VAR_NAME: a

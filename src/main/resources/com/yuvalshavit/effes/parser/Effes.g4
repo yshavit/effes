@@ -117,9 +117,13 @@ block: INDENT stat+ DEDENT;
 
 stat: ifStatFragment elseIfStatFragment* elseStatFragment?                      # IfElseStat
     | CASE expr OF INDENT caseStatPattern+ DEDENT                               # CaseStat
-    | VAR_NAME type? EQ expr NL?                                                # AssignStat
-    | RETURN expr NL?                                                           # ReturnStat
+    | VAR_NAME type? EQ exprLine                                                # AssignStat
+    | RETURN exprLine                                                           # ReturnStat
     ;
+
+exprLine: expr NL
+        | multilineExpr
+        ;
 
 // A note on if-else: Unlike C/Java, an if-else's bodies are blocks, not
 // statements; a block isn't a statement. So we have to treat "else if" as a
@@ -131,7 +135,7 @@ elseStatFragment: ELSE block;
 // expressions
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
-    | expr AT type                                                   # ComponentCastExpr
+    | expr AT type                                                              # ComponentCastExpr
     | expr MULT_OPS expr                                                        # MultOrDivExpr
     | expr ADD_OPS expr                                                         # AddOrSubExpr
     | ADD_OPS expr                                                              # UnaryExpr
@@ -141,19 +145,21 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | DECIMAL                                                                   # DecimalLiteral
     | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN                                 # TupleExpr
     | IF expr THEN expr ELSE expr                                               # IfExpr
-    | CASE expr OF caseExprs                                                    # CaseOfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
     | expr methodName (expr (COLON expr (COMMA expr)*)?)?                       # MethodInvoke
     | expr LCOMPOSE expr                                                        # LeftCompose
     ;
 
+multilineExpr: CASE expr OF caseExprs                                           # CaseOfExpr
+             ;
+
 /**
  * The expr rule is rewritten in such a way that it takes an int arg and needs
  * a surrounding context. For test purposes, it's convenient to have a variant
  * that can be called "plain".
  */
-expr__ForTest__: expr;
+expr__ForTest__: expr | multilineExpr;
 
 type__ForTest__: type;
 
@@ -183,6 +189,7 @@ casePatternArg: VAR_NAME
 
 exprBlock: expr NL
          | expr WHERE INDENT stat+ DEDENT
+         | multilineExpr
          ;
 
 // tokens

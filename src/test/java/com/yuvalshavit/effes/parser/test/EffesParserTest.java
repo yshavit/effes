@@ -8,6 +8,7 @@ import com.yuvalshavit.effes.parser.EffesLexer;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenSource;
@@ -111,9 +112,17 @@ public final class EffesParserTest {
       }
 
       try {
-        RuleContext rule = ParserUtils.ruleByName(parser, ruleName);
+        ParserRuleContext rule = ParserUtils.ruleByName(parser, ruleName);
         StringBuilder sb = new StringBuilder();
         ParserUtils.prettyPrint(sb, rule, parser);
+        int stopIndex = rule.getStop().getStopIndex() + 1;
+        String efFileContent = readFile(fileNameNoExt + ".ef");
+        String remaining = stopIndex >= 0
+          ? efFileContent.substring(stopIndex)
+          : "";
+        if (!remaining.trim().isEmpty()) {
+          sb.append('\n').append("!!! unconsumed input: ").append(remaining);
+        }
         actualTree = sb.toString();
         literalsInvoker.invokeLiteralTokenMethods(rule);
       } catch (Exception e) {

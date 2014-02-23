@@ -16,9 +16,11 @@ typeDeclr
           inlinableBlock
             AssignStat
               VAR_NAME: myA
-              VarExpr
-                VAR_NAME: a
+              exprLine
+                VarExpr
+                  VAR_NAME: a
             AssignStat
               VAR_NAME: myB
-              VarExpr
-                VAR_NAME: b
+              exprLine
+                VarExpr
+                  VAR_NAME: b

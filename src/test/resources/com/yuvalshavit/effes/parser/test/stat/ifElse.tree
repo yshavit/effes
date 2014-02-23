@@ -5,11 +5,13 @@ IfElseStat
     block
       AssignStat
         VAR_NAME: a
-        IntLiteral
-          INT: 1
+        exprLine
+          IntLiteral
+            INT: 1
   elseStatFragment
     block
       AssignStat
         VAR_NAME: b
-        IntLiteral
-          INT: 2
+        exprLine
+          IntLiteral
+            INT: 2

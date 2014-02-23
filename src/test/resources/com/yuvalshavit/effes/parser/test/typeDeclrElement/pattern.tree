@@ -10,8 +10,9 @@ TypePatternDeclr
   methodDef
     inlinableBlock
       ReturnStat
-        TupleExpr
-          VarExpr
-            VAR_NAME: head
-          VarExpr
-            VAR_NAME: tail
+        exprLine
+          TupleExpr
+            VarExpr
+              VAR_NAME: head
+            VarExpr
+              VAR_NAME: tail

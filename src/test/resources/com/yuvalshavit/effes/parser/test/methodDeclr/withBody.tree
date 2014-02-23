@@ -5,5 +5,6 @@ methodDeclr
   methodDef
     inlinableBlock
       ReturnStat
-        IntLiteral
-          INT: 5
+        exprLine
+          IntLiteral
+            INT: 5

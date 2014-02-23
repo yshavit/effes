@@ -1,1 +1,1 @@
-!!! AntlrParseException: at line 1 column 10: missing INDENT at 'a' at "" (rule 'block')
+!!! AntlrParseException: at line 1 column 12: extraneous input '=' expecting {'\\', '@', '</', VAR_NAME, ADD_OPS, CMP_OPS, MULT_OPS, INDENT} at "cond0a" (rule 'expr')

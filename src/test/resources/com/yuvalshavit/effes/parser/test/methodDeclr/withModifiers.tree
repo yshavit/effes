@@ -7,5 +7,6 @@ methodDeclr
   methodDef
     inlinableBlock
       ReturnStat
-        IntLiteral
-          INT: 7
+        exprLine
+          IntLiteral
+            INT: 7

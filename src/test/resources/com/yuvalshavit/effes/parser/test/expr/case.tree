@@ -33,9 +33,11 @@ CaseOfExpr
           VAR_NAME: averageColor
         AssignStat
           VAR_NAME: defaultcolor
-          CtorInvoke
-            TYPE_NAME: Gray
+          exprLine
+            CtorInvoke
+              TYPE_NAME: Gray
         AssignStat
           VAR_NAME: averageColor
-          VarExpr
-            VAR_NAME: defaultColor
+          exprLine
+            VarExpr
+              VAR_NAME: defaultColor

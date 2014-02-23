@@ -45,21 +45,22 @@ compilationUnit
               methodDef
                 inlinableBlock
                   ReturnStat
-                    CaseOfExpr
-                      VarExpr
-                        VAR_NAME: size
-                      caseExprs
-                        caseExprPattern
-                          caseMatcher
-                            TYPE_NAME: Zero
-                          exprBlock
-                            CtorInvoke
-                              TYPE_NAME: True
-                        caseExprPattern
-                          caseMatcher
-                          exprBlock
-                            CtorInvoke
-                              TYPE_NAME: False
+                    exprLine
+                      CaseOfExpr
+                        VarExpr
+                          VAR_NAME: size
+                        caseExprs
+                          caseExprPattern
+                            caseMatcher
+                              TYPE_NAME: Zero
+                            exprBlock
+                              CtorInvoke
+                                TYPE_NAME: True
+                          caseExprPattern
+                            caseMatcher
+                            exprBlock
+                              CtorInvoke
+                                TYPE_NAME: False
   compilationBodyElement
     dataTypeDeclr
       TYPE_NAME: True

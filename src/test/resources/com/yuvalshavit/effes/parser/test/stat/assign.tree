@@ -1,8 +1,9 @@
 AssignStat
   VAR_NAME: foo
-  AddOrSubExpr
-    IntLiteral
-      INT: 1
-    ADD_OPS: +
-    IntLiteral
-      INT: 2
+  exprLine
+    AddOrSubExpr
+      IntLiteral
+        INT: 1
+      ADD_OPS: +
+      IntLiteral
+        INT: 2

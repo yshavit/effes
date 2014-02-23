@@ -5,5 +5,6 @@ IfElseStat
     block
       AssignStat
         VAR_NAME: a
-        IntLiteral
-          INT: 1
+        exprLine
+          IntLiteral
+            INT: 1

@@ -14,8 +14,9 @@ CaseStat
     block
       AssignStat
         VAR_NAME: a
-        IntLiteral
-          INT: 123
+        exprLine
+          IntLiteral
+            INT: 123
   caseStatPattern
     caseMatcher
       casePatternArgs
@@ -25,20 +26,23 @@ CaseStat
     block
       AssignStat
         VAR_NAME: b
-        IntLiteral
-          INT: 456
+        exprLine
+          IntLiteral
+            INT: 456
   caseStatPattern
     caseMatcher
       TYPE_NAME: Nothing
     block
       AssignStat
         VAR_NAME: c
-        IntLiteral
-          INT: 789
+        exprLine
+          IntLiteral
+            INT: 789
   caseStatPattern
     caseMatcher
     block
       AssignStat
         VAR_NAME: d
-        IntLiteral
-          INT: 120
+        exprLine
+          IntLiteral
+            INT: 120
