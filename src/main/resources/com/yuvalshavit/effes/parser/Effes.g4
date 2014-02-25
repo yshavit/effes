@@ -31,6 +31,7 @@ compilationUnit: NL
 
 compilationBodyElement: typeDeclr
                       | dataTypeDeclr
+                      | stat
                       ;
 
 // type declr
