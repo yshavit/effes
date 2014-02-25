@@ -1,0 +1,7 @@
+#!/bin/bash
+for DIR in $(ls target/effesParserTest); do
+  TARGET="src/test/resources/com/yuvalshavit/effes/parser/test/${DIR}/"
+  mkdir "$TARGET" 2> /dev/null
+  cp target/effesParserTest/${DIR}/*.tree "$TARGET"
+done
+
