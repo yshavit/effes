@@ -34,6 +34,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -279,19 +280,21 @@ public final class ParserUtils {
   }
 
   public static class TunableDiagnosticErrorListener extends DiagnosticErrorListener {
+
     @Override
     public void reportAttemptingFullContext(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex,
-                                            @NotNull ATNConfigSet configs) {
+                                            @Nullable BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
+
       if (Boolean.getBoolean("antlr.report.ALL")) {
-        super.reportAttemptingFullContext(recognizer, dfa, startIndex, stopIndex, configs);
+        super.reportAttemptingFullContext(recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs);
       }
     }
 
     @Override
     public void reportContextSensitivity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex,
-                                         @NotNull ATNConfigSet configs) {
+                                         int prediction, @NotNull ATNConfigSet configs) {
       if (Boolean.getBoolean("antlr.report.contextSensitivity")) {
-        super.reportContextSensitivity(recognizer, dfa, startIndex, stopIndex, configs);
+        super.reportContextSensitivity(recognizer, dfa, startIndex, stopIndex, prediction, configs);
       }
     }
   }
