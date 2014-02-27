@@ -1,6 +1,6 @@
 methodDeclr
   methodOrOverrideName
-    VAR_NAME: foo
+    ADD_OPS: -
   methodArgs
     NormalMethodArg
-      VAR_NAME: arg0
+      VAR_NAME: bar

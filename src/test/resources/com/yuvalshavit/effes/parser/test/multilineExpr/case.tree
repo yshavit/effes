@@ -14,8 +14,7 @@ CaseOfExpr
         MethodInvoke
           target= VarExpr
             VAR_NAME: h
-          methodName
-            VAR_NAME: color
+          VAR_NAME: color
           methodInvokeArgs
     caseExprPattern
       caseMatcher

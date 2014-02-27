@@ -9,7 +9,7 @@ compilationUnit
         typeDeclrBody
           TypeMethodDeclr
             methodDeclr
-              methodName
+              methodOrOverrideName
                 VAR_NAME: head
               methodArgs
               methodReturnDeclr
@@ -17,7 +17,7 @@ compilationUnit
                   GENERIC_NAME: A
           TypeMethodDeclr
             methodDeclr
-              methodName
+              methodOrOverrideName
                 VAR_NAME: tails
               methodArgs
               methodReturnDeclr
@@ -28,7 +28,7 @@ compilationUnit
                       GENERIC_NAME: A
           TypeMethodDeclr
             methodDeclr
-              methodName
+              methodOrOverrideName
                 VAR_NAME: size
               methodArgs
               methodReturnDeclr
@@ -36,7 +36,7 @@ compilationUnit
                   TYPE_NAME: Int
           TypeMethodDeclr
             methodDeclr
-              methodName
+              methodOrOverrideName
                 VAR_NAME: isEmpty
               methodArgs
               methodReturnDeclr

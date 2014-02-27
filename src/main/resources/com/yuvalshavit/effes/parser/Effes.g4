@@ -52,7 +52,7 @@ typeDeclrElement: methodDeclr                                                   
 ctorDeclrArgs: OPEN_PAREN methodArg (COMMA methodArg)* CLOSE_PAREN;
 
 methodDeclr: funcModifiers?
-             methodName
+             methodOrOverrideName
              methodArgs
              (methodReturnDeclr)?
              (NL | COLON methodDef)
@@ -60,11 +60,11 @@ methodDeclr: funcModifiers?
 
 funcModifiers: OPEN_BRACKET VAR_NAME+ CLOSE_BRACKET;
 
-methodName: VAR_NAME
-          | CMP_OPS
-          | MULT_OPS
-          | ADD_OPS
-          ;
+methodOrOverrideName: VAR_NAME
+                    | CMP_OPS
+                    | MULT_OPS
+                    | ADD_OPS
+                    ;
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
@@ -148,8 +148,9 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | IF cond=expr THEN expr ELSE expr                                          # IfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
-    | THIS methodName methodInvokeArgs                                          # ThisMethodInvoke
-    | target=expr methodName methodInvokeArgs                                   # MethodInvoke
+    | THIS VAR_NAME methodInvokeArgs                                            # ThisMethodInvoke
+    | target=expr VAR_NAME methodInvokeArgs                                     # MethodInvoke
+    | expr CMP_OPS expr                                                         # CompareExpr
     | expr LCOMPOSE expr                                                        # LeftCompose
     ;
 

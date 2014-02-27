@@ -3,8 +3,7 @@ AddOrSubExpr
     MethodInvoke
       target= VarExpr
         VAR_NAME: mylist
-      methodName
-        VAR_NAME: head
+      VAR_NAME: head
       methodInvokeArgs
   ADD_OPS: +
   IntLiteral

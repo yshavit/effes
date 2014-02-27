@@ -1,8 +1,7 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: myWhatever
-  methodName
-    VAR_NAME: someMethod
+  VAR_NAME: someMethod
   methodInvokeArgs
     VarExpr
       VAR_NAME: argA

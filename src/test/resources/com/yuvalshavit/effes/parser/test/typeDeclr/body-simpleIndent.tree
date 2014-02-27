@@ -4,7 +4,7 @@ typeDeclr
     typeDeclrBody
       TypeMethodDeclr
         methodDeclr
-          methodName
+          methodOrOverrideName
             VAR_NAME: f
           methodArgs
           methodReturnDeclr
