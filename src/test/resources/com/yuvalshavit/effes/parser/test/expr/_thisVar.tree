@@ -1,4 +1,3 @@
 ThisMethodInvoke
-  methodName
-    VAR_NAME: myVar
+  VAR_NAME: myVar
   methodInvokeArgs

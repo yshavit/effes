@@ -4,11 +4,9 @@ ParenExpr
       MethodInvoke
         target= VarExpr
           VAR_NAME: mylist
-        methodName
-          VAR_NAME: pop
+        VAR_NAME: pop
         methodInvokeArgs
-    methodName
-      VAR_NAME: apply
+    VAR_NAME: apply
     methodInvokeArgs
       IntLiteral
         INT: 5

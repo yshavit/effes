@@ -1,5 +1,5 @@
 methodDeclr
-  methodName
+  methodOrOverrideName
     VAR_NAME: foo
   methodArgs
     MethodTupleArg
