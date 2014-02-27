@@ -1,7 +1,8 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: mylist
-  VAR_NAME: sublist
+  methodName
+    VAR_NAME: sublist
   methodInvokeArgs
     TupleExpr
       IntLiteral

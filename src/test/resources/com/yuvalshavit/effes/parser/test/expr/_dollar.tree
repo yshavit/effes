@@ -1,7 +1,8 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: mylist
-  VAR_NAME: push
+  methodName
+    VAR_NAME: push
   methodInvokeArgs
     DollarExpr
       AddOrSubExpr

@@ -1,7 +1,7 @@
 methodDeclr
   funcModifiers
     VAR_NAME: overlay
-  methodOrOverrideName
+  methodName
     VAR_NAME: foo
   methodArgs
   methodDef

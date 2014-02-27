@@ -1,4 +1,4 @@
 methodDeclr
-  methodOrOverrideName
+  methodName
     VAR_NAME: foo
   methodArgs

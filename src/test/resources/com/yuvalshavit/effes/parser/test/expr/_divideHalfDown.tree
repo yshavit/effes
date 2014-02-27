@@ -1,0 +1,10 @@
+MethodInvoke
+  target= IntLiteral
+    INT: 1
+  methodName
+    MULT_OPS: /
+  methodInvokeArgs
+    IntLiteral
+      INT: 2
+    CtorInvoke
+      TYPE_NAME: HalfDown
