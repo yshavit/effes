@@ -1,10 +1,12 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: one
-  VAR_NAME: two
+  methodName
+    VAR_NAME: two
   methodInvokeArgs
     MethodInvoke
       target= VarExpr
         VAR_NAME: three
-      VAR_NAME: four
+      methodName
+        VAR_NAME: four
       methodInvokeArgs

@@ -1,7 +1,8 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: mynum
-  VAR_NAME: dividedBy
+  methodName
+    VAR_NAME: dividedBy
   methodInvokeArgs
     VarExpr
       VAR_NAME: divisor

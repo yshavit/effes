@@ -1,5 +1,6 @@
 ThisMethodInvoke
-  VAR_NAME: myMethod
+  methodName
+    VAR_NAME: myMethod
   methodInvokeArgs
     VarExpr
       VAR_NAME: fooArg

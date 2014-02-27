@@ -1,0 +1,14 @@
+CompareExpr
+  AddOrSubExpr
+    IntLiteral
+      INT: 1
+    ADD_OPS: +
+    IntLiteral
+      INT: 2
+  CMP_OPS: !=
+  AddOrSubExpr
+    IntLiteral
+      INT: 3
+    ADD_OPS: +
+    IntLiteral
+      INT: 4

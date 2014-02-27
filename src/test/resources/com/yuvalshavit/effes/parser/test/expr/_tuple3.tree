@@ -10,5 +10,6 @@ TupleExpr
   MethodInvoke
     target= VarExpr
       VAR_NAME: foo
-    VAR_NAME: head
+    methodName
+      VAR_NAME: head
     methodInvokeArgs

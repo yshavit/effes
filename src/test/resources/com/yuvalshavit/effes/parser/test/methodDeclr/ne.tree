@@ -1,5 +1,5 @@
 methodDeclr
-  methodOrOverrideName
+  methodName
     CMP_OPS: !=
   methodArgs
     NormalMethodArg

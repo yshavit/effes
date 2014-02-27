@@ -1,5 +1,6 @@
 MethodInvoke
   target= VarExpr
     VAR_NAME: mylist
-  VAR_NAME: head
+  methodName
+    VAR_NAME: head
   methodInvokeArgs

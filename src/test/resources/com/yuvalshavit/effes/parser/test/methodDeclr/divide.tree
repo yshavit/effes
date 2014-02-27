@@ -1,5 +1,5 @@
 methodDeclr
-  methodOrOverrideName
+  methodName
     MULT_OPS: /
   methodArgs
     NormalMethodArg
