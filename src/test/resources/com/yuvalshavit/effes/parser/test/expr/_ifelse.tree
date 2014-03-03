@@ -1,12 +1,12 @@
 IfExpr
   cond= VarExpr
     VAR_NAME: someCondition
-  AddOrSubExpr
+  trueExpr= AddOrSubExpr
     IntLiteral
       INT: 1
     ADD_OPS: +
     IntLiteral
       INT: 2
-  DollarExpr
+  falseExpr= DollarExpr
     VarExpr
       VAR_NAME: elseCond
