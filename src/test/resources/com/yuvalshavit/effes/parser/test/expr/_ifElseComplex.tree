@@ -5,11 +5,11 @@ IfExpr
     methodName
       VAR_NAME: notEmpty
     methodInvokeArgs
-  MethodInvoke
+  trueExpr= MethodInvoke
     target= VarExpr
       VAR_NAME: mylist
     methodName
       VAR_NAME: head
     methodInvokeArgs
-  IntLiteral
+  falseExpr= IntLiteral
     INT: 0

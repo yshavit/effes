@@ -9,7 +9,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <antlr4.visitor>false</antlr4.visitor>
-    <antlr4.listener>false</antlr4.listener>
+    <antlr4.listener>true</antlr4.listener>
   </properties>
 
   <dependencies>
