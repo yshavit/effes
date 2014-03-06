@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.interpreter.BuiltIns;
-import com.yuvalshavit.effes.interpreter.EfMethod;
 import com.yuvalshavit.effes.interpreter.EfMethodMeta;
 import com.yuvalshavit.effes.interpreter.EfType;
 import com.yuvalshavit.effes.interpreter.Scopes;
@@ -29,6 +28,13 @@ public class ExpressionCompiler {
     private DispatchImpl(EfType declaringContext, Scopes<EfType> scopes) {
       this.declaringContext = declaringContext;
       this.scopes = scopes;
+    }
+
+    @Override
+    public Expression createExpr(EffesParser.ExprContext ctx) {
+      // TODO remove this useless override; it's a workaround for an IDEA bug:
+      // http://youtrack.jetbrains.com/issue/IDEA-121737
+      return Dispatch.super.createExpr(ctx); // TODO
     }
 
     @Override
@@ -57,17 +63,13 @@ public class ExpressionCompiler {
       EfMethodMeta method = target.getResultType().getMethods().get(methodName);
       return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
     }
+
     public Expression methodInvokeExpr(Token at, Expression target, String methodName, List<Expression> args) {
       EfMethodMeta method = target.getResultType().getMethods().get(methodName);
       return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
     }
 
-    public Expression methodInvokeExpr(Token at, Expression target, EfMethodMeta method, Expression... args) {
-      return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
-    }
-
     private Expression methodInvokeExpr(Token at, Expression target, EfMethodMeta method, List<Expression> args) {
-      EfType resultType = method.getReturnType();
       return new Expression.MethodExpression(method, target, ImmutableList.copyOf(args));
     }
 
