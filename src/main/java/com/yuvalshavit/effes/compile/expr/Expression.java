@@ -47,7 +47,7 @@ public abstract class Expression {
     private final double value;
 
     public FloatLiteralExpression(String value) {
-      super(BuiltIns.typeFloat);
+      super(BuiltIns.floatType);
       this.value = Double.parseDouble(value); // TODO what if this throws? e.g. double is out of range
     }
 
@@ -135,10 +135,10 @@ public abstract class Expression {
       EfVariable exprValue = expr.evaluate(state);
       for (EfType needle : needles) {
         if (exprValue.getType().instanceOf(needle)) {
-          return BuiltIns.valueTrue;
+          return BuiltIns.trueValue();
         }
       }
-      return BuiltIns.valueFalse;
+      return BuiltIns.valueFalse();
     }
   }
 
@@ -157,7 +157,7 @@ public abstract class Expression {
     @Override
     protected EfVariable doEvaluate(State state) {
       EfVariable condVar = cond.evaluate(state);
-      Expression which = condVar.getType().instanceOf(BuiltIns.typeTrue)
+      Expression which = condVar.getType().instanceOf(BuiltIns.trueType)
         ? ifTrue
         : ifFalse;
       return which.evaluate(state);
