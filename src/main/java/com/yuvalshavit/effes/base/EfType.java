@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.interpreter;
+package com.yuvalshavit.effes.base;
 
 import com.google.common.collect.ImmutableMap;
 
