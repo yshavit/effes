@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.interpreter.BuiltIns;
+import com.yuvalshavit.effes.interpreter.EfMethod;
+import com.yuvalshavit.effes.interpreter.EfMethodMeta;
 import com.yuvalshavit.effes.interpreter.EfType;
 import com.yuvalshavit.effes.interpreter.Scopes;
 import com.yuvalshavit.effes.parser.EffesParser;
@@ -35,8 +37,8 @@ public class ExpressionCompiler {
       String op = ctx.ADD_OPS().getText();
       Token opToken = ctx.ADD_OPS().getSymbol();
       Expression expr = createExpr(ctx.expr());
-      Expression zero = createMethod(opToken, expr, "zero");
-      return createMethod(opToken, zero, op, expr);
+      Expression zero = methodInvokeExpr(opToken, expr, "zero");
+      return methodInvokeExpr(opToken, zero, op, expr);
     }
 
     @Override
@@ -46,25 +48,37 @@ public class ExpressionCompiler {
         .stream()
         .map(this::createExpr)
         .collect(Collectors.toList());
-      return createMethod(ctx.methodName().getStart(), createExpr(ctx.target), ctx.methodName().getText(), args);
+      Expression target = createExpr(ctx.target);
+      String methodName = ctx.methodName().getText();
+      return methodInvokeExpr(ctx.methodName().getStart(), target, methodName, args);
     }
 
-    public Expression createMethod(Token at, Expression target, String name, Expression... args) {
-      return createMethod(at, target, name, ImmutableList.copyOf(args));
+    public Expression methodInvokeExpr(Token at, Expression target, String methodName, Expression... args) {
+      EfMethodMeta method = target.getResultType().getMethods().get(methodName);
+      return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
+    }
+    public Expression methodInvokeExpr(Token at, Expression target, String methodName, List<Expression> args) {
+      EfMethodMeta method = target.getResultType().getMethods().get(methodName);
+      return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
     }
 
-    private Expression createMethod(Token at, Expression target, String name, List<Expression> args) {
-      throw new UnsupportedOperationException(); // TODO
+    public Expression methodInvokeExpr(Token at, Expression target, EfMethodMeta method, Expression... args) {
+      return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
+    }
+
+    private Expression methodInvokeExpr(Token at, Expression target, EfMethodMeta method, List<Expression> args) {
+      EfType resultType = method.getReturnType();
+      return new Expression.MethodExpression(method, target, ImmutableList.copyOf(args));
     }
 
     @Override
     public Expression intLiteral(EffesParser.IntLiteralContext ctx) {
-      return new Expression.DecimalLiteralExpression(ctx.INT().getText());
+      return new Expression.FloatLiteralExpression(ctx.INT().getText());
     }
 
     @Override
     public Expression decimalLiteral(EffesParser.DecimalLiteralContext ctx) {
-      return new Expression.DecimalLiteralExpression(ctx.DECIMAL().getText());
+      return new Expression.FloatLiteralExpression(ctx.DECIMAL().getText());
     }
 
     @Override
@@ -80,7 +94,13 @@ public class ExpressionCompiler {
 
     @Override
     public Expression methodWithThis(EffesParser.ThisMethodInvokeContext ctx) {
-      throw new UnsupportedOperationException(); // TODO
+      EfMethodMeta method = declaringContext.getMethods().get(ctx.methodName().getText());
+      if (method == null) {
+        throw new CompileException("no such method on type " + declaringContext, ctx.methodName().getStart());
+      }
+      List<Expression> args = ctx.methodInvokeArgs().expr().stream().map(this::createExpr).collect(Collectors.toList());
+      Expression declaringExpr = new Expression.ThisExpr(declaringContext);
+      return methodInvokeExpr(ctx.getStart(), declaringExpr, method, args);
     }
 
     @Override
@@ -102,14 +122,14 @@ public class ExpressionCompiler {
     public Expression addOrSub(EffesParser.AddOrSubExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      return createMethod(ctx.getStart(), left, ctx.ADD_OPS().getText(), right);
+      return methodInvokeExpr(ctx.getStart(), left, ctx.ADD_OPS().getText(), right);
     }
 
     @Override
     public Expression multOrDiv(EffesParser.MultOrDivExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      return createMethod(ctx.getStart(), left, ctx.MULT_OPS().getText(), right);
+      return methodInvokeExpr(ctx.getStart(), left, ctx.MULT_OPS().getText(), right);
     }
 
     @Override
@@ -121,7 +141,7 @@ public class ExpressionCompiler {
     public Expression compare(EffesParser.CompareExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      Expression cmp = createMethod(ctx.getStart(), left, "cmp", right);
+      Expression cmp = methodInvokeExpr(ctx.getStart(), left, "cmp", right);
       if (cmp.getResultType() != BuiltIns.comparison) {
         throw new CompileException("invalid cmp method for type " + left.getResultType(), ctx.CMP_OPS().getSymbol());
       }

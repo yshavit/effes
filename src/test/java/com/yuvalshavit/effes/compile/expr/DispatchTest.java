@@ -2,7 +2,7 @@ package com.yuvalshavit.effes.compile.expr;
 
 import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.parser.EffesParser;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.Set;

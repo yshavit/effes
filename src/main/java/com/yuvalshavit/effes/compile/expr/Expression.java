@@ -3,13 +3,13 @@ package com.yuvalshavit.effes.compile.expr;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.interpreter.BuiltIns;
 import com.yuvalshavit.effes.interpreter.EfMethod;
+import com.yuvalshavit.effes.interpreter.EfMethodMeta;
 import com.yuvalshavit.effes.interpreter.EfType;
 import com.yuvalshavit.effes.interpreter.EfVariable;
 import com.yuvalshavit.effes.interpreter.State;
 import com.yuvalshavit.effes.interpreter.TupleType;
 import com.yuvalshavit.effes.interpreter.TupleVar;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,27 +44,28 @@ public abstract class Expression {
       throw new UnsupportedOperationException(); // TODO
     }
   }
-  public static class DecimalLiteralExpression extends Expression {
+  public static class FloatLiteralExpression extends Expression {
+    private final double value;
 
-    public DecimalLiteralExpression(String value) {
-      super(null);
-      throw new UnsupportedOperationException(); // TODO
+    public FloatLiteralExpression(String value) {
+      super(BuiltIns.typeFloat);
+      this.value = Double.parseDouble(value); // TODO what if this throws? e.g. double is out of range
     }
 
     @Override
     public EfVariable doEvaluate(State state) {
-      throw new UnsupportedOperationException(); // TODO
+      return new EfVariable(getResultType(), value);
     }
   }
 
   static class MethodExpression extends Expression {
-    private final String methodName;
+    private final EfMethodMeta method;
     private final Expression target;
     private final ImmutableList<Expression> args;
 
-    MethodExpression(EfType resultType, String methodName, Expression target, ImmutableList<Expression> args) {
-      super(resultType);
-      this.methodName = methodName;
+    MethodExpression(EfMethodMeta method, Expression target, ImmutableList<Expression> args) {
+      super(method.getReturnType());
+      this.method = method;
       this.target = target;
       this.args = args;
     }
@@ -73,8 +74,7 @@ public abstract class Expression {
     public EfVariable doEvaluate(State state) {
       EfVariable targetVar = target.doEvaluate(state);
       List<EfVariable> argVars = args.stream().map(e -> e.doEvaluate(state)).collect(Collectors.toList());
-      EfMethod method = null; // TODO
-      return method.invoke(targetVar, argVars);
+      return method.getMethod().invoke(targetVar, argVars);
     }
   }
 
