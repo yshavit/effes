@@ -17,7 +17,9 @@ public class EfType {
   }
 
   public EfType(Map<String, EfMethodMeta> methods) {
-    this.methods = ImmutableMap.copyOf(methods);
+    ImmutableMap.Builder<String, EfMethodMeta> builder = ImmutableMap.builder();
+    methods.forEach((k, m) -> builder.put(k, m.resolveOwningType(this)));
+    this.methods = builder.build();
   }
 
   public Map<String, EfMethodMeta> getMethods() {
