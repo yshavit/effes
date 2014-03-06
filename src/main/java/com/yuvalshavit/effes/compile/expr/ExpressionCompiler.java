@@ -3,10 +3,10 @@ package com.yuvalshavit.effes.compile.expr;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.yuvalshavit.effes.compile.CompileException;
-import com.yuvalshavit.effes.interpreter.BuiltIns;
-import com.yuvalshavit.effes.interpreter.EfMethodMeta;
-import com.yuvalshavit.effes.interpreter.EfType;
-import com.yuvalshavit.effes.interpreter.Scopes;
+import com.yuvalshavit.effes.base.BuiltIns;
+import com.yuvalshavit.effes.base.EfMethodMeta;
+import com.yuvalshavit.effes.base.EfType;
+import com.yuvalshavit.effes.base.Scopes;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 

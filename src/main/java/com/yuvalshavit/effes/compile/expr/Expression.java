@@ -1,13 +1,13 @@
 package com.yuvalshavit.effes.compile.expr;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.interpreter.BuiltIns;
-import com.yuvalshavit.effes.interpreter.EfMethodMeta;
-import com.yuvalshavit.effes.interpreter.EfType;
-import com.yuvalshavit.effes.interpreter.EfVariable;
-import com.yuvalshavit.effes.interpreter.State;
-import com.yuvalshavit.effes.interpreter.TupleType;
-import com.yuvalshavit.effes.interpreter.TupleVar;
+import com.yuvalshavit.effes.base.BuiltIns;
+import com.yuvalshavit.effes.base.EfMethodMeta;
+import com.yuvalshavit.effes.base.EfType;
+import com.yuvalshavit.effes.base.EfVariable;
+import com.yuvalshavit.effes.base.State;
+import com.yuvalshavit.effes.base.TupleType;
+import com.yuvalshavit.effes.base.TupleVar;
 
 import java.util.List;
 import java.util.stream.Collectors;
