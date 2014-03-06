@@ -9,19 +9,24 @@ import java.util.Map;
 import java.util.function.DoubleBinaryOperator;
 
 public class BuiltIns {
-  public static final EfType lt = new EfType();
-  public static final EfType gt = new EfType();
-  public static final EfType eq = new EfType();
-  public static final EfType comparison = EfType.alias(lt, gt, eq);
+  public static final EfType ltType = new EfType();
+  public static final EfType gtType = new EfType();
+  public static final EfType eqType = new EfType();
+  public static final EfType comparisonType = EfType.alias(ltType, gtType, eqType);
 
-  public static final EfType typeTrue = new EfType();
-  public static final EfType typeFalse = new EfType();
-  public static final EfType booleanType = EfType.alias(typeTrue, typeFalse);
+  public static final EfType trueType = new EfType();
+  public static final EfType falseType = new EfType();
+  public static final EfType booleanType = EfType.alias(trueType, falseType);
 
-  public static final EfVariable valueTrue = new EfVariable(typeTrue, Collections.emptyList());
-  public static final EfVariable valueFalse = new EfVariable(typeFalse, Collections.emptyList());
+  public static EfVariable trueValue() {
+    return new EfVariable(trueType, Collections.emptyList());
+  }
 
-  public static final EfType typeFloat = builder()
+  public static EfVariable valueFalse() {
+    return new EfVariable(falseType, Collections.emptyList());
+  }
+
+  public static final EfType floatType = typeBuilder()
     .method("+", doubleArith((l, r) -> l + r), EfMethodMeta.owningType, EfMethodMeta.owningType)
     .method("-", doubleArith((l, r) -> l - r), EfMethodMeta.owningType, EfMethodMeta.owningType)
     .method("*", doubleArith((l, r) -> l * r), EfMethodMeta.owningType, EfMethodMeta.owningType)
@@ -36,7 +41,7 @@ public class BuiltIns {
     };
   }
 
-  public static Builder builder() {
+  public static Builder typeBuilder() {
     return new Builder();
   }
 

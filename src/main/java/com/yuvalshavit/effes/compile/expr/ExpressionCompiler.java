@@ -144,28 +144,28 @@ public class ExpressionCompiler {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
       Expression cmp = methodInvokeExpr(ctx.getStart(), left, "cmp", right);
-      if (cmp.getResultType() != BuiltIns.comparison) {
+      if (cmp.getResultType() != BuiltIns.comparisonType) {
         throw new CompileException("invalid cmp method for type " + left.getResultType(), ctx.CMP_OPS().getSymbol());
       }
       final List<? extends EfType> lookingFor;
       switch (ctx.CMP_OPS().getText()) {
       case "<":
-        lookingFor = ImmutableList.of(BuiltIns.lt);
+        lookingFor = ImmutableList.of(BuiltIns.ltType);
         break;
       case ">":
-        lookingFor = ImmutableList.of(BuiltIns.gt);
+        lookingFor = ImmutableList.of(BuiltIns.gtType);
         break;
       case "<=":
-        lookingFor = ImmutableList.of(BuiltIns.lt, BuiltIns.eq);
+        lookingFor = ImmutableList.of(BuiltIns.ltType, BuiltIns.eqType);
         break;
       case ">=":
-        lookingFor = ImmutableList.of(BuiltIns.gt, BuiltIns.eq);
+        lookingFor = ImmutableList.of(BuiltIns.gtType, BuiltIns.eqType);
         break;
       case "==":
-        lookingFor = ImmutableList.of(BuiltIns.eq);
+        lookingFor = ImmutableList.of(BuiltIns.eqType);
         break;
       case "!=":
-        lookingFor = ImmutableList.of(BuiltIns.lt, BuiltIns.gt);
+        lookingFor = ImmutableList.of(BuiltIns.ltType, BuiltIns.gtType);
         break;
       default:
         throw new AssertionError("unrecognized comparison op: " + ctx.CMP_OPS().getText());
