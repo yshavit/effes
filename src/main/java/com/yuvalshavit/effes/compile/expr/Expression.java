@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.compile.expr;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.interpreter.BuiltIns;
-import com.yuvalshavit.effes.interpreter.EfMethod;
 import com.yuvalshavit.effes.interpreter.EfMethodMeta;
 import com.yuvalshavit.effes.interpreter.EfType;
 import com.yuvalshavit.effes.interpreter.EfVariable;

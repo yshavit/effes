@@ -21,13 +21,11 @@ public class BuiltIns {
   public static final EfVariable valueTrue = new EfVariable(typeTrue, Collections.emptyList());
   public static final EfVariable valueFalse = new EfVariable(typeFalse, Collections.emptyList());
 
-  private static final EfType selfProxy = null; // TODO need a better way of doing this!
-
   public static final EfType typeFloat = builder()
-    .method("+", doubleArith((l, r) -> l + r), selfProxy, selfProxy)
-    .method("-", doubleArith((l, r) -> l - r), selfProxy, selfProxy)
-    .method("*", doubleArith((l, r) -> l * r), selfProxy, selfProxy)
-    .method("/", doubleArith((l, r) -> l / r), selfProxy, selfProxy)
+    .method("+", doubleArith((l, r) -> l + r), EfMethodMeta.owningType, EfMethodMeta.owningType)
+    .method("-", doubleArith((l, r) -> l - r), EfMethodMeta.owningType, EfMethodMeta.owningType)
+    .method("*", doubleArith((l, r) -> l * r), EfMethodMeta.owningType, EfMethodMeta.owningType)
+    .method("/", doubleArith((l, r) -> l / r), EfMethodMeta.owningType, EfMethodMeta.owningType)
     .build();
 
   private static EfMethod doubleArith(DoubleBinaryOperator op) {
