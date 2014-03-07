@@ -31,6 +31,7 @@ public abstract class Type {
       if (other instanceof SimpleType) {
         return registery.isSubtype((SimpleType)other, this);
       }
+      // TODO disjunctive/conjunctive types
       return false;
     }
 
@@ -49,12 +50,25 @@ public abstract class Type {
 
     @Override
     public EfMethodMeta getMethod(String method) {
-      throw new UnsupportedOperationException(); // TODO
+      return null;
     }
 
     @Override
     public boolean isSubtypeOf(Type other) {
-      throw new UnsupportedOperationException(); // TODO
+      if (other instanceof TupleType) {
+        // check that this[i].isSubtypeOf(other[i]) for i <= 0 < len
+        List<Type> otherTypes = ((TupleType) other).types;
+        int nTypes = types.size();
+        if (otherTypes.size() == nTypes) {
+          for (int i = 0; i < nTypes; ++i) {
+            if (!types.get(i).isSubtypeOf(otherTypes.get(i))) {
+              return false;
+            }
+          }
+          return true;
+        }
+      }
+      return false;
     }
 
     @Override
