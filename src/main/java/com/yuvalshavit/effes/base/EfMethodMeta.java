@@ -1,39 +1,30 @@
 package com.yuvalshavit.effes.base;
 
-import com.google.common.collect.ImmutableList;
-
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public final class EfMethodMeta {
-  static final EfType owningType = new EfType();
 
   private final EfMethod method;
-  private final EfType returnType;
-  private final List<EfType> args;
+  private final Type returnType;
+  private final List<Type> args;
 
-  public EfMethodMeta(EfMethod method, EfType returnType, List<EfType> args) {
+  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> args) {
     this.method = method;
     this.returnType = returnType;
     this.args = args;
   }
-  
-  public EfMethodMeta resolveOwningType(EfType type) {
-    Function<EfType, EfType> resolver = t -> (t==owningType ? type : t);
-    List<EfType> resolvedArgs = ImmutableList.copyOf(args.stream().map(resolver).collect(Collectors.toList()));
-    return new EfMethodMeta(method, resolver.apply(returnType), resolvedArgs);
-  }
 
+  @Nullable
   public EfMethod getMethod() {
     return method;
   }
 
-  public EfType getReturnType() {
+  public Type getReturnType() {
     return returnType;
   }
 
-  public List<EfType> getArgs() {
+  public List<Type> getArgs() {
     return args;
   }
 }
