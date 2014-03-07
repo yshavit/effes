@@ -3,29 +3,29 @@ package com.yuvalshavit.effes.compile.expr;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.base.BuiltIns;
 import com.yuvalshavit.effes.base.EfMethodMeta;
-import com.yuvalshavit.effes.base.EfType;
 import com.yuvalshavit.effes.base.EfVariable;
 import com.yuvalshavit.effes.base.State;
-import com.yuvalshavit.effes.base.TupleType;
-import com.yuvalshavit.effes.base.TupleVar;
+import com.yuvalshavit.effes.base.Type;
+import com.yuvalshavit.effes.base.TypeRegistery;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class Expression {
-  private final EfType resultType;
+  private final Type resultType;
 
-  protected Expression(EfType resultType) {
+  protected Expression(Type resultType) {
     this.resultType = resultType;
   }
 
-  public EfType getResultType() {
+  public Type getResultType() {
     return resultType;
   }
 
   public final EfVariable evaluate(State state) {
     EfVariable var = doEvaluate(state);
-    assert var.getType().instanceOf(resultType) : String.format("%s not a %s", var, resultType);
+    TypeRegistery reg = state.typeRegistry();
+    assert var.getType().isSubtypeOf(resultType) : String.format("%s is not a %s", var.getType(), resultType);
     return var;
   }
 
@@ -73,6 +73,7 @@ public abstract class Expression {
     public EfVariable doEvaluate(State state) {
       EfVariable targetVar = target.doEvaluate(state);
       List<EfVariable> argVars = args.stream().map(e -> e.doEvaluate(state)).collect(Collectors.toList());
+      assert method.getMethod() != null;
       return method.getMethod().invoke(targetVar, argVars);
     }
   }
@@ -87,17 +88,17 @@ public abstract class Expression {
     @Override
     public EfVariable doEvaluate(State state) {
       List<EfVariable> values = exprs.stream().map(e -> e.doEvaluate(state)).collect(Collectors.toList());
-      return new TupleVar(getResultType(), ImmutableList.copyOf(values));
+      return new EfVariable(getResultType(), ImmutableList.copyOf(values));
     }
 
-    private static EfType tupleType(List<Expression> exprs) {
-      List<EfType> types = exprs.stream().map(Expression::getResultType).collect(Collectors.toList());
-      return new TupleType(ImmutableList.copyOf(types));
+    private static Type tupleType(List<Expression> exprs) {
+      List<Type> types = exprs.stream().map(Expression::getResultType).collect(Collectors.toList());
+      return new Type.TupleType(types);
     }
   }
 
   static class ThisExpr extends Expression {
-    ThisExpr(EfType resultType) {
+    ThisExpr(Type resultType) {
       super(resultType);
     }
 
@@ -109,7 +110,7 @@ public abstract class Expression {
 
   static class VarExpr extends Expression {
     private final String name;
-    VarExpr(EfType resultType, String name) {
+    VarExpr(Type resultType, String name) {
       super(resultType);
       this.name = name;
     }
@@ -122,9 +123,9 @@ public abstract class Expression {
 
   static class VarTypeOfExpression extends Expression {
     private final Expression expr;
-    private final List<EfType> needles;
+    private final List<Type> needles;
 
-    VarTypeOfExpression(Expression expr, List<? extends EfType> needles) {
+    VarTypeOfExpression(Expression expr, List<? extends Type> needles) {
       super(BuiltIns.booleanType);
       this.expr = expr;
       this.needles = ImmutableList.copyOf(needles);
@@ -133,12 +134,12 @@ public abstract class Expression {
     @Override
     protected EfVariable doEvaluate(State state) {
       EfVariable exprValue = expr.evaluate(state);
-      for (EfType needle : needles) {
-        if (exprValue.getType().instanceOf(needle)) {
-          return BuiltIns.trueValue();
+      for (Type needle : needles) {
+        if (exprValue.getType().isSubtypeOf(needle)) {
+          return new EfVariable(BuiltIns.trueType);
         }
       }
-      return BuiltIns.valueFalse();
+      return new EfVariable(BuiltIns.falseType);
     }
   }
 
@@ -157,7 +158,7 @@ public abstract class Expression {
     @Override
     protected EfVariable doEvaluate(State state) {
       EfVariable condVar = cond.evaluate(state);
-      Expression which = condVar.getType().instanceOf(BuiltIns.trueType)
+      Expression which = condVar.getType().isSubtypeOf(BuiltIns.trueType)
         ? ifTrue
         : ifFalse;
       return which.evaluate(state);

@@ -2,10 +2,10 @@ package com.yuvalshavit.effes.compile.expr;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.yuvalshavit.effes.base.Type;
 import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.base.BuiltIns;
 import com.yuvalshavit.effes.base.EfMethodMeta;
-import com.yuvalshavit.effes.base.EfType;
 import com.yuvalshavit.effes.base.Scopes;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
@@ -17,15 +17,15 @@ import java.util.stream.Collectors;
 
 public class ExpressionCompiler {
 
-  public Expression run(EfType declaringContext, Scopes<EfType> scopes, EffesParser.ExprContext expr) {
+  public Expression run(Type declaringContext, Scopes<Type> scopes, EffesParser.ExprContext expr) {
     return new DispatchImpl(declaringContext, scopes).createExpr(expr);
   }
 
   private static class DispatchImpl implements Dispatch {
-    private final Scopes<EfType> scopes;
-    private final EfType declaringContext;
+    private final Scopes<Type> scopes;
+    private final Type declaringContext;
 
-    private DispatchImpl(EfType declaringContext, Scopes<EfType> scopes) {
+    private DispatchImpl(Type declaringContext, Scopes<Type> scopes) {
       this.declaringContext = declaringContext;
       this.scopes = scopes;
     }
@@ -60,12 +60,12 @@ public class ExpressionCompiler {
     }
 
     public Expression methodInvokeExpr(Token at, Expression target, String methodName, Expression... args) {
-      EfMethodMeta method = target.getResultType().getMethods().get(methodName);
+      EfMethodMeta method = target.getResultType().getMethod(methodName);
       return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
     }
 
     public Expression methodInvokeExpr(Token at, Expression target, String methodName, List<Expression> args) {
-      EfMethodMeta method = target.getResultType().getMethods().get(methodName);
+      EfMethodMeta method = target.getResultType().getMethod(methodName);
       return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
     }
 
@@ -96,7 +96,7 @@ public class ExpressionCompiler {
 
     @Override
     public Expression methodWithThis(EffesParser.ThisMethodInvokeContext ctx) {
-      EfMethodMeta method = declaringContext.getMethods().get(ctx.methodName().getText());
+      EfMethodMeta method = declaringContext.getMethod(ctx.methodName().getText());
       if (method == null) {
         throw new CompileException("no such method on type " + declaringContext, ctx.methodName().getStart());
       }
@@ -108,7 +108,7 @@ public class ExpressionCompiler {
     @Override
     public Expression var(EffesParser.VarExprContext ctx) {
       String name = ctx.VAR_NAME().getText();
-      EfType efType = scopes.lookUp(name);
+      Type efType = scopes.lookUp(name);
       if (efType == null) {
         throw new CompileException("unrecognized variable name", ctx.VAR_NAME().getSymbol());
       }
@@ -147,7 +147,7 @@ public class ExpressionCompiler {
       if (cmp.getResultType() != BuiltIns.comparisonType) {
         throw new CompileException("invalid cmp method for type " + left.getResultType(), ctx.CMP_OPS().getSymbol());
       }
-      final List<? extends EfType> lookingFor;
+      final List<? extends Type> lookingFor;
       switch (ctx.CMP_OPS().getText()) {
       case "<":
         lookingFor = ImmutableList.of(BuiltIns.ltType);
