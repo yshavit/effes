@@ -7,6 +7,7 @@ import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.base.BuiltIns;
 import com.yuvalshavit.effes.base.EfMethodMeta;
 import com.yuvalshavit.effes.base.Scopes;
+import com.yuvalshavit.effes.ir.Expression;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
