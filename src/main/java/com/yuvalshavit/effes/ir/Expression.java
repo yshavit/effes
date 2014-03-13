@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.compile.expr;
+package com.yuvalshavit.effes.ir;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.base.BuiltIns;
@@ -11,10 +11,10 @@ import com.yuvalshavit.effes.base.TypeRegistery;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class Expression {
+public abstract class Expression implements EfNode {
   private final Type resultType;
 
-  protected Expression(Type resultType) {
+  private Expression(Type resultType) {
     this.resultType = resultType;
   }
 
@@ -31,7 +31,19 @@ public abstract class Expression {
 
   protected abstract EfVariable doEvaluate(State state);
 
-  public static class IntLiteralExpression extends Expression {
+  private abstract static class LeafExpression extends Expression {
+
+    protected LeafExpression(Type resultType) {
+      super(resultType);
+    }
+
+    @Override
+    public ImmutableList<EfNode> children() {
+      return ImmutableList.of();
+    }
+  }
+
+  public static class IntLiteralExpression extends LeafExpression {
 
     public IntLiteralExpression(String value) {
       super(null);
@@ -43,7 +55,8 @@ public abstract class Expression {
       throw new UnsupportedOperationException(); // TODO
     }
   }
-  public static class FloatLiteralExpression extends Expression {
+
+  public static class FloatLiteralExpression extends LeafExpression {
     private final double value;
 
     public FloatLiteralExpression(String value) {
@@ -57,12 +70,12 @@ public abstract class Expression {
     }
   }
 
-  static class MethodExpression extends Expression {
+  public static class MethodExpression extends Expression {
     private final EfMethodMeta method;
     private final Expression target;
     private final ImmutableList<Expression> args;
 
-    MethodExpression(EfMethodMeta method, Expression target, ImmutableList<Expression> args) {
+    public MethodExpression(EfMethodMeta method, Expression target, ImmutableList<Expression> args) {
       super(method.getReturnType());
       this.method = method;
       this.target = target;
@@ -76,11 +89,17 @@ public abstract class Expression {
       assert method.getMethod() != null;
       return method.getMethod().invoke(targetVar, argVars);
     }
+
+    @Override
+    public ImmutableList<? extends EfNode> children() {
+      return args;
+    }
   }
 
-  static class TupleExpression extends Expression {
+  public static class TupleExpression extends Expression {
     private final ImmutableList<Expression> exprs;
-    TupleExpression(ImmutableList<Expression> exprs) {
+
+    public TupleExpression(ImmutableList<Expression> exprs) {
       super(tupleType(exprs));
       this.exprs = exprs;
     }
@@ -95,10 +114,15 @@ public abstract class Expression {
       List<Type> types = exprs.stream().map(Expression::getResultType).collect(Collectors.toList());
       return new Type.TupleType(types);
     }
+
+    @Override
+    public ImmutableList<? extends EfNode> children() {
+      return exprs;
+    }
   }
 
-  static class ThisExpr extends Expression {
-    ThisExpr(Type resultType) {
+  public static class ThisExpr extends LeafExpression {
+    public ThisExpr(Type resultType) {
       super(resultType);
     }
 
@@ -108,9 +132,10 @@ public abstract class Expression {
     }
   }
 
-  static class VarExpr extends Expression {
+  public static class VarExpr extends LeafExpression {
     private final String name;
-    VarExpr(Type resultType, String name) {
+
+    public VarExpr(Type resultType, String name) {
       super(resultType);
       this.name = name;
     }
@@ -121,11 +146,11 @@ public abstract class Expression {
     }
   }
 
-  static class VarTypeOfExpression extends Expression {
+  public static class VarTypeOfExpression extends LeafExpression {
     private final Expression expr;
     private final List<Type> needles;
 
-    VarTypeOfExpression(Expression expr, List<? extends Type> needles) {
+    public VarTypeOfExpression(Expression expr, List<? extends Type> needles) {
       super(BuiltIns.booleanType);
       this.expr = expr;
       this.needles = ImmutableList.copyOf(needles);
@@ -143,12 +168,12 @@ public abstract class Expression {
     }
   }
 
-  static class IfElseExpression extends Expression {
+  public static class IfElseExpression extends Expression {
     private final Expression cond;
     private final Expression ifTrue;
     private final Expression ifFalse;
 
-    IfElseExpression(Expression cond, Expression ifTrue, Expression ifFalse) {
+    public IfElseExpression(Expression cond, Expression ifTrue, Expression ifFalse) {
       super(BuiltIns.booleanType);
       this.cond = cond;
       this.ifTrue = ifTrue;
@@ -162,6 +187,11 @@ public abstract class Expression {
         ? ifTrue
         : ifFalse;
       return which.evaluate(state);
+    }
+
+    @Override
+    public ImmutableList<? extends EfNode> children() {
+      return ImmutableList.of(cond, ifTrue, ifFalse);
     }
   }
 }
