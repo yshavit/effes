@@ -18,7 +18,7 @@ public class BuiltIns {
 
   private BuiltIns() {}
 
-  private static final TypeRegistery builtinRegistry = createRegistry();
+  private static final TypeRegistery builtinRegistry = createBuiltinRegistry();
 
   public static final Type ltType = builtinRegistry.getTypeId(LT);
   public static final Type gtType = builtinRegistry.getTypeId(GT);
@@ -29,8 +29,12 @@ public class BuiltIns {
   public static final Type booleanType = builtinRegistry.getTypeId(BOOLEAN);
   public static final Type floatType = builtinRegistry.getTypeId(FLOAT);
 
-  private static TypeRegistery createRegistry() {
-    TypeRegistryBuilder reg = new TypeRegistryBuilder();
+  public static MutableTypeRegistry createRegistry() {
+    return new TypeRegistryBuilder(builtinRegistry);
+  }
+
+  private static TypeRegistery createBuiltinRegistry() {
+    TypeRegistryBuilder reg = new TypeRegistryBuilder(TypeRegistery.EMPTY);
 
     Type.SimpleType lt = reg.register(LT);
     Type.SimpleType gt = reg.register(GT);
