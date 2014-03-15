@@ -145,7 +145,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | INT                                                                       # IntLiteral
     | DECIMAL                                                                   # DecimalLiteral
     | OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN                                 # TupleExpr
-    | IF cond=expr THEN trueExpr=expr ELSE falseExpr=expr                                          # IfExpr
+    | IF cond=expr THEN trueExpr=expr ELSE falseExpr=expr                       # IfExpr
     | VAR_NAME                                                                  # VarExpr
     | TYPE_NAME ctorInvokeArgs?                                                 # CtorInvoke
     | THIS methodName methodInvokeArgs                                          # ThisMethodInvoke
