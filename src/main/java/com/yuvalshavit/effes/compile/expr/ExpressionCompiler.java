@@ -38,13 +38,6 @@ public class ExpressionCompiler {
     }
 
     @Override
-    public Expression createExpr(EffesParser.ExprContext ctx) {
-      // TODO remove this useless override; it's a workaround for an IDEA bug:
-      // http://youtrack.jetbrains.com/issue/IDEA-121737
-      return Dispatch.super.createExpr(ctx); // TODO
-    }
-
-    @Override
     public Expression unary(EffesParser.UnaryExprContext ctx) {
       // turn into "zero OP expr"
       String op = ctx.ADD_OPS().getText();
