@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile.expr;
 
 import com.google.common.collect.Sets;
+import com.yuvalshavit.effes.ir.Statement;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -20,7 +21,8 @@ public class DispatchTest {
   public static Object[][] classes() {
     return new Object[][] {
       new Object[] { ExpressionCompiler.Dispatch.class, EffesParser.ExprContext.class },
-      new Object[] {StatementCompiler.Dispatch.class, EffesParser.StatContext.class }
+      new Object[] { StatementCompiler.Dispatch.class, EffesParser.StatContext.class },
+      new Object[] { ExpressionCompiler.MultilineDispatch.class, EffesParser.MultilineExprContext.class }
     };
   }
 
