@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,16 @@ public class ExpressionCompiler {
     return new DispatchImpl(declaringContext).createExpr(expr);
   }
 
-  private static class DispatchImpl implements Dispatch {
+  public Expression run(Type declaringContext, EffesParser.ExprLineContext exprLine) {
+    EffesParser.ExprContext expr = exprLine.expr();
+    if (expr != null) {
+      return run(declaringContext, expr);
+    } else {
+      return new DispatchImpl(declaringContext).createExpr(exprLine.multilineExpr());
+    }
+  }
+
+  private static class DispatchImpl implements Dispatch, MultilineDispatch {
     private final Type declaringContext;
 
     private DispatchImpl(Type declaringContext) {
@@ -128,7 +138,7 @@ public class ExpressionCompiler {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
       Expression cmp = methodInvokeExpr(ctx.getStart(), left, "cmp", right);
-      if (cmp.getResultType() != BuiltIns.comparisonType) {
+      if (!Objects.equals(cmp.getResultType(), BuiltIns.comparisonType)) {
         throw new CompileException("invalid cmp method for type " + left.getResultType(), ctx.CMP_OPS().getSymbol());
       }
       final List<? extends Type> lookingFor;
@@ -161,17 +171,22 @@ public class ExpressionCompiler {
     public Expression ifElse(EffesParser.IfExprContext ctx) {
       return new Expression.IfElseExpression(createExpr(ctx.cond), createExpr(ctx.trueExpr), createExpr(ctx.falseExpr));
     }
+
+    @Override
+    public Expression caseOfExpr(EffesParser.CaseOfExprContext ctx) {
+      throw new UnsupportedOperationException(); // TODO
+    }
   }
 
   private static Map<Class<?>, BiFunction<Dispatch, Object, Expression>> createDispatchMap() {
     ImmutableMap.Builder<Class<?>, BiFunction<Dispatch, Object, Expression>> builder = ImmutableMap.builder();
     builder.put(EffesParser.UnaryExprContext.class, (d, o) -> d.unary((EffesParser.UnaryExprContext) o));
-    builder.put(EffesParser.MethodInvokeContext.class, (d, o) -> d.methodInvoke((EffesParser.MethodInvokeContext)o));
+    builder.put(EffesParser.MethodInvokeContext.class, (d, o) -> d.methodInvoke((EffesParser.MethodInvokeContext) o));
     builder.put(EffesParser.IntLiteralContext.class, (d, o) -> d.intLiteral((EffesParser.IntLiteralContext)o));
     builder.put(EffesParser.DecimalLiteralContext.class, (d, o) -> d.decimalLiteral((EffesParser.DecimalLiteralContext)o));
     builder.put(EffesParser.CtorInvokeContext.class, (d, o) -> d.ctor((EffesParser.CtorInvokeContext)o));
     builder.put(EffesParser.TupleExprContext.class, (d, o) -> d.tuple((EffesParser.TupleExprContext)o));
-    builder.put(EffesParser.ThisMethodInvokeContext.class, (d, o) -> d.methodWithThis((EffesParser.ThisMethodInvokeContext)o));
+    builder.put(EffesParser.ThisMethodInvokeContext.class, (d, o) -> d.methodWithThis((EffesParser.ThisMethodInvokeContext) o));
     builder.put(EffesParser.VarExprContext.class, (d, o) -> d.var((EffesParser.VarExprContext)o));
     builder.put(EffesParser.LeftComposeContext.class, (d, o) -> d.leftCompose((EffesParser.LeftComposeContext)o));
     builder.put(EffesParser.DollarExprContext.class, (d, o) -> d.dollar((EffesParser.DollarExprContext)o));
@@ -185,7 +200,7 @@ public class ExpressionCompiler {
     return builder.build();
   }
 
-  public interface Dispatch {
+  interface Dispatch {
     static Map<Class<?>, BiFunction<Dispatch, Object, Expression>> dispatchMap = createDispatchMap();
 
     default Expression createExpr(EffesParser.ExprContext ctx) {
@@ -220,5 +235,23 @@ public class ExpressionCompiler {
     default Expression paren(EffesParser.ParenExprContext ctx) {
       return createExpr(ctx.expr());
     }
+  }
+
+  private static Map<Class<?>, BiFunction<MultilineDispatch, Object, Expression>> createMultilineDispatchMap() {
+    ImmutableMap.Builder<Class<?>, BiFunction<MultilineDispatch, Object, Expression>> builder = ImmutableMap.builder();
+    builder.put(EffesParser.CaseOfExprContext.class, (d, o) -> d.caseOfExpr((EffesParser.CaseOfExprContext) o));
+    return builder.build();
+  }
+
+  interface MultilineDispatch {
+    static Map<Class<?>, BiFunction<MultilineDispatch, Object, Expression>> dispatchMap = createMultilineDispatchMap();
+
+    default Expression createExpr(EffesParser.MultilineExprContext ctx) {
+      BiFunction<MultilineDispatch, Object, Expression> dispatch = dispatchMap.get(ctx.getClass());
+      assert dispatch != null: "no dispatch for " + ctx.getClass();
+      return dispatch.apply(this, ctx);
+    }
+
+    Expression caseOfExpr(EffesParser.CaseOfExprContext ctx);
   }
 }
