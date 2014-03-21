@@ -70,7 +70,7 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
     if (methods.containsKey(methodId) || parent.getMethod(target, name) != null) {
       throw new TypeRegistrationException("duplicate method " + name);
     }
-    methods.put(methodId, new EfMethodMeta(method, returnType, ImmutableList.copyOf(argTypes)));
+    methods.put(methodId, new EfMethodMeta(method, returnType, ImmutableList.copyOf(argTypes), null));
   }
 
   private static <T, U, R> R firstNonNull(T arg1, U arg2, BiFunction<T, U, R> f1, BiFunction<T, U, R> f2) {

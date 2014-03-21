@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.base;
 
+import com.yuvalshavit.effes.ir.Block;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -8,11 +10,13 @@ public final class EfMethodMeta {
   private final EfMethod method;
   private final Type returnType;
   private final List<Type> args;
+  private final Block body;
 
-  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> args) {
+  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> args, Block body) {
     this.method = method;
     this.returnType = returnType;
     this.args = args;
+    this.body = body;
   }
 
   @Nullable
@@ -26,5 +30,9 @@ public final class EfMethodMeta {
 
   public List<Type> getArgs() {
     return args;
+  }
+
+  public Block getBody() {
+    return body;
   }
 }
