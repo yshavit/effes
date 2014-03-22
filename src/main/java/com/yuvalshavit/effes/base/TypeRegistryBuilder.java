@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public final class TypeRegistryBuilder implements MutableTypeRegistry {
+public final class TypeRegistryBuilder implements TypeRegistry {
   private final BiMap<String, Type.SimpleType> types = HashBiMap.create();
   private final Multimap<Type, Type.SimpleType> subtypesBySuper = HashMultimap.create();
   private final Map<MethodId, EfMethodMeta> methods = Maps.newHashMap();
-  private final TypeRegistery parent;
+  private final TypeRegistry parent;
   private boolean frozen = false;
 
-  TypeRegistryBuilder(TypeRegistery parent) {
+  TypeRegistryBuilder(TypeRegistry parent) {
     if (!parent.isFrozen()) {
       throw new IllegalStateException();
     }
@@ -28,7 +28,7 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
   }
 
   TypeRegistryBuilder() {
-    this(TypeRegistery.EMPTY);
+    this(TypeRegistry.EMPTY);
   }
 
   @Override
