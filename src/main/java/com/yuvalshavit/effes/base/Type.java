@@ -12,10 +12,10 @@ public abstract class Type {
   @Nullable public abstract EfMethodMeta getMethod(String method);
 
   public static class SimpleType extends Type {
-    private final TypeRegistery registery;
+    private final TypeRegistry registery;
     private final String name;
 
-    public SimpleType(TypeRegistery registery, String name) {
+    public SimpleType(TypeRegistry registery, String name) {
       this.registery = registery;
       this.name = name;
     }
