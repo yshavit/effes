@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -17,9 +18,17 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
   private final Multimap<Type, Type.SimpleType> subtypesBySuper = HashMultimap.create();
   private final Map<MethodId, EfMethodMeta> methods = Maps.newHashMap();
   private final TypeRegistery parent;
+  private boolean frozen = false;
 
   TypeRegistryBuilder(TypeRegistery parent) {
+    if (!parent.isFrozen()) {
+      throw new IllegalStateException();
+    }
     this.parent = parent;
+  }
+
+  TypeRegistryBuilder() {
+    this(TypeRegistery.EMPTY);
   }
 
   @Override
@@ -40,11 +49,31 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
 
   @Override
   public boolean isSubtype(Type.SimpleType potentialSupertype, Type.SimpleType potentialSubtype) {
-    return firstNonNull(potentialSubtype, potentialSubtype, parent::isSubtype, subtypesBySuper::containsEntry);
+    if (parent.isSubtype(potentialSupertype, potentialSubtype)) {
+      return true;
+    }
+    Collection<Type.SimpleType> subtypesOfSuper = subtypesBySuper.get(potentialSupertype);
+    if (subtypesOfSuper.contains(potentialSubtype)) {
+      // subtypesOfSuper is a hash map, so it's quicker to check here rather than in the loop below
+      return true;
+    }
+    // check for transitive subtypes
+    for (Type.SimpleType subtype : subtypesOfSuper) {
+      if (isSubtype(subtype, potentialSubtype)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isFrozen() {
+    return frozen;
   }
 
   @Override
   public Type.SimpleType register(String name) {
+    checkNotFrozen();
     if (types.containsKey(name) || parent.getTypeId(name) != null) {
       throw new TypeRegistrationException("duplicate type name: " + name);
     }
@@ -55,6 +84,7 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
 
   @Override
   public void registerSubtype(Type.SimpleType supertype, Type.SimpleType subtype) {
+    checkNotFrozen();
     if (isSubtype(subtype, supertype) || parent.isSubtype(subtype, supertype)) {
       String msg = String.format("cyclical subtyping: %s is already a subtype of %s", supertype, subtype);
       throw new TypeRegistrationException(msg);
@@ -66,11 +96,17 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
   public void registerMethod(Type target, String name, Type returnType, List<Type> argTypes,
                              @Nullable EfMethod method)
   {
+    checkNotFrozen();
     MethodId methodId = new MethodId(target, name);
     if (methods.containsKey(methodId) || parent.getMethod(target, name) != null) {
       throw new TypeRegistrationException("duplicate method " + name);
     }
     methods.put(methodId, new EfMethodMeta(method, returnType, ImmutableList.copyOf(argTypes), null));
+  }
+
+  @Override
+  public void freeze() {
+    frozen = true;
   }
 
   private static <T, U, R> R firstNonNull(T arg1, U arg2, BiFunction<T, U, R> f1, BiFunction<T, U, R> f2) {
@@ -79,6 +115,12 @@ public final class TypeRegistryBuilder implements MutableTypeRegistry {
       result = f2.apply(arg1, arg2);
     }
     return result;
+  }
+
+  private void checkNotFrozen() {
+    if (frozen) {
+      throw new IllegalStateException("object cannot be modified");
+    }
   }
 
   private static class MethodId {
