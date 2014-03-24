@@ -148,4 +148,20 @@ public abstract class Expression implements EfNode {
       return ImmutableList.of(cond, ifTrue, ifFalse);
     }
   }
+
+  public static class ConstructExpression extends Expression {
+    private final Type.SimpleType type;
+    private final ImmutableList<Expression> args;
+
+    public ConstructExpression(Type.SimpleType type, List<Expression> args) {
+      super(type);
+      this.type = type;
+      this.args = ImmutableList.copyOf(args);
+    }
+
+    @Override
+    public ImmutableList<? extends EfNode> children() {
+      return args;
+    }
+  }
 }
