@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public interface TypeRegistry {
-  Type.SimpleType getTypeId(String name);
+  @Nullable Type.SimpleType getTypeId(String name);
   @Nullable EfMethodMeta getMethod(Type type, String methodName);
   boolean isSubtype(Type.SimpleType potentialSupertype, Type.SimpleType potentialSubtype);
 
@@ -40,6 +40,7 @@ public interface TypeRegistry {
     }
 
     @Override
+    @Nullable
     public Type.SimpleType getTypeId(String name) {
       return null;
     }

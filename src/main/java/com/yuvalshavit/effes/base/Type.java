@@ -4,7 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Type {
   private Type() {}
@@ -14,10 +16,19 @@ public abstract class Type {
   public static class SimpleType extends Type {
     private final TypeRegistry registery;
     private final String name;
+    private Map<String, Type> generics;
 
     public SimpleType(TypeRegistry registery, String name) {
       this.registery = registery;
       this.name = name;
+    }
+
+    public Map<String, Type> getGenerics() {
+      return generics;
+    }
+
+    public void setGenerics(Map<String, Type> generics) {
+      this.generics = new LinkedHashMap<>(generics);
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public final class TypeRegistryBuilder implements TypeRegistry {
+final class TypeRegistryBuilder implements TypeRegistry {
   private final BiMap<String, Type.SimpleType> types = HashBiMap.create();
   private final Multimap<Type, Type.SimpleType> subtypesBySuper = HashMultimap.create();
   private final Map<MethodId, EfMethodMeta> methods = Maps.newHashMap();
@@ -33,6 +33,7 @@ public final class TypeRegistryBuilder implements TypeRegistry {
   }
 
   @Override
+  @Nullable
   public Type.SimpleType getTypeId(String name) {
     Type.SimpleType r = parent.getTypeId(name);
     if (r == null) {
