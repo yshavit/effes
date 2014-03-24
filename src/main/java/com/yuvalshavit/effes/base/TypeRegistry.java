@@ -7,7 +7,7 @@ public interface TypeRegistry {
   Type.SimpleType getTypeId(String name);
   @Nullable EfMethodMeta getMethod(Type type, String methodName);
   boolean isSubtype(Type.SimpleType potentialSupertype, Type.SimpleType potentialSubtype);
-  
+
   Type.SimpleType register(String name);
   void registerSubtype(Type.SimpleType supertype, Type.SimpleType subtype);
   void registerMethod(Type target, String name, Type returnType, List<Type> argTypes, @Nullable EfMethod method);
