@@ -9,13 +9,13 @@ public final class EfMethodMeta {
 
   private final EfMethod method;
   private final Type returnType;
-  private final List<Type> args;
+  private final List<Type> argTypes;
   private final Block body;
 
-  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> args, Block body) {
+  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> argTypes, Block body) {
     this.method = method;
     this.returnType = returnType;
-    this.args = args;
+    this.argTypes = argTypes;
     this.body = body;
   }
 
@@ -28,8 +28,8 @@ public final class EfMethodMeta {
     return returnType;
   }
 
-  public List<Type> getArgs() {
-    return args;
+  public List<Type> getArgTypes() {
+    return argTypes;
   }
 
   public Block getBody() {
