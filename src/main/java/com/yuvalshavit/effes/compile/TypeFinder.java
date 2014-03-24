@@ -22,6 +22,7 @@ public final class TypeFinder {
 
   void accept(EffesParser.CompilationUnitContext ctx) {
     walk(ctx, new InitialTypeScanner());
+    walk(ctx, new TypeDetailScanner());
   }
 
   private void walk(EffesParser.CompilationUnitContext ctx, org.antlr.v4.runtime.tree.ParseTreeListener listener) {
@@ -65,6 +66,12 @@ public final class TypeFinder {
         }
         type.setGenerics(genericsMap);
       }
+    }
+
+    @Override
+    public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
+      super.enterMethodDeclr(ctx);
+      throw new UnsupportedOperationException(); // TODO
     }
   }
 }
