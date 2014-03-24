@@ -7,21 +7,14 @@ import java.util.List;
 
 public final class EfMethodMeta {
 
-  private final EfMethod method;
   private final Type returnType;
   private final List<Type> argTypes;
   private final Block body;
 
-  public EfMethodMeta(@Nullable EfMethod method, Type returnType, List<Type> argTypes, Block body) {
-    this.method = method;
+  public EfMethodMeta(Type returnType, List<Type> argTypes, @Nullable Block body) {
     this.returnType = returnType;
     this.argTypes = argTypes;
     this.body = body;
-  }
-
-  @Nullable
-  public EfMethod getMethod() {
-    return method;
   }
 
   public Type getReturnType() {
@@ -32,6 +25,7 @@ public final class EfMethodMeta {
     return argTypes;
   }
 
+  @Nullable
   public Block getBody() {
     return body;
   }
