@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.base;
 
+import com.yuvalshavit.effes.ir.Block;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -10,7 +12,7 @@ public interface TypeRegistry {
 
   Type.SimpleType register(String name);
   void registerSubtype(Type.SimpleType supertype, Type.SimpleType subtype);
-  void registerMethod(Type target, String name, Type returnType, List<Type> argTypes, @Nullable EfMethod method);
+  void registerMethod(Type target, String name, Type returnType, List<Type> argTypes, @Nullable Block method);
 
   boolean isFrozen();
   void freeze();
@@ -28,8 +30,7 @@ public interface TypeRegistry {
     }
 
     @Override
-    public void registerMethod(Type target, String name, Type returnType, List<Type> argTypes,
-                               @Nullable EfMethod method) {
+    public void registerMethod(Type target, String name, Type returnType, List<Type> argTypes, @Nullable Block body) {
       throw new UnsupportedOperationException();
     }
 

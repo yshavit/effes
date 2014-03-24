@@ -15,6 +15,10 @@ public final class Block implements EfNode {
     this(ImmutableList.copyOf(statements));
   }
 
+  public Block(Statement... statements) {
+    this(ImmutableList.copyOf(statements));
+  }
+
   @Override
   public ImmutableList<? extends EfNode> children() {
     return statements;

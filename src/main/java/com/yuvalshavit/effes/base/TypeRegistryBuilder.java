@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.yuvalshavit.effes.ir.Block;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -93,15 +94,14 @@ public final class TypeRegistryBuilder implements TypeRegistry {
   }
 
   @Override
-  public void registerMethod(Type target, String name, Type returnType, List<Type> argTypes,
-                             @Nullable EfMethod method)
+  public void registerMethod(Type target, String name, Type returnType, List<Type> argTypes, @Nullable Block body)
   {
     checkNotFrozen();
     MethodId methodId = new MethodId(target, name);
     if (methods.containsKey(methodId) || parent.getMethod(target, name) != null) {
       throw new TypeRegistrationException("duplicate method " + name);
     }
-    methods.put(methodId, new EfMethodMeta(method, returnType, ImmutableList.copyOf(argTypes), null));
+    methods.put(methodId, new EfMethodMeta(returnType, ImmutableList.copyOf(argTypes), body));
   }
 
   @Override

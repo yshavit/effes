@@ -6,6 +6,24 @@ public abstract class Statement implements EfNode {
 
   private Statement() {}
 
+  public static class BuiltInStatement extends Statement {
+    private final String desc;
+
+    public BuiltInStatement(String desc) {
+      this.desc = desc;
+    }
+
+    @Override
+    public ImmutableList<? extends EfNode> children() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public String toString() {
+      return desc;
+    }
+  }
+
   public static class IfElseStatement extends Statement {
     private final Expression cond;
     private final Block trueBlock;

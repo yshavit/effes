@@ -1,6 +1,8 @@
 package com.yuvalshavit.effes.base;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.ir.Block;
+import com.yuvalshavit.effes.ir.Statement;
 
 import java.util.List;
 import java.util.function.DoubleBinaryOperator;
@@ -49,28 +51,20 @@ public class BuiltIns {
     Type.SimpleType booleanType = reg.register(BOOLEAN);
     reg.registerSubtype(booleanType, trueType);
     reg.registerSubtype(booleanType, falseType);
-    reg.registerMethod(booleanType, "not", booleanType, ImmutableList.of(), null);
-    EfVariable trueVar = new EfVariable(trueType);
-    EfVariable falseVar = new EfVariable(falseType);
-    reg.registerMethod(trueType, "not", falseType, ImmutableList.of(), (t, a) -> trueVar);
-    reg.registerMethod(falseType, "not", trueType, ImmutableList.of(), (t, a) -> falseVar);
 
     Type floatType = reg.register(FLOAT);
     ImmutableList<Type> oneFloat = ImmutableList.of(floatType);
-    reg.registerMethod(floatType, "+", floatType, oneFloat, doubleArith((l, r) -> l + r));
-    reg.registerMethod(floatType, "-", floatType, oneFloat, doubleArith((l, r) -> l - r));
-    reg.registerMethod(floatType, "*", floatType, oneFloat, doubleArith((l, r) -> l * r));
-    reg.registerMethod(floatType, "/", floatType, oneFloat, doubleArith((l, r) -> l / r));
+    reg.registerMethod(floatType, "+", floatType, oneFloat, doubleArith('+'));
+    reg.registerMethod(floatType, "-", floatType, oneFloat, doubleArith('-'));
+    reg.registerMethod(floatType, "*", floatType, oneFloat, doubleArith('*'));
+    reg.registerMethod(floatType, "/", floatType, oneFloat, doubleArith('/'));
 
     return reg;
   }
 
-  private static EfMethod doubleArith(DoubleBinaryOperator op) {
-    return (target, args) -> {
-      double targetValue = getOnlyState(target);
-      double opValue = getOnlyState(getOnly(args));
-      return new EfVariable(target.getType(), op.applyAsDouble(targetValue, opValue));
-    };
+  private static Block doubleArith(char op) {
+    Statement s = new Statement.BuiltInStatement("DoubleArith(" + op + ')');
+    return new Block(s);
   }
 
   @SuppressWarnings("unchecked")
