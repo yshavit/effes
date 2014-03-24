@@ -7,7 +7,6 @@ import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.base.BuiltIns;
 import com.yuvalshavit.effes.ir.Expression;
 import com.yuvalshavit.effes.parser.EffesParser;
-import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.Map;
@@ -41,10 +40,9 @@ public class ExpressionCompiler {
     public Expression unary(EffesParser.UnaryExprContext ctx) {
       // turn into "zero OP expr"
       String op = ctx.ADD_OPS().getText();
-      Token opToken = ctx.ADD_OPS().getSymbol();
       Expression expr = createExpr(ctx.expr());
-      Expression zero = methodInvokeExpr(opToken, expr, "zero");
-      return methodInvokeExpr(opToken, zero, op, expr);
+      Expression zero = methodInvokeExpr(expr, "zero");
+      return methodInvokeExpr(zero, op, expr);
     }
 
     @Override
@@ -56,14 +54,14 @@ public class ExpressionCompiler {
         .collect(Collectors.toList());
       Expression target = createExpr(ctx.target);
       String methodName = ctx.methodName().getText();
-      return methodInvokeExpr(ctx.methodName().getStart(), target, methodName, args);
+      return methodInvokeExpr(target, methodName, args);
     }
 
-    public Expression methodInvokeExpr(Token at, Expression target, String method, Expression... args) {
-      return methodInvokeExpr(at, target, method, ImmutableList.copyOf(args));
+    public Expression methodInvokeExpr(Expression target, String method, Expression... args) {
+      return methodInvokeExpr(target, method, ImmutableList.copyOf(args));
     }
 
-    private Expression methodInvokeExpr(Token at, Expression target, String method, List<Expression> args) {
+    private Expression methodInvokeExpr(Expression target, String method, List<Expression> args) {
       return new Expression.MethodExpressionStub(method, target, ImmutableList.copyOf(args));
     }
 
@@ -79,7 +77,11 @@ public class ExpressionCompiler {
 
     @Override
     public Expression ctor(EffesParser.CtorInvokeContext ctx) {
-      throw new UnsupportedOperationException(); // TODO
+      String typeName = ctx.TYPE_NAME().getText();
+      Type.SimpleType type = null;
+      assert false : "look up type"; // TODO
+      List<Expression> children = createExprs(ctx.ctorInvokeArgs().expr());
+      return new Expression.ConstructExpression(type, children);
     }
 
     @Override
@@ -93,7 +95,7 @@ public class ExpressionCompiler {
       String method = ctx.methodName().getText();
       List<Expression> args = ctx.methodInvokeArgs().expr().stream().map(this::createExpr).collect(Collectors.toList());
       Expression declaringExpr = new Expression.ThisExpr(declaringContext);
-      return methodInvokeExpr(ctx.getStart(), declaringExpr, method, args);
+      return methodInvokeExpr(declaringExpr, method, args);
     }
 
     @Override
@@ -111,14 +113,14 @@ public class ExpressionCompiler {
     public Expression addOrSub(EffesParser.AddOrSubExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      return methodInvokeExpr(ctx.getStart(), left, ctx.ADD_OPS().getText(), right);
+      return methodInvokeExpr(left, ctx.ADD_OPS().getText(), right);
     }
 
     @Override
     public Expression multOrDiv(EffesParser.MultOrDivExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      return methodInvokeExpr(ctx.getStart(), left, ctx.MULT_OPS().getText(), right);
+      return methodInvokeExpr(left, ctx.MULT_OPS().getText(), right);
     }
 
     @Override
@@ -130,7 +132,7 @@ public class ExpressionCompiler {
     public Expression compare(EffesParser.CompareExprContext ctx) {
       Expression left = createExpr(ctx.expr(0));
       Expression right = createExpr(ctx.expr(1));
-      Expression cmp = methodInvokeExpr(ctx.getStart(), left, "cmp", right);
+      Expression cmp = methodInvokeExpr(left, "cmp", right);
       if (!Objects.equals(cmp.getResultType(), BuiltIns.comparisonType)) {
         throw new CompileException("invalid cmp method for type " + left.getResultType(), ctx.CMP_OPS().getSymbol());
       }
@@ -200,6 +202,10 @@ public class ExpressionCompiler {
       BiFunction<Dispatch, Object, Expression> dispatch = dispatchMap.get(ctx.getClass());
       assert dispatch != null: "no dispatch for " + ctx.getClass();
       return dispatch.apply(this, ctx);
+    }
+
+    default List<Expression> createExprs(List<EffesParser.ExprContext> exprs) {
+      return exprs.stream().map(this::createExpr).collect(Collectors.toList());
     }
 
     Expression unary(EffesParser.UnaryExprContext ctx);
