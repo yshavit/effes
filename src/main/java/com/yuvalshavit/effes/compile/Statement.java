@@ -1,5 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.base.Joiner;
+
+import java.util.List;
+
 public abstract class Statement extends StatefulObject {
   private Statement() {}
 
@@ -22,6 +26,34 @@ public abstract class Statement extends StatefulObject {
     @Override
     protected Object[] state() {
       return new Object[] { expression };
+    }
+  }
+
+  public static class MethodInvoke extends Statement {
+    private final String methodName;
+    private final List<Expression> args;
+
+    public MethodInvoke(String methodName, List<Expression> args) {
+      this.methodName = methodName;
+      this.args = args;
+    }
+
+    public String getMethodName() {
+      return methodName;
+    }
+
+    public List<Expression> getArgs() {
+      return args;
+    }
+
+    @Override
+    protected Object[] state() {
+      return new Object[] { methodName, args };
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
   }
 }

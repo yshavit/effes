@@ -1,6 +1,10 @@
 package com.yuvalshavit.effes.interpreter;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.Statement;
+
+import java.util.List;
 
 public abstract class ExecutableStatement implements ExecutableElement {
   private final Statement source;
@@ -20,6 +24,35 @@ public abstract class ExecutableStatement implements ExecutableElement {
     @Override
     public void execute(StateStack stack) {
       value.execute(stack); // just leave it on the stack
+    }
+  }
+
+  public static class MethodInvoke extends ExecutableStatement {
+    private final List<ExecutableExpression> args;
+    private final List<ExecutableStatement> body;
+    public MethodInvoke(Statement.MethodInvoke source,
+                        ExecutableExpressionCompiler expressionCompiler,
+                        List<ExecutableStatement> body)
+    {
+      super(source);
+      this.args = ImmutableList.copyOf(Lists.transform(source.getArgs(), expressionCompiler::apply));
+      this.body = ImmutableList.copyOf(body);
+    }
+
+    @Override
+    public void execute(StateStack stack) {
+      for (ExecutableExpression arg : args) {
+        arg.execute(stack);
+      }
+      for (ExecutableStatement s : body) {
+        s.execute(stack);
+      }
+      // TODO not efficient, but we can work on that later!
+      Object rv = stack.pop();
+      for (int i = 0, nArgs = args.size(); i < nArgs; ++ i) {
+        stack.pop(); // TODO also not efficient!
+      }
+      stack.push(rv);
     }
   }
 }
