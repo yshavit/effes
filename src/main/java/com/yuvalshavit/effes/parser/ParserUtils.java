@@ -79,8 +79,8 @@ public final class ParserUtils {
     return createParser(Joiner.on('\n').join(lines));
   }
 
-  public static void walk(EffesListener listener, EffesParser parser) {
-    new ParseTreeWalker().walk(listener, parser.compilationUnit());
+  public static void walk(EffesListener listener, EffesParser.CompilationUnitContext source) {
+    new ParseTreeWalker().walk(listener, source);
   }
 
   public static ParserRuleContext ruleByName(EffesParser parser, String ruleName) {

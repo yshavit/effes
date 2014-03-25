@@ -49,7 +49,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
         throw new StatementCompilationException(
           String.format("mismatched types: expected %s but found %s", expectedArgs, invokeArgTypes));
       }
-      return new Statement.MethodInvoke(methodName, invokeArgs);
+      return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType());
     }
 
     public Statement returnStat(EffesParser.ReturnStatContext ctx) {

@@ -53,11 +53,16 @@ public final class Block {
   static class ValidationDispatch {
     static final Dispatcher<ValidationDispatch, Statement, SimpleType> dispatcher =
       Dispatcher.builder(ValidationDispatch.class, Statement.class, SimpleType.class)
+        .put(Statement.MethodInvoke.class, ValidationDispatch::methodInvoke)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .build();
 
     public SimpleType returnStat(Statement.ReturnStatement stat) {
       return stat.getExpression().resultType();
+    }
+
+    public SimpleType methodInvoke(@SuppressWarnings("unused") Statement.MethodInvoke stat) {
+      return null;
     }
   }
 }

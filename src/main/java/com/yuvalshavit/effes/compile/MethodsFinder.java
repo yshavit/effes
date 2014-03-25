@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class MethodsFinder implements Consumer<EffesParser> {
+public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
   private final TypeRegistry typeRegistry;
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
@@ -20,8 +20,8 @@ public final class MethodsFinder implements Consumer<EffesParser> {
   }
 
   @Override
-  public void accept(EffesParser effesParser) {
-    ParserUtils.walk(new Listener(), effesParser);
+  public void accept(EffesParser.CompilationUnitContext source) {
+    ParserUtils.walk(new Listener(), source);
   }
 
   private class Listener extends EffesBaseListener {

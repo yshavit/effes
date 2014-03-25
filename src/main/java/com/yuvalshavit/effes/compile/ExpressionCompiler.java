@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.annotations.VisibleForTesting;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
+import org.antlr.v4.runtime.tree.ErrorNode;
 
 import java.util.function.Function;
 

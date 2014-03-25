@@ -30,12 +30,18 @@ public abstract class Statement extends StatefulObject {
   }
 
   public static class MethodInvoke extends Statement {
+    private final SimpleType resultType;
     private final String methodName;
     private final List<Expression> args;
 
-    public MethodInvoke(String methodName, List<Expression> args) {
+    public MethodInvoke(String methodName, List<Expression> args, SimpleType resultType) {
       this.methodName = methodName;
       this.args = args;
+      this.resultType = resultType;
+    }
+
+    public SimpleType getResultType() {
+      return resultType;
     }
 
     public String getMethodName() {
