@@ -26,9 +26,10 @@ public final class StatementCompilerTest extends DispatcherTestBase {
   @Test
   public void returnStat() {
     TypeRegistry registry = TUtils.typeRegistry("True");
+    MethodsRegistry<?> methods = new MethodsRegistry<>();
     EffesParser.StatContext statContext = parseStatement("return True");
     ExpressionCompiler expressionCompiler = new ExpressionCompiler(registry);
-    Statement compiled = new StatementCompiler(expressionCompiler).apply(statContext);
+    Statement compiled = new StatementCompiler(expressionCompiler, methods).apply(statContext);
     Expression trueExpr = new Expression.CtorInvoke(getExistingType(registry, "True"));
     assertEquals(compiled, new Statement.ReturnStatement(trueExpr));
   }

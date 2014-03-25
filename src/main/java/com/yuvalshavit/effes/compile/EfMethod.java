@@ -17,6 +17,18 @@ public final class EfMethod<B> {
     this.body = body;
   }
 
+  public List<SimpleType> getArgTypes() {
+    return argTypes;
+  }
+
+  public SimpleType getResultType() {
+    return resultType;
+  }
+
+  public B getBody() {
+    return body;
+  }
+
   public <B2> EfMethod<B2> tranform(Function<B, B2> func) {
     return new EfMethod<>(argTypes, resultType, func.apply(body));
   }
