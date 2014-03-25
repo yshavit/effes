@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
@@ -17,6 +18,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     return ExpressionDispatcher.dispatcher.apply(dispatcher, exprContext);
   }
 
+  @VisibleForTesting
   static class ExpressionDispatcher {
     static final Dispatcher<ExpressionDispatcher, EffesParser.ExprContext, Expression> dispatcher =
       Dispatcher.<ExpressionDispatcher, EffesParser.ExprContext, Expression>builder(EffesParser.ExprContext.class)
