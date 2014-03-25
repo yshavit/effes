@@ -15,7 +15,7 @@ public final class ExpressionCompilerTest extends DispatcherTestBase {
 
   @DataProvider(name=DispatcherTestBase.providerName)
   public static Object[][] exprSubclasses() {
-    return findSubclasses(EffesParser.class, EffesParser.ExprContext.class);
+    return findSubclasses(EffesParser.ExprContext.class);
   }
 
   @Test
