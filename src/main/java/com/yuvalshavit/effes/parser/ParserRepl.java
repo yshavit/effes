@@ -79,7 +79,7 @@ public final class ParserRepl {
       ParserRuleContext rule = ParserUtils.ruleByName(parser, ruleName);
       StringBuilder sb = new StringBuilder();
       ParserUtils.prettyPrint(sb, rule, parser);
-      System.out.println(sb.toString());
+      System.out.println(sb);
       pause();
       // stopIndex is inclusive, so need to add 1. effes String has trailing \n, so need to subtract 1
       if ((rule.getStop().getStopIndex() + 1) != (effes.length())) {
@@ -90,8 +90,6 @@ public final class ParserRepl {
         }
         pause();
       }
-    } catch (IOException e) {
-      System.err.println(e);
     } catch (Exception e) {
       e.printStackTrace();
     }

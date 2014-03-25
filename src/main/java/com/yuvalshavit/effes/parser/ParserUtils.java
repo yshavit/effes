@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.parser;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
@@ -22,6 +23,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Nullable;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -65,8 +67,20 @@ public final class ParserUtils {
     return lexer;
   }
 
-  public static EffesParser createParser(String input) throws IOException {
-    return createParser(new StringReader(input));
+  public static EffesParser createParser(String input) {
+    try {
+      return createParser(new StringReader(input));
+    } catch (IOException e) {
+      throw new RuntimeException("unexpected IOException while parsing String", e);
+    }
+  }
+
+  public static EffesParser createParser(String... lines) {
+    return createParser(Joiner.on('\n').join(lines));
+  }
+
+  public static void walk(EffesListener listener, EffesParser parser) {
+    new ParseTreeWalker().walk(listener, parser.compilationUnit());
   }
 
   public static ParserRuleContext ruleByName(EffesParser parser, String ruleName) {
