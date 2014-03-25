@@ -9,52 +9,45 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class StatementCompiler implements Function<EffesParser.StatContext, Statement> {
-  private final StatementDispatcher dispatcher;
+
+  private final ExpressionCompiler expressionCompiler;
+  private final MethodsRegistry<?> methodsRegistry;
 
   public StatementCompiler(ExpressionCompiler expressionCompiler, MethodsRegistry<?> methodsRegistry) {
-    this.dispatcher = new StatementDispatcher(expressionCompiler, methodsRegistry);
+    this.expressionCompiler = expressionCompiler;
+    this.methodsRegistry = methodsRegistry;
   }
 
   @Override
   public Statement apply(EffesParser.StatContext statContext) {
-    return StatementDispatcher.dispatcher.apply(dispatcher, statContext);
+    return dispatcher.apply(this, statContext);
   }
 
-  static class StatementDispatcher {
-    static final Dispatcher<StatementDispatcher, EffesParser.StatContext, Statement> dispatcher =
-      Dispatcher.builder(StatementDispatcher.class, EffesParser.StatContext.class, Statement.class)
-        .put(EffesParser.MethodInvokeContext.class, StatementDispatcher::methodInvoke)
-        .put(EffesParser.ReturnStatContext.class, StatementDispatcher::returnStat)
-        .build();
+  static final Dispatcher<StatementCompiler, EffesParser.StatContext, Statement> dispatcher =
+    Dispatcher.builder(StatementCompiler.class, EffesParser.StatContext.class, Statement.class)
+      .put(EffesParser.MethodInvokeContext.class, StatementCompiler::methodInvoke)
+      .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
+      .build();
 
-    private final ExpressionCompiler expressionCompiler;
-    private final MethodsRegistry<?> methodsRegistry;
-
-    StatementDispatcher(ExpressionCompiler expressionCompiler, MethodsRegistry<?> methodsRegistry) {
-      this.expressionCompiler = expressionCompiler;
-      this.methodsRegistry = methodsRegistry;
+  private Statement methodInvoke(EffesParser.MethodInvokeContext ctx) {
+    String methodName = ctx.methodName().getText();
+    EfMethod<?> method = methodsRegistry.getMethod(methodName);
+    if (method == null) {
+      throw new StatementCompilationException("no such method: " + methodName);
     }
-
-    public Statement methodInvoke(EffesParser.MethodInvokeContext ctx) {
-      String methodName = ctx.methodName().getText();
-      EfMethod<?> method = methodsRegistry.getMethod(methodName);
-      if (method == null) {
-        throw new StatementCompilationException("no such method: " + methodName);
-      }
-      List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
-        .map(expressionCompiler::apply).collect(Collectors.toList());
-      List<SimpleType> invokeArgTypes = Lists.transform(invokeArgs, Expression::resultType);
-      List<SimpleType> expectedArgs = method.getArgTypes();
-      if (!invokeArgTypes.equals(expectedArgs)) {
-        throw new StatementCompilationException(
-          String.format("mismatched types: expected %s but found %s", expectedArgs, invokeArgTypes));
-      }
-      return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType());
+    List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
+      .map(expressionCompiler::apply).collect(Collectors.toList());
+    List<SimpleType> invokeArgTypes = Lists.transform(invokeArgs, Expression::resultType);
+    List<SimpleType> expectedArgs = method.getArgTypes();
+    if (!invokeArgTypes.equals(expectedArgs)) {
+      throw new StatementCompilationException(
+        String.format("mismatched types: expected %s but found %s", expectedArgs, invokeArgTypes));
     }
+    return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType());
+  }
 
-    public Statement returnStat(EffesParser.ReturnStatContext ctx) {
-      Expression expr = expressionCompiler.apply(ctx.exprLine().expr());
-      return new Statement.ReturnStatement(expr);
-    }
+  private Statement returnStat(EffesParser.ReturnStatContext ctx) {
+    Expression expr = expressionCompiler.apply(ctx.exprLine().expr());
+    return new Statement.ReturnStatement(expr);
   }
 }
