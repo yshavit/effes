@@ -5,11 +5,18 @@ import javax.annotation.Nonnull;
 public abstract class Expression extends StatefulObject {
   private Expression() {}
 
+  public abstract SimpleType resultType();
+
   public static class CtorInvoke extends Expression {
     private final SimpleType type;
 
     public CtorInvoke(@Nonnull SimpleType type) {
       this.type = type;
+    }
+
+    @Override
+    public SimpleType resultType() {
+      return type;
     }
 
     @Override

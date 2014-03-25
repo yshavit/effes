@@ -10,6 +10,10 @@ public abstract class Statement extends StatefulObject {
       this.expression = expression;
     }
 
+    public Expression getExpression() {
+      return expression;
+    }
+
     @Override
     public String toString() {
       return "return " + expression;

@@ -30,33 +30,34 @@ public final class Block {
     return statements.hashCode();
   }
 
-  public void validate(boolean requireReturn) {
+  public void validate(SimpleType requiredReturnType) {
     ValidationDispatch validator = new ValidationDispatch();
-    BranchReturn lastBranch = BranchReturn.NEVER;
+    SimpleType lastBranchReturned = null;
     for (Statement s : statements) {
-      if (lastBranch == BranchReturn.ALWAYS) {
+      if (lastBranchReturned != null) {
         throw new BlockValidationException("unreachable statement: " + s);
       }
-      lastBranch = ValidationDispatch.dispatcher.apply(validator, s);
+      lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
     }
-    if (requireReturn && lastBranch != BranchReturn.ALWAYS) {
-      throw new BlockValidationException("block may not return");
+    if (requiredReturnType != null) {
+      if (lastBranchReturned == null) {
+        throw new BlockValidationException("block may not return");
+      }
+      if (!lastBranchReturned.equals(requiredReturnType)) {
+        throw new BlockValidationException(String.format("expected result type %s but found %s",
+          requiredReturnType, lastBranchReturned));
+      }
     }
-  }
-
-  private enum BranchReturn {
-    ALWAYS,
-    NEVER
   }
 
   static class ValidationDispatch {
-    static final Dispatcher<ValidationDispatch, Statement, BranchReturn> dispatcher =
-      Dispatcher.<ValidationDispatch, Statement, BranchReturn>builder(Statement.class)
+    static final Dispatcher<ValidationDispatch, Statement, SimpleType> dispatcher =
+      Dispatcher.<ValidationDispatch, Statement, SimpleType>builder(Statement.class)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .build();
 
-    public BranchReturn returnStat(Statement.ReturnStatement ctx) {
-      return BranchReturn.ALWAYS;
+    public SimpleType returnStat(Statement.ReturnStatement stat) {
+      return stat.getExpression().resultType();
     }
   }
 }
