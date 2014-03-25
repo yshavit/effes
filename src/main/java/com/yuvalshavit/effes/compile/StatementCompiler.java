@@ -19,7 +19,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   static class StatementDispatcher {
     static final Dispatcher<StatementDispatcher, EffesParser.StatContext, Statement> dispatcher =
-      Dispatcher.<StatementDispatcher, EffesParser.StatContext, Statement>builder(EffesParser.StatContext.class)
+      Dispatcher.builder(StatementDispatcher.class, EffesParser.StatContext.class, Statement.class)
         .put(EffesParser.ReturnStatContext.class, StatementDispatcher::returnStat)
         .build();
 
