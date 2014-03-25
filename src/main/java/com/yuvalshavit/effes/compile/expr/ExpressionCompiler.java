@@ -7,6 +7,7 @@ import com.yuvalshavit.effes.compile.CompileException;
 import com.yuvalshavit.effes.base.BuiltIns;
 import com.yuvalshavit.effes.ir.Expression;
 import com.yuvalshavit.effes.parser.EffesParser;
+import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;
 import java.util.Map;
@@ -173,35 +174,53 @@ public class ExpressionCompiler {
     }
   }
 
-  private static Map<Class<?>, BiFunction<Dispatch, Object, Expression>> createDispatchMap() {
-    ImmutableMap.Builder<Class<?>, BiFunction<Dispatch, Object, Expression>> builder = ImmutableMap.builder();
-    builder.put(EffesParser.UnaryExprContext.class, (d, o) -> d.unary((EffesParser.UnaryExprContext) o));
-    builder.put(EffesParser.MethodInvokeContext.class, (d, o) -> d.methodInvoke((EffesParser.MethodInvokeContext) o));
-    builder.put(EffesParser.IntLiteralContext.class, (d, o) -> d.intLiteral((EffesParser.IntLiteralContext)o));
-    builder.put(EffesParser.DecimalLiteralContext.class, (d, o) -> d.decimalLiteral((EffesParser.DecimalLiteralContext)o));
-    builder.put(EffesParser.CtorInvokeContext.class, (d, o) -> d.ctor((EffesParser.CtorInvokeContext)o));
-    builder.put(EffesParser.TupleExprContext.class, (d, o) -> d.tuple((EffesParser.TupleExprContext)o));
-    builder.put(EffesParser.ThisMethodInvokeContext.class, (d, o) -> d.methodWithThis((EffesParser.ThisMethodInvokeContext) o));
-    builder.put(EffesParser.VarExprContext.class, (d, o) -> d.var((EffesParser.VarExprContext)o));
-    builder.put(EffesParser.LeftComposeContext.class, (d, o) -> d.leftCompose((EffesParser.LeftComposeContext)o));
-    builder.put(EffesParser.DollarExprContext.class, (d, o) -> d.dollar((EffesParser.DollarExprContext)o));
-    builder.put(EffesParser.AddOrSubExprContext.class, (d, o) -> d.addOrSub((EffesParser.AddOrSubExprContext)o));
-    builder.put(EffesParser.ParenExprContext.class, (d, o) -> d.paren((EffesParser.ParenExprContext)o));
-    builder.put(EffesParser.PipeExprContext.class, (d, o) -> d.pipe((EffesParser.PipeExprContext)o));
-    builder.put(EffesParser.MultOrDivExprContext.class, (d, o) -> d.multOrDiv((EffesParser.MultOrDivExprContext)o));
-    builder.put(EffesParser.ComponentCastExprContext.class, (d, o) -> d.componentCast((EffesParser.ComponentCastExprContext)o));
-    builder.put(EffesParser.CompareExprContext.class, (d, o) -> d.compare((EffesParser.CompareExprContext)o));
-    builder.put(EffesParser.IfExprContext.class, (d, o) -> d.ifElse((EffesParser.IfExprContext)o));
-    return builder.build();
+  private static Dispatcher<Dispatch, EffesParser.ExprContext, Expression> createDispatchMap() {
+//    Dispatcher.Builder<Dispatch, EffesParser.ExprContext, Expression> builder
+    return Dispatcher.<Dispatch, EffesParser.ExprContext, Expression>builder(EffesParser.ExprContext.class)
+      .put(EffesParser.UnaryExprContext.class, (d, o) -> d.unary(o))
+      .put(EffesParser.MethodInvokeContext.class, (d, o) -> d.methodInvoke(o))
+      .put(EffesParser.IntLiteralContext.class, (d, o) -> d.intLiteral(o))
+      .put(EffesParser.DecimalLiteralContext.class, (d, o) -> d.decimalLiteral(o))
+      .put(EffesParser.CtorInvokeContext.class, (d, o) -> d.ctor(o))
+      .put(EffesParser.TupleExprContext.class, (d, o) -> d.tuple(o))
+      .put(EffesParser.ThisMethodInvokeContext.class, (d, o) -> d.methodWithThis((EffesParser.ThisMethodInvokeContext) o))
+      .put(EffesParser.VarExprContext.class, (d, o) -> d.var(o))
+      .put(EffesParser.LeftComposeContext.class, (d, o) -> d.leftCompose(o))
+      .put(EffesParser.DollarExprContext.class, (d, o) -> d.dollar(o))
+      .put(EffesParser.AddOrSubExprContext.class, (d, o) -> d.addOrSub(o))
+      .put(EffesParser.ParenExprContext.class, (d, o) -> d.paren(o))
+      .put(EffesParser.PipeExprContext.class, (d, o) -> d.pipe(o))
+      .put(EffesParser.MultOrDivExprContext.class, (d, o) -> d.multOrDiv(o))
+      .put(EffesParser.ComponentCastExprContext.class, (d, o) -> d.componentCast(o))
+      .put(EffesParser.CompareExprContext.class, (d, o) -> d.compare(o))
+      .put(EffesParser.IfExprContext.class, (d, o) -> d.ifElse(o))
+      .build();
   }
 
   interface Dispatch {
-    static Map<Class<?>, BiFunction<Dispatch, Object, Expression>> dispatchMap = createDispatchMap();
+    static Dispatcher<Dispatch, EffesParser.ExprContext, Expression> dispatcher =
+      Dispatcher.<Dispatch, EffesParser.ExprContext, Expression>builder(EffesParser.ExprContext.class)
+      .put(EffesParser.UnaryExprContext.class, (d, o) -> d.unary(o))
+      .put(EffesParser.MethodInvokeContext.class, (d, o) -> d.methodInvoke(o))
+      .put(EffesParser.IntLiteralContext.class, (d, o) -> d.intLiteral(o))
+      .put(EffesParser.DecimalLiteralContext.class, (d, o) -> d.decimalLiteral(o))
+      .put(EffesParser.CtorInvokeContext.class, (d, o) -> d.ctor(o))
+      .put(EffesParser.TupleExprContext.class, (d, o) -> d.tuple(o))
+      .put(EffesParser.ThisMethodInvokeContext.class, (d, o) -> d.methodWithThis(o))
+      .put(EffesParser.VarExprContext.class, (d, o) -> d.var(o))
+      .put(EffesParser.LeftComposeContext.class, (d, o) -> d.leftCompose(o))
+      .put(EffesParser.DollarExprContext.class, (d, o) -> d.dollar(o))
+      .put(EffesParser.AddOrSubExprContext.class, (d, o) -> d.addOrSub(o))
+      .put(EffesParser.ParenExprContext.class, (d, o) -> d.paren(o))
+      .put(EffesParser.PipeExprContext.class, (d, o) -> d.pipe(o))
+      .put(EffesParser.MultOrDivExprContext.class, (d, o) -> d.multOrDiv(o))
+      .put(EffesParser.ComponentCastExprContext.class, (d, o) -> d.componentCast(o))
+      .put(EffesParser.CompareExprContext.class, (d, o) -> d.compare(o))
+      .put(EffesParser.IfExprContext.class, (d, o) -> d.ifElse(o))
+      .build();
 
     default Expression createExpr(EffesParser.ExprContext ctx) {
-      BiFunction<Dispatch, Object, Expression> dispatch = dispatchMap.get(ctx.getClass());
-      assert dispatch != null: "no dispatch for " + ctx.getClass();
-      return dispatch.apply(this, ctx);
+      return dispatcher.apply(this, ctx);
     }
 
     default List<Expression> createExprs(List<EffesParser.ExprContext> exprs) {
