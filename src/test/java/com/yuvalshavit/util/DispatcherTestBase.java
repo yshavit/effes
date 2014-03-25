@@ -18,6 +18,10 @@ public abstract class DispatcherTestBase {
       .toArray(new Object[0][]);
   }
 
+  public static Object[][] findSubclasses(Class<?> baseClass) {
+    return findSubclasses(baseClass, baseClass);
+  }
+
   protected abstract Dispatcher<?,?,?> getDispatcherUnderTest();
 
   @Test(dataProvider = providerName)
