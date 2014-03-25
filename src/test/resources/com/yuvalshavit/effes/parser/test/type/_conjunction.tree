@@ -1,8 +1,0 @@
-ConjunciveType
-  ConcreteAtom
-    TYPE_NAME: One
-  ConcreteAtom
-    TYPE_NAME: Two
-    genericsDeclr
-      NamedGeneric
-        GENERIC_NAME: A

@@ -1,6 +1,0 @@
-case someObject of
-  List(h, ts): h color
-  Nothing: Red
-  Pixels(ps): averageColor where
-    defaultcolor = Gray
-    averageColor = defaultColor -- complex graphics algorithm goes here

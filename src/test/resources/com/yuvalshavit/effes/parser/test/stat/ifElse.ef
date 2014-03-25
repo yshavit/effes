@@ -1,5 +1,0 @@
-if cond
-  a = 1
-else
-  b = 2
-

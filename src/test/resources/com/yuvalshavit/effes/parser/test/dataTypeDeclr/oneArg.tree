@@ -1,7 +1,0 @@
-dataTypeDeclr
-  TYPE_NAME: Just
-  dataTypeArgs
-    dataTypeArg
-      VAR_NAME: item
-      GenericAtom
-        GENERIC_NAME: A

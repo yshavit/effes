@@ -1,2 +1,0 @@
-@pattern -> (E, List[E]): return (head, tail)
-

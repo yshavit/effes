@@ -2,5 +2,14 @@ methodDeclr
   methodName
     MULT_OPS: /
   methodArgs
-    NormalMethodArg
-      VAR_NAME: bar
+    methodArg
+      type
+        TYPE_NAME: Foo
+  methodReturnDeclr
+    type
+      TYPE_NAME: Bar
+  inlinableBlock
+    ReturnStat
+      exprLine
+        CtorInvoke
+          TYPE_NAME: Bar

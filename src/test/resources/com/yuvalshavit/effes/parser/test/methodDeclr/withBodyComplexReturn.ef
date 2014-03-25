@@ -1,3 +1,0 @@
-foo: return case object0 of
-  One(a): 1
-  _: 0

@@ -1,5 +1,0 @@
-DisjunctiveType
-  ConcreteAtom
-    TYPE_NAME: True
-  ConcreteAtom
-    TYPE_NAME: False

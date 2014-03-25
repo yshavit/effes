@@ -1,8 +1,0 @@
-methodDeclr
-  methodName
-    VAR_NAME: foo
-  methodArgs
-    NormalMethodArg
-      VAR_NAME: arg0
-    NormalMethodArg
-      VAR_NAME: arg1
