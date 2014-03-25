@@ -62,7 +62,7 @@ public final class MethodsFinderTest {
     assertException(MethodRegistrationException.class, () -> new MethodsFinder(types, methodsRegistry).accept(parser));
   }
 
-  private TypeRegistry typeRegisry(String... types) {
+  static TypeRegistry typeRegisry(String... types) {
     TypeRegistry registry = new TypeRegistry();
     for (String type : types) {
       registry.registerType(type);
