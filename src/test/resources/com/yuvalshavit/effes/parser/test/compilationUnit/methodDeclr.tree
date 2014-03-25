@@ -1,0 +1,18 @@
+compilationUnit
+  compilationBodyElement
+    methodDeclr
+      methodName
+        VAR_NAME: not
+      methodArgs
+        methodArg
+          type
+            TYPE_NAME: True
+      methodReturnDeclr
+        type
+          TYPE_NAME: False
+      inlinableBlock
+        ReturnStat
+          exprLine
+            CtorInvoke
+              TYPE_NAME: False
+  EOF: <EOF>

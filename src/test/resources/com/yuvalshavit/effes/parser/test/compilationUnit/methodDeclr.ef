@@ -1,0 +1,1 @@
+def not True -> False: return False
