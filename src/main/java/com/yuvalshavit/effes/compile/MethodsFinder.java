@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 public final class MethodsFinder implements Consumer<EffesParser> {
 
   private final TypeRegistry typeRegistry;
-  private final MethodsRegistry methodsRegistry;
+  private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
 
-  public MethodsFinder(TypeRegistry typeRegistry, MethodsRegistry methodsRegistry) {
+  public MethodsFinder(TypeRegistry typeRegistry, MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry) {
     this.typeRegistry = typeRegistry;
     this.methodsRegistry = methodsRegistry;
   }
@@ -35,7 +35,8 @@ public final class MethodsFinder implements Consumer<EffesParser> {
         argTypes.add(type);
       }
       SimpleType resultType = lookupType(ctx.methodReturnDeclr().type());
-      EfMethod method = new EfMethod(argTypes, resultType);
+      EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
+      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
       methodsRegistry.registerTopLevelMethod(name, method);
     }
   }

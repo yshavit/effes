@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 
 import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 public final class ExpressionCompilerTest extends DispatcherTestBase {
 
