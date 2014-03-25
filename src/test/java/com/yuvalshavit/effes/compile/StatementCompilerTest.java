@@ -7,7 +7,7 @@ import com.yuvalshavit.util.DispatcherTestBase;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import static com.yuvalshavit.effes.compile.ExpressionCompilerTest.getExistingType;
+import static com.yuvalshavit.effes.compile.TUtils.getExistingType;
 import static org.testng.Assert.assertEquals;
 
 public final class StatementCompilerTest extends DispatcherTestBase {
@@ -24,7 +24,7 @@ public final class StatementCompilerTest extends DispatcherTestBase {
 
   @Test
   public void returnStat() {
-    TypeRegistry registry = MethodsFinderTest.typeRegisry("True");
+    TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.StatContext statContext = parseStatement("return True");
     ExpressionCompiler expressionCompiler = new ExpressionCompiler(registry);
     Statement compiled = new StatementCompiler(expressionCompiler).apply(statContext);
