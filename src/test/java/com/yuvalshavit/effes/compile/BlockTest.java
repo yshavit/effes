@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.TUtils;
 import org.testng.annotations.Test;
 
 import static com.yuvalshavit.util.AssertException.assertException;
