@@ -1,4 +1,4 @@
 ReturnStat
   exprLine
-    IntLiteral
-      INT: 5
+    CtorInvoke
+      TYPE_NAME: True

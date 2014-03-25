@@ -1,7 +1,0 @@
-ParenExpr
-  AddOrSubExpr
-    IntLiteral
-      INT: 5
-    ADD_OPS: +
-    IntLiteral
-      INT: 2

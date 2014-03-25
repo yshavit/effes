@@ -1,7 +1,0 @@
-AssignStat
-  VAR_NAME: foo
-  ConcreteAtom
-    TYPE_NAME: Foo
-  exprLine
-    IntLiteral
-      INT: 5

@@ -1,4 +1,0 @@
-case obj0 of
-  One: 1
-  _: 2
-+ 4 

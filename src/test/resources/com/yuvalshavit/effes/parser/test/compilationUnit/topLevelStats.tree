@@ -1,8 +1,0 @@
-compilationUnit
-  compilationBodyElement
-    AssignStat
-      VAR_NAME: i
-      exprLine
-        IntLiteral
-          INT: 1
-  EOF: <EOF>

@@ -1,1 +1,0 @@
-type Either[A, B:Hashable] = A | B

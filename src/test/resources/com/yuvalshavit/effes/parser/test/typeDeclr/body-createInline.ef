@@ -1,2 +1,0 @@
-type One[A]:
-  @create(v A): value = v

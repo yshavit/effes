@@ -1,6 +1,0 @@
-methodDeclr
-  methodName
-    ADD_OPS: -
-  methodArgs
-    NormalMethodArg
-      VAR_NAME: bar

@@ -1,1 +1,0 @@
-if someCondition then 1+2 else $ elseCond

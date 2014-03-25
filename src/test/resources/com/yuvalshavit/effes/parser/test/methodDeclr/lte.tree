@@ -1,6 +1,0 @@
-methodDeclr
-  methodName
-    CMP_OPS: <=
-  methodArgs
-    NormalMethodArg
-      VAR_NAME: bar

@@ -1,0 +1,8 @@
+compilationUnit
+  compilationBodyElement
+    dataTypeDeclr
+      TYPE_NAME: True
+  compilationBodyElement
+    dataTypeDeclr
+      TYPE_NAME: False
+  EOF: <EOF>
