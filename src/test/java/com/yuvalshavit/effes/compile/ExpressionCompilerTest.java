@@ -15,15 +15,13 @@ public final class ExpressionCompilerTest extends DispatcherTestBase {
 
   @DataProvider(name=DispatcherTestBase.providerName)
   public static Object[][] exprSubclasses() {
-    Class<EffesParser> lookIn = EffesParser.class;
-    Class<EffesParser.ExprContext> baseClass = EffesParser.ExprContext.class;
-    return findSubclasses(lookIn, baseClass);
+    return findSubclasses(EffesParser.class, EffesParser.ExprContext.class);
   }
 
   @Test
   public void ctorInvoke() {
     TypeRegistry registry = MethodsFinderTest.typeRegisry("True");
-    EffesParser.ExprContext exprContext = parseException("True");
+    EffesParser.ExprContext exprContext = parseExpression("True");
     Expression compiled = new ExpressionCompiler(registry).apply(exprContext);
     assertEquals(compiled, new Expression.CtorInvoke(getExistingType(registry, "True")));
   }
@@ -31,25 +29,24 @@ public final class ExpressionCompilerTest extends DispatcherTestBase {
   @Test
   public void ctorInvokeUnknownType() {
     TypeRegistry registry = MethodsFinderTest.typeRegisry("True");
-    EffesParser.ExprContext exprContext = parseException("False");
+    EffesParser.ExprContext exprContext = parseExpression("False");
     assertException(ExpressionCompilationException.class, () -> new ExpressionCompiler(registry).apply(exprContext));
   }
 
   @Test
   public void param() {
     TypeRegistry registry = MethodsFinderTest.typeRegisry("True");
-    EffesParser.ExprContext exprContext = parseException("(True)");
+    EffesParser.ExprContext exprContext = parseExpression("(True)");
     Expression compiled = new ExpressionCompiler(registry).apply(exprContext);
     // Note that the compiled expression is inlined -- there's no Expression.Param
     assertEquals(compiled, new Expression.CtorInvoke(getExistingType(registry, "True")));
   }
 
-  private EffesParser.ExprContext parseException(String code) {
-    EffesParser parser = ParserUtils.createParser(code);
-    return ParserUtils.ruleByName(parser, EffesParser.ExprContext.class);
+  private static EffesParser.ExprContext parseExpression(String code) {
+    return ParserUtils.parseRule(EffesParser.ExprContext.class, code);
   }
 
-  private SimpleType getExistingType(TypeRegistry registry, String name) {
+  static SimpleType getExistingType(TypeRegistry registry, String name) {
     SimpleType type = registry.getSimpleType(name);
     assertNotNull(type, name);
     return type;

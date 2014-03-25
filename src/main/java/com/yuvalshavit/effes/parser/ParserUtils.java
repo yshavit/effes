@@ -103,11 +103,11 @@ public final class ParserUtils {
     }
   }
 
-  public static <R extends ParserRuleContext> R ruleByName(EffesParser parser, Class<R> ruleClass) {
+  public static <R extends ParserRuleContext> R parseRule(Class<R> ruleClass, String code) {
     StringBuilder ruleName = new StringBuilder(ruleClass.getSimpleName());
     ruleName.setLength(ruleName.length() - "Context".length());
     ruleName.setCharAt(0, Character.toLowerCase(ruleName.charAt(0)));
-    return ruleClass.cast(ruleByName(parser, ruleName.toString()));
+    return ruleClass.cast(ruleByName(ParserUtils.createParser(code), ruleName.toString()));
   }
 
   public static void prettyPrint(StringBuilder sb, ParseTree tree, Parser parser) {
