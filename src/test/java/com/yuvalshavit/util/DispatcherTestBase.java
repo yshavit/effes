@@ -10,16 +10,16 @@ import static org.testng.Assert.assertTrue;
 public abstract class DispatcherTestBase {
   public static final String providerName = "DispatcherTestBase main provider";
 
-  public static Object[][] findSubclasses(Class<?> lookIn, Class<?> baseClass) {
+  public static Object[][] findSubclasses(Class<?> baseClass) {
+    Class<?> lookIn = baseClass;
+    while (lookIn.getDeclaringClass() != null) {
+      lookIn = lookIn.getDeclaringClass();
+    }
     return Stream.of(lookIn.getClasses())
       .filter(baseClass::isAssignableFrom)
       .map(c -> new Object[] { c })
       .collect(Collectors.toList())
       .toArray(new Object[0][]);
-  }
-
-  public static Object[][] findSubclasses(Class<?> baseClass) {
-    return findSubclasses(baseClass, baseClass);
   }
 
   protected abstract Dispatcher<?,?,?> getDispatcherUnderTest();

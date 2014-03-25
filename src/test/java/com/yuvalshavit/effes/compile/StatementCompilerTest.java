@@ -15,7 +15,7 @@ public final class StatementCompilerTest extends DispatcherTestBase {
 
   @DataProvider(name=DispatcherTestBase.providerName)
   public static Object[][] statSubclasses() {
-    return findSubclasses(EffesParser.class, EffesParser.StatContext.class);
+    return findSubclasses(EffesParser.StatContext.class);
   }
 
   @Override
