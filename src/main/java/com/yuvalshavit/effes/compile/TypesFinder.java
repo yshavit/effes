@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.function.Consumer;
 
-public final class TypesFinder implements Consumer<EffesParser> {
+public final class TypesFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
   private final TypeRegistry registry;
 
@@ -16,8 +16,8 @@ public final class TypesFinder implements Consumer<EffesParser> {
   }
 
   @Override
-  public void accept(EffesParser effesParser) {
-    ParserUtils.walk(new Listener(), effesParser);
+  public void accept(EffesParser.CompilationUnitContext source) {
+    ParserUtils.walk(new Listener(), source);
   }
 
   private class Listener extends EffesBaseListener {

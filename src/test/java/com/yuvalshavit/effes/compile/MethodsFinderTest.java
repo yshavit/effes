@@ -17,7 +17,7 @@ public final class MethodsFinderTest {
       "def id True -> True: return True",
       "def ego True -> True: return True");
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
-    new MethodsFinder(types, methodsRegistry).accept(parser);
+    findMethods(types, methodsRegistry, parser);
     assertEquals(methodsRegistry.getAllTopLevelMethodNames(), Sets.newHashSet("id", "ego"));
   }
 
@@ -28,7 +28,7 @@ public final class MethodsFinderTest {
       "def bogus False -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
-    assertException(MethodRegistrationException.class, () -> new MethodsFinder(types, methodsRegistry).accept(parser));
+    assertException(MethodRegistrationException.class, () -> findMethods(types, methodsRegistry, parser));
   }
 
   @Test
@@ -38,7 +38,7 @@ public final class MethodsFinderTest {
       "def not True -> False: return False"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
-    assertException(MethodRegistrationException.class, () -> new MethodsFinder(types, methodsRegistry).accept(parser));
+    assertException(MethodRegistrationException.class, () -> findMethods(types, methodsRegistry, parser));
   }
 
   @Test
@@ -49,7 +49,7 @@ public final class MethodsFinderTest {
       "def not False -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
-    assertException(MethodRegistrationException.class, () -> new MethodsFinder(types, methodsRegistry).accept(parser));
+    assertException(MethodRegistrationException.class, () -> findMethods(types, methodsRegistry, parser));
   }
 
   @Test
@@ -60,6 +60,12 @@ public final class MethodsFinderTest {
       "def not True -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
-    assertException(MethodRegistrationException.class, () -> new MethodsFinder(types, methodsRegistry).accept(parser));
+    assertException(MethodRegistrationException.class, () -> findMethods(types, methodsRegistry, parser));
+  }
+
+  private static void findMethods(TypeRegistry types,
+                                  MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
+                                  EffesParser parser) {
+    new MethodsFinder(types, methodsRegistry).accept(parser.compilationUnit());
   }
 }

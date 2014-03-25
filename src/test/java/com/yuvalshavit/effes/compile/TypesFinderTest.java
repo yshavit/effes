@@ -17,7 +17,7 @@ public final class TypesFinderTest {
       "data type True",
       "data type False");
     TypeRegistry registry = new TypeRegistry();
-    new TypesFinder(registry).accept(parser);
+    new TypesFinder(registry).accept(parser.compilationUnit());
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
   }
 
@@ -28,6 +28,6 @@ public final class TypesFinderTest {
       "data type True"
     );
     TypeRegistry registry = new TypeRegistry();
-    assertException(TypeRegistryException.class, () -> new TypesFinder(registry).accept(parser));
+    assertException(TypeRegistryException.class, () -> new TypesFinder(registry).accept(parser.compilationUnit()));
   }
 }

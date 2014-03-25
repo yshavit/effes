@@ -1,20 +1,19 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.EfMethod;
-import com.yuvalshavit.effes.compile.MethodsRegistry;
+import com.google.common.base.Suppliers;
 import com.yuvalshavit.effes.compile.Statement;
 import com.yuvalshavit.util.Dispatcher;
 
-import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class ExecutableStatementCompiler implements Function<Statement, ExecutableStatement> {
 
   private final StatementCompiler statementCompiler;
 
-  public ExecutableStatementCompiler(ExecutableExpressionCompiler expressionCompiler, MethodsRegistry<Block> methods) {
+  public ExecutableStatementCompiler(ExecutableExpressionCompiler expressionCompiler,
+                                     Function<String, ExecutableBlock> methods)
+  {
     this.statementCompiler = new StatementCompiler(methods, expressionCompiler);
   }
 
@@ -30,19 +29,23 @@ public final class ExecutableStatementCompiler implements Function<Statement, Ex
         .put(Statement.ReturnStatement.class, StatementCompiler::returnStat)
         .build();
 
-    private final MethodsRegistry<Block> methods;
+    private final Function<String, ExecutableBlock> methods;
     private final ExecutableExpressionCompiler expressionCompiler;
 
-    StatementCompiler(MethodsRegistry<Block> methods, ExecutableExpressionCompiler expressionCompiler) {
+    StatementCompiler(Function<String, ExecutableBlock> methods, ExecutableExpressionCompiler expressionCompiler) {
       this.methods = methods;
       this.expressionCompiler = expressionCompiler;
     }
 
     public ExecutableStatement methodInvoke(Statement.MethodInvoke methodInvoke) {
-      EfMethod<Block> method = methods.getMethod(methodInvoke.getMethodName());
-      assert method != null : methodInvoke.getMethodName();
-      List<ExecutableStatement> body = Lists.transform(method.getBody().statements(), s -> dispatcher.apply(this, s));
-      return new ExecutableStatement.MethodInvoke(methodInvoke, expressionCompiler, body);
+      com.google.common.base.Supplier<ExecutableBlock> memoized = Suppliers.memoize(() -> {
+        String methodName = methodInvoke.getMethodName();
+        ExecutableBlock method = methods.apply(methodName);
+        assert method != null : methodName;
+        return method;
+      });
+      Supplier<ExecutableBlock> getter = memoized::get; // convert to java.lang.function.Supplier
+      return new ExecutableStatement.MethodInvoke(methodInvoke, expressionCompiler, getter);
     }
 
     public ExecutableStatement returnStat(Statement.ReturnStatement returnStatement) {

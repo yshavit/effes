@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.Statement;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public abstract class ExecutableStatement implements ExecutableElement {
   private final Statement source;
@@ -29,30 +30,33 @@ public abstract class ExecutableStatement implements ExecutableElement {
 
   public static class MethodInvoke extends ExecutableStatement {
     private final List<ExecutableExpression> args;
-    private final List<ExecutableStatement> body;
+    private final Supplier<ExecutableBlock> body;
+
     public MethodInvoke(Statement.MethodInvoke source,
                         ExecutableExpressionCompiler expressionCompiler,
-                        List<ExecutableStatement> body)
+                        Supplier<ExecutableBlock> body)
     {
       super(source);
       this.args = ImmutableList.copyOf(Lists.transform(source.getArgs(), expressionCompiler::apply));
-      this.body = ImmutableList.copyOf(body);
+      this.body = body;
     }
 
     @Override
     public void execute(StateStack stack) {
+      invoke(body.get(), args, stack);
+    }
+
+    public static Object invoke(ExecutableBlock body, List<ExecutableExpression> args, StateStack stack) {
       for (ExecutableExpression arg : args) {
         arg.execute(stack);
       }
-      for (ExecutableStatement s : body) {
-        s.execute(stack);
-      }
+      body.execute(stack);
       // TODO not efficient, but we can work on that later!
       Object rv = stack.pop();
       for (int i = 0, nArgs = args.size(); i < nArgs; ++ i) {
         stack.pop(); // TODO also not efficient!
       }
-      stack.push(rv);
+      return rv; // will be useful later, when this is used in an expression
     }
   }
 }
