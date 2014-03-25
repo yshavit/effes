@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.util.function.Function;
 
 public final class Interpreter {
-  public static StateStack run(EffesParser.CompilationUnitContext source) {
+  private final MethodsRegistry<ExecutableBlock> methodsRegistry;
+
+  public Interpreter(EffesParser.CompilationUnitContext source) {
     TypeRegistry typeRegistry = new TypeRegistry();
     new TypesFinder(typeRegistry).accept(source);
 
@@ -39,8 +41,11 @@ public final class Interpreter {
     ExecutableStatementCompiler executableStatementCompiler = new ExecutableStatementCompiler(executableExpressionCompiler, methodLookup);
     ExecutableBlockCompiler executableBlockCompiler = new ExecutableBlockCompiler(executableStatementCompiler);
     executableMethods.addAll(compiledMethods, executableBlockCompiler);
+    this.methodsRegistry = executableMethods;
+  }
 
-    EfMethod<ExecutableBlock> main = executableMethods.getMethod("main");
+  public void runMain() {
+    EfMethod<ExecutableBlock> main = methodsRegistry.getMethod("main");
     StateStack states = new StateStack();
     if (main != null) {
       if(!main.getArgTypes().isEmpty()) {
@@ -48,20 +53,14 @@ public final class Interpreter {
       }
       ExecutableStatement.MethodInvoke.invoke(main.getBody(), ImmutableList.of(), states);
     }
-    return states;
-  }
-
-  private static class BadMainException extends RuntimeException {
-    private BadMainException(String message) {
-      super(message);
-    }
+    assert states.getAllStates().isEmpty() : states.getAllStates();
   }
 
   public static void main(String[] args) throws IOException {
     try (FileReader tmpFile = new FileReader("/tmp/ramdisk/example.ef")) {
       EffesParser parser = ParserUtils.createParser(tmpFile);
-      StateStack states = run(parser.compilationUnit());
-      System.out.println(">> " + states.getAllStates());
+      new Interpreter(parser.compilationUnit()).runMain();
+      System.out.println(">> Done!");
     }
   }
 }
