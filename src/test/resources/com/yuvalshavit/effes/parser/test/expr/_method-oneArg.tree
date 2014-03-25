@@ -1,0 +1,8 @@
+MethodInvoke
+  target= VarExpr
+    VAR_NAME: mylist
+  methodName
+    VAR_NAME: push
+  methodInvokeArgs
+    IntLiteral
+      INT: 5

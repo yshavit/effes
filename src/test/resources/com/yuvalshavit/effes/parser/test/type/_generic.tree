@@ -1,0 +1,5 @@
+ConcreteAtom
+  TYPE_NAME: Set
+  genericsDeclr
+    ConcreteGeneric
+      TYPE_NAME: Foo

@@ -1,0 +1,2 @@
+type Foo:
+  f -> Int: return 5

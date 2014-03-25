@@ -1,0 +1,6 @@
+methodDeclr
+  methodName
+    MULT_OPS: *
+  methodArgs
+    NormalMethodArg
+      VAR_NAME: bar

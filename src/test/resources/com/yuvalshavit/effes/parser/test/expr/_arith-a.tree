@@ -1,0 +1,14 @@
+AddOrSubExpr
+  AddOrSubExpr
+    IntLiteral
+      INT: 1
+    ADD_OPS: +
+    MultOrDivExpr
+      IntLiteral
+        INT: 2
+      MULT_OPS: *
+      IntLiteral
+        INT: 3
+  ADD_OPS: +
+  IntLiteral
+    INT: 4

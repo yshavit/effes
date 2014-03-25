@@ -1,0 +1,20 @@
+typeDeclr
+  TYPE_NAME: One
+  genericsDeclr
+    NamedGeneric
+      GENERIC_NAME: A
+  typeDef
+    typeDeclrBody
+      TypeCreateDeclr
+        ctorDeclrArgs
+          NormalMethodArg
+            VAR_NAME: v
+            GenericAtom
+              GENERIC_NAME: A
+        methodDef
+          inlinableBlock
+            AssignStat
+              VAR_NAME: value
+              exprLine
+                VarExpr
+                  VAR_NAME: v

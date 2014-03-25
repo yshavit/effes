@@ -1,0 +1,14 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+    NormalMethodArg
+      VAR_NAME: tup
+      TupleAtom
+        tupleType
+          GenericAtom
+            GENERIC_NAME: A
+          GenericAtom
+            GENERIC_NAME: B
+    NormalMethodArg
+      VAR_NAME: c

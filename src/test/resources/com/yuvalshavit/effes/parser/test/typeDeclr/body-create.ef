@@ -1,0 +1,4 @@
+type Foo:
+  @create (a A, b B):
+    myA = a
+    myB = b

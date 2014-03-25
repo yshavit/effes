@@ -1,0 +1,19 @@
+dataTypeDeclr
+  TYPE_NAME: Pair
+  genericsDeclr
+    NamedGeneric
+      GENERIC_NAME: A
+      genericParamRestriction
+        ConcreteAtom
+          TYPE_NAME: Eq
+    NamedGeneric
+      GENERIC_NAME: B
+  dataTypeArgs
+    dataTypeArg
+      VAR_NAME: first
+      GenericAtom
+        GENERIC_NAME: A
+    dataTypeArg
+      VAR_NAME: second
+      GenericAtom
+        GENERIC_NAME: B

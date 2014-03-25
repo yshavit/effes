@@ -1,0 +1,37 @@
+IfElseStat
+  ifStatFragment
+    VarExpr
+      VAR_NAME: cond0
+    block
+      AssignStat
+        VAR_NAME: a
+        exprLine
+          IntLiteral
+            INT: 1
+  elseIfStatFragment
+    VarExpr
+      VAR_NAME: cond1
+    block
+      AssignStat
+        VAR_NAME: b
+        exprLine
+          IntLiteral
+            INT: 2
+  elseIfStatFragment
+    VarExpr
+      VAR_NAME: cond2
+    block
+      AssignStat
+        VAR_NAME: c
+        exprLine
+          IntLiteral
+            INT: 3
+  elseIfStatFragment
+    VarExpr
+      VAR_NAME: cond3
+    block
+      AssignStat
+        VAR_NAME: d
+        exprLine
+          IntLiteral
+            INT: 4

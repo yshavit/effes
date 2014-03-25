@@ -1,0 +1,4 @@
+ReturnStat
+  exprLine
+    IntLiteral
+      INT: 5

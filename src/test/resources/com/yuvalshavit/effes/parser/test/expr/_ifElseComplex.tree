@@ -1,0 +1,15 @@
+IfExpr
+  cond= MethodInvoke
+    target= VarExpr
+      VAR_NAME: mylist
+    methodName
+      VAR_NAME: notEmpty
+    methodInvokeArgs
+  trueExpr= MethodInvoke
+    target= VarExpr
+      VAR_NAME: mylist
+    methodName
+      VAR_NAME: head
+    methodInvokeArgs
+  falseExpr= IntLiteral
+    INT: 0

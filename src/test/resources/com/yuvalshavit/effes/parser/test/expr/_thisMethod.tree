@@ -1,0 +1,6 @@
+ThisMethodInvoke
+  target= VarExpr
+    VAR_NAME: myMethod
+  methodName
+    VAR_NAME: fooArg
+  methodInvokeArgs

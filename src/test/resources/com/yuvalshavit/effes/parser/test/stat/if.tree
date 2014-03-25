@@ -1,0 +1,10 @@
+IfElseStat
+  ifStatFragment
+    VarExpr
+      VAR_NAME: cond
+    block
+      AssignStat
+        VAR_NAME: a
+        exprLine
+          IntLiteral
+            INT: 1

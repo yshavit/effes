@@ -1,0 +1,22 @@
+MethodInvoke
+  target= AddOrSubExpr
+    DecimalLiteral
+      DECIMAL: 1.0
+    ADD_OPS: +
+    DecimalLiteral
+      DECIMAL: 2.0
+  methodName
+    CMP_OPS: <
+  methodInvokeArgs
+    ParenExpr
+      MultOrDivExpr
+        DecimalLiteral
+          DECIMAL: 0.3
+        MULT_OPS: *
+        IntLiteral
+          INT: 10
+    CtorInvoke
+      TYPE_NAME: Absolute
+      ctorInvokeArgs
+        DecimalLiteral
+          DECIMAL: 0.01
