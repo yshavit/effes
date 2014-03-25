@@ -1,0 +1,23 @@
+DisjunctiveType
+  ConcreteAtom
+    TYPE_NAME: One
+  ConjunciveType
+    GroupedType
+      ConjunciveType
+        ConcreteAtom
+          TYPE_NAME: Two
+        ConcreteAtom
+          TYPE_NAME: Three
+    GroupedType
+      DisjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Four
+        GroupedType
+          ConjunciveType
+            ConcreteAtom
+              TYPE_NAME: Five
+            ConjunciveType
+              ConcreteAtom
+                TYPE_NAME: Six
+              ConcreteAtom
+                TYPE_NAME: Seven

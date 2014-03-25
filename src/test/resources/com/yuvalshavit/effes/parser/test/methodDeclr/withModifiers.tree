@@ -1,0 +1,12 @@
+methodDeclr
+  funcModifiers
+    VAR_NAME: overlay
+  methodName
+    VAR_NAME: foo
+  methodArgs
+  methodDef
+    inlinableBlock
+      ReturnStat
+        exprLine
+          IntLiteral
+            INT: 7

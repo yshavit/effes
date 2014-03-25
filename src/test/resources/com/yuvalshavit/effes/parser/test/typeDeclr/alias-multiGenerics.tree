@@ -1,0 +1,16 @@
+typeDeclr
+  TYPE_NAME: Either
+  genericsDeclr
+    NamedGeneric
+      GENERIC_NAME: A
+    NamedGeneric
+      GENERIC_NAME: B
+      genericParamRestriction
+        ConcreteAtom
+          TYPE_NAME: Hashable
+  typeDef
+    DisjunctiveType
+      GenericAtom
+        GENERIC_NAME: A
+      GenericAtom
+        GENERIC_NAME: B

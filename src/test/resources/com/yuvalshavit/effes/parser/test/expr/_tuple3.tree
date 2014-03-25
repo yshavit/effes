@@ -1,0 +1,15 @@
+TupleExpr
+  IntLiteral
+    INT: 7
+  AddOrSubExpr
+    IntLiteral
+      INT: 1
+    ADD_OPS: +
+    IntLiteral
+      INT: 2
+  MethodInvoke
+    target= VarExpr
+      VAR_NAME: foo
+    methodName
+      VAR_NAME: head
+    methodInvokeArgs

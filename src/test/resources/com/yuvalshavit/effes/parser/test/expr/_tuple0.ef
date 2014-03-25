@@ -1,0 +1,1 @@
+() -- invalid; a 0-tuple is represented as an identity type like Nothing

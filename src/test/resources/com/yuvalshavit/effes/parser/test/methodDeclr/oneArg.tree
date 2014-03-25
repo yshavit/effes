@@ -1,0 +1,6 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+    NormalMethodArg
+      VAR_NAME: arg0

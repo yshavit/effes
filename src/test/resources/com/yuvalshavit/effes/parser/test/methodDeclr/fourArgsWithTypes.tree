@@ -1,0 +1,24 @@
+methodDeclr
+  methodName
+    VAR_NAME: foo
+  methodArgs
+    NormalMethodArg
+      VAR_NAME: arg0
+      ConcreteAtom
+        TYPE_NAME: First
+    NormalMethodArg
+      VAR_NAME: arg1
+      DisjunctiveType
+        ConcreteAtom
+          TYPE_NAME: Second
+        ConcreteAtom
+          TYPE_NAME: List
+          genericsDeclr
+            NamedGeneric
+              GENERIC_NAME: A
+    NormalMethodArg
+      VAR_NAME: arg2
+    NormalMethodArg
+      VAR_NAME: arg3
+      ConcreteAtom
+        TYPE_NAME: Third

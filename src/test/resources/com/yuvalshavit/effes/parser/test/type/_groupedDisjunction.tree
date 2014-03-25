@@ -1,0 +1,6 @@
+GroupedType
+  DisjunctiveType
+    ConcreteAtom
+      TYPE_NAME: One
+    ConcreteAtom
+      TYPE_NAME: Two

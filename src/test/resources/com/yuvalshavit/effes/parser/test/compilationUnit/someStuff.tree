@@ -1,0 +1,87 @@
+compilationUnit
+  compilationBodyElement
+    typeDeclr
+      TYPE_NAME: List
+      genericsDeclr
+        NamedGeneric
+          GENERIC_NAME: A
+      typeDef
+        typeDeclrBody
+          TypeMethodDeclr
+            methodDeclr
+              methodName
+                VAR_NAME: head
+              methodArgs
+              methodReturnDeclr
+                GenericAtom
+                  GENERIC_NAME: A
+          TypeMethodDeclr
+            methodDeclr
+              methodName
+                VAR_NAME: tails
+              methodArgs
+              methodReturnDeclr
+                ConcreteAtom
+                  TYPE_NAME: List
+                  genericsDeclr
+                    NamedGeneric
+                      GENERIC_NAME: A
+          TypeMethodDeclr
+            methodDeclr
+              methodName
+                VAR_NAME: size
+              methodArgs
+              methodReturnDeclr
+                ConcreteAtom
+                  TYPE_NAME: Int
+          TypeMethodDeclr
+            methodDeclr
+              methodName
+                VAR_NAME: isEmpty
+              methodArgs
+              methodReturnDeclr
+                ConcreteAtom
+                  TYPE_NAME: Boolean
+              methodDef
+                inlinableBlock
+                  ReturnStat
+                    exprLine
+                      CaseOfExpr
+                        VarExpr
+                          VAR_NAME: size
+                        caseExprs
+                          caseExprPattern
+                            caseMatcher
+                              TYPE_NAME: Zero
+                            exprBlock
+                              CtorInvoke
+                                TYPE_NAME: True
+                          caseExprPattern
+                            caseMatcher
+                            exprBlock
+                              CtorInvoke
+                                TYPE_NAME: False
+  compilationBodyElement
+    dataTypeDeclr
+      TYPE_NAME: True
+  compilationBodyElement
+    dataTypeDeclr
+      TYPE_NAME: False
+  compilationBodyElement
+    typeDeclr
+      TYPE_NAME: Boolean
+      typeDef
+        DisjunctiveType
+          ConcreteAtom
+            TYPE_NAME: True
+          ConcreteAtom
+            TYPE_NAME: False
+  compilationBodyElement
+    dataTypeDeclr
+      TYPE_NAME: One
+      dataTypeArgs
+        dataTypeArg
+          VAR_NAME: value
+          GenericAtom
+            GENERIC_NAME: A
+  EOF: <EOF>

@@ -1,0 +1,4 @@
+if cond0 a = 2
+else if cond1
+  b = 2
+else c = 3
