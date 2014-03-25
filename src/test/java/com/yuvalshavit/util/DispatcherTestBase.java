@@ -2,10 +2,21 @@ package com.yuvalshavit.util;
 
 import org.testng.annotations.Test;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.testng.Assert.assertTrue;
 
 public abstract class DispatcherTestBase {
   public static final String providerName = "DispatcherTestBase main provider";
+
+  public static Object[][] findSubclasses(Class<?> lookIn, Class<?> baseClass) {
+    return Stream.of(lookIn.getClasses())
+      .filter(baseClass::isAssignableFrom)
+      .map(c -> new Object[] { c })
+      .collect(Collectors.toList())
+      .toArray(new Object[0][]);
+  }
 
   protected abstract Dispatcher<?,?,?> getDispatcherUnderTest();
 
