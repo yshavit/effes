@@ -1,34 +1,6 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.EfMethod;
-import com.yuvalshavit.effes.compile.Expression;
-import com.yuvalshavit.effes.compile.MethodsRegistry;
-import com.yuvalshavit.effes.compile.SimpleType;
-import com.yuvalshavit.effes.compile.Statement;
-import com.yuvalshavit.effes.TUtils;
-import com.yuvalshavit.effes.compile.TypeRegistry;
-import com.yuvalshavit.util.Dispatcher;
-import com.yuvalshavit.util.DispatcherTestBase;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import java.util.Arrays;
-
-import static org.testng.Assert.assertEquals;
-
-public final class ExecutableStatementCompilerTest extends DispatcherTestBase {
-
-  @DataProvider(name = DispatcherTestBase.providerName)
-  public static Object[][] statementSubclasses() {
-    return DispatcherTestBase.findSubclasses(Statement.class);
-  }
-
-  @Override
-  protected Dispatcher<?, ?, ?> getDispatcherUnderTest() {
-    return ExecutableStatementCompiler.StatementCompiler.dispatcher;
-  }
+public final class ExecutableStatementCompilerTest {
 
 //  @Test
 //  public void returnStat() {

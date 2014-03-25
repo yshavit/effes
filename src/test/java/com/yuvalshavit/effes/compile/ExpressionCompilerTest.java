@@ -3,20 +3,12 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.TUtils;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
-import com.yuvalshavit.util.Dispatcher;
-import com.yuvalshavit.util.DispatcherTestBase;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
 
-public final class ExpressionCompilerTest extends DispatcherTestBase {
-
-  @DataProvider(name=DispatcherTestBase.providerName)
-  public static Object[][] exprSubclasses() {
-    return findSubclasses(EffesParser.ExprContext.class);
-  }
+public final class ExpressionCompilerTest {
 
   @Test
   public void ctorInvoke() {
@@ -44,10 +36,5 @@ public final class ExpressionCompilerTest extends DispatcherTestBase {
 
   private static EffesParser.ExprContext parseExpression(String code) {
     return ParserUtils.parseRule(EffesParser.ExprContext.class, code);
-  }
-
-  @Override
-  protected Dispatcher<?, ?, ?> getDispatcherUnderTest() {
-    return ExpressionCompiler.ExpressionDispatcher.dispatcher;
   }
 }
