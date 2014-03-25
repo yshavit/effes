@@ -1,4 +1,7 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes;
+
+import com.yuvalshavit.effes.compile.SimpleType;
+import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import static org.testng.Assert.assertNotNull;
 

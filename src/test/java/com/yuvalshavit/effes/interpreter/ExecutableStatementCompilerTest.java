@@ -3,7 +3,7 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.Expression;
 import com.yuvalshavit.effes.compile.Statement;
-import com.yuvalshavit.effes.compile.TUtils;
+import com.yuvalshavit.effes.TUtils;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.util.Dispatcher;
 import com.yuvalshavit.util.DispatcherTestBase;
