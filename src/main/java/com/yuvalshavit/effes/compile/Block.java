@@ -52,7 +52,7 @@ public final class Block {
 
   static class ValidationDispatch {
     static final Dispatcher<ValidationDispatch, Statement, SimpleType> dispatcher =
-      Dispatcher.<ValidationDispatch, Statement, SimpleType>builder(Statement.class)
+      Dispatcher.builder(ValidationDispatch.class, Statement.class, SimpleType.class)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .build();
 

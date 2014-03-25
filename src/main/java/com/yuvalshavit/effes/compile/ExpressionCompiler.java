@@ -21,7 +21,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
   @VisibleForTesting
   static class ExpressionDispatcher {
     static final Dispatcher<ExpressionDispatcher, EffesParser.ExprContext, Expression> dispatcher =
-      Dispatcher.<ExpressionDispatcher, EffesParser.ExprContext, Expression>builder(EffesParser.ExprContext.class)
+      Dispatcher.builder(ExpressionDispatcher.class, EffesParser.ExprContext.class, Expression.class)
         .put(EffesParser.ParenExprContext.class, ExpressionDispatcher::paren)
         .put(EffesParser.CtorInvokeContext.class, ExpressionDispatcher::ctorInvoke)
         .build();

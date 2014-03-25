@@ -37,7 +37,7 @@ public class Dispatcher<D,I,O> implements BiFunction<D, I, O> {
     return dispatchFunc.apply(dispatch, input);
   }
 
-  public static <D, I, O> Builder<D, I, O> builder(Class<I> baseClass) {
+  public static <D, I, O> Builder<D, I, O> builder(Class<D> dispatchClass, Class<I> baseClass, Class<O> resultClass) {
     return new Builder<>(baseClass);
   }
 
