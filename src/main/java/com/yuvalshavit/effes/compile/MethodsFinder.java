@@ -29,13 +29,13 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-      List<EfType.SimpleType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
+      List<EfType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
-        EfType.SimpleType type = lookupType(typeContext);
+        EfType type = lookupType(typeContext);
         argTypes.add(type);
       }
-      EfType.SimpleType resultType = lookupType(ctx.methodReturnDeclr().type());
+      EfType resultType = lookupType(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
       try {

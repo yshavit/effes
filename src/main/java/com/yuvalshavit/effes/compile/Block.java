@@ -31,9 +31,9 @@ public final class Block {
     return statements.hashCode();
   }
 
-  public void validate(EfType.SimpleType requiredReturnType) {
+  public void validate(EfType requiredReturnType) {
     ValidationDispatch validator = new ValidationDispatch();
-    EfType.SimpleType lastBranchReturned = null;
+    EfType lastBranchReturned = null;
     Statement lastStatement = null;
     for (Statement s : statements) {
       if (lastBranchReturned != null) {
@@ -58,17 +58,17 @@ public final class Block {
   }
 
   static class ValidationDispatch {
-    static final Dispatcher<ValidationDispatch, Statement, EfType.SimpleType> dispatcher =
-      Dispatcher.builder(ValidationDispatch.class, Statement.class, EfType.SimpleType.class)
+    static final Dispatcher<ValidationDispatch, Statement, EfType> dispatcher =
+      Dispatcher.builder(ValidationDispatch.class, Statement.class, EfType.class)
         .put(Statement.MethodInvoke.class, ValidationDispatch::methodInvoke)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .build();
 
-    public EfType.SimpleType returnStat(Statement.ReturnStatement stat) {
+    public EfType returnStat(Statement.ReturnStatement stat) {
       return stat.getExpression().resultType();
     }
 
-    public EfType.SimpleType methodInvoke(@SuppressWarnings("unused") Statement.MethodInvoke stat) {
+    public EfType methodInvoke(@SuppressWarnings("unused") Statement.MethodInvoke stat) {
       return null;
     }
   }

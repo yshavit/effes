@@ -47,10 +47,10 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
       .map(expressionCompiler::apply).collect(Collectors.toList());
-    List<EfType.SimpleType> expectedArgs = method.getArgTypes();
+    List<EfType> expectedArgs = method.getArgTypes();
     for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
-      EfType.SimpleType invokeArg = invokeArgs.get(i).resultType();
-      EfType.SimpleType expectedArg = expectedArgs.get(i);
+      EfType invokeArg = invokeArgs.get(i).resultType();
+      EfType expectedArg = expectedArgs.get(i);
       // e.g. method (True | False), arg is True
       if (!expectedArg.contains(invokeArg)) {
         throw new StatementCompilationException(
