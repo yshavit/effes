@@ -14,7 +14,7 @@ public final class ExpressionCompilerTest {
   public void ctorInvoke() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("True");
-    Expression compiled = new ExpressionCompiler(registry).apply(exprContext);
+    Expression compiled = new ExpressionCompiler(null, registry).apply(exprContext);
     assertEquals(compiled, new Expression.CtorInvoke(TUtils.getExistingType(registry, "True")));
   }
 
@@ -22,14 +22,14 @@ public final class ExpressionCompilerTest {
   public void ctorInvokeUnknownType() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("False");
-    assertException(ExpressionCompilationException.class, () -> new ExpressionCompiler(registry).apply(exprContext));
+    assertException(ExpressionCompilationException.class, () -> new ExpressionCompiler(null, registry).apply(exprContext));
   }
 
   @Test
   public void param() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("(True)");
-    Expression compiled = new ExpressionCompiler(registry).apply(exprContext);
+    Expression compiled = new ExpressionCompiler(null, registry).apply(exprContext);
     // Note that the compiled expression is inlined -- there's no Expression.Param
     assertEquals(compiled, new Expression.CtorInvoke(TUtils.getExistingType(registry, "True")));
   }

@@ -81,6 +81,7 @@ exprLine: expr NL
 // expressions
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
+    | methodName methodInvokeArgs                                               # MethodInvokeExpr
     | TYPE_NAME                                                                 # CtorInvoke
     ;
 
