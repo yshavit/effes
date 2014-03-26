@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
@@ -32,10 +33,10 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       List<EfType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
-        EfType type = lookupType(typeContext);
+        EfType type = getEfType(typeContext);
         argTypes.add(type);
       }
-      EfType resultType = lookupType(ctx.methodReturnDeclr().type());
+      EfType resultType = getEfType(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
       try {
@@ -51,7 +52,16 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     }
   }
 
-  private EfType.SimpleType lookupType(EffesParser.TypeContext typeContext) {
+  private EfType getEfType(EffesParser.TypeContext typeContext) {
+    return typesDispatcher.apply(this, typeContext);
+  }
+
+  private static final Dispatcher<MethodsFinder, EffesParser.TypeContext, EfType> typesDispatcher
+    = Dispatcher.builder(MethodsFinder.class, EffesParser.TypeContext.class, EfType.class)
+    .put(EffesParser.SimpleTypeContext.class, MethodsFinder::lookupSimpleType)
+    .build();
+
+  private EfType.SimpleType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
     String simpleTypeName = typeContext.TYPE_NAME().getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(simpleTypeName);
     if (type == null) {
