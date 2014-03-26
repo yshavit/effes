@@ -3,7 +3,6 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 
@@ -30,13 +29,13 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-      List<SimpleType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
+      List<EfType.SimpleType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
-        SimpleType type = lookupType(typeContext);
+        EfType.SimpleType type = lookupType(typeContext);
         argTypes.add(type);
       }
-      SimpleType resultType = lookupType(ctx.methodReturnDeclr().type());
+      EfType.SimpleType resultType = lookupType(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
       try {
@@ -52,9 +51,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     }
   }
 
-  private SimpleType lookupType(EffesParser.TypeContext typeContext) {
+  private EfType.SimpleType lookupType(EffesParser.TypeContext typeContext) {
     String simpleTypeName = typeContext.TYPE_NAME().getText();
-    SimpleType type = typeRegistry.getSimpleType(simpleTypeName);
+    EfType.SimpleType type = typeRegistry.getSimpleType(simpleTypeName);
     if (type == null) {
       throw new MethodRegistrationException(typeContext.TYPE_NAME().getSymbol(), "unknown type: " + simpleTypeName);
     }

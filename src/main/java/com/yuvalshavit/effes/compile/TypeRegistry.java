@@ -11,13 +11,13 @@ import java.util.Set;
 
 public final class TypeRegistry {
 
-  private final Map<String, SimpleType> simpleTypes = new HashMap<>();
+  private final Map<String, EfType.SimpleType> simpleTypes = new HashMap<>();
 
   public void registerType(Token token, String name) {
     if (simpleTypes.containsKey(name)) {
       throw new TypeRegistryException(token, "duplicate type name: " + name);
     }
-    SimpleType r = new SimpleType(name);
+    EfType.SimpleType r = new EfType.SimpleType(name);
     simpleTypes.put(name, r);
   }
 
@@ -27,7 +27,7 @@ public final class TypeRegistry {
   }
 
   @Nullable
-  public SimpleType getSimpleType(String name) {
+  public EfType.SimpleType getSimpleType(String name) {
     return simpleTypes.get(name);
   }
 

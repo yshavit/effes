@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
+import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
-import com.yuvalshavit.effes.compile.SimpleType;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
   }
 
   public static class CtorExpression extends ExecutableExpression {
-    private final SimpleType type;
+    private final EfType.SimpleType type;
 
     public CtorExpression(Expression.CtorInvoke source) {
       super(source);

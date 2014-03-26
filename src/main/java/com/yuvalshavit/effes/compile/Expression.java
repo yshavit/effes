@@ -7,14 +7,14 @@ import java.util.List;
 
 public abstract class Expression extends StatefulObject {
   private final Token token;
-  private final SimpleType type;
+  private final EfType.SimpleType type;
 
-  private Expression(Token token, SimpleType type) {
+  private Expression(Token token, EfType.SimpleType type) {
     this.token = token;
     this.type = type;
   }
 
-  public final SimpleType resultType() {
+  public final EfType.SimpleType resultType() {
     return type;
   }
 
@@ -24,7 +24,7 @@ public abstract class Expression extends StatefulObject {
 
   public static class CtorInvoke extends Expression {
 
-    public CtorInvoke(Token token, @Nonnull SimpleType type) {
+    public CtorInvoke(Token token, @Nonnull EfType.SimpleType type) {
       super(token, type);
     }
 

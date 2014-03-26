@@ -27,8 +27,8 @@ public interface BuiltInMethodsFactory<T> {
         }
         @SuppressWarnings("unchecked")
         T casted = (T) raw; // we know this works because of the above checks of getGenericReturnType
-        List<SimpleType> args = Stream.of(meta.args()).map(typeRegistry::getSimpleType).collect(Collectors.toList());
-        SimpleType resultType = typeRegistry.getSimpleType(meta.resultType());
+        List<EfType.SimpleType> args = Stream.of(meta.args()).map(typeRegistry::getSimpleType).collect(Collectors.toList());
+        EfType.SimpleType resultType = typeRegistry.getSimpleType(meta.resultType());
         outRegistry.registerTopLevelMethod(meta.name(), new EfMethod<>(args, resultType, casted));
       }
     }
