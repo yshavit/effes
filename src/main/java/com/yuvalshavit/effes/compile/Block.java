@@ -34,24 +34,21 @@ public final class Block {
   public void validate(EfType requiredReturnType, CompileErrors errs) {
     ValidationDispatch validator = new ValidationDispatch();
     EfType lastBranchReturned = null;
-    Statement lastStatement = null;
+    Token lastToken = null;
     for (Statement s : statements) {
       if (lastBranchReturned != null) {
         errs.add(s.token(), "unreachable statement: " + s);
       }
       lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
-      lastStatement = s;
+      lastToken = s.token();
     }
     if (requiredReturnType != null) {
-      Token token = lastStatement != null
-        ? lastStatement.token()
-        : null;
       if (lastBranchReturned == null) {
-        errs.add(token, "block may not return, but needs to return " + requiredReturnType);
+        errs.add(lastToken, "block may not return, but needs to return " + requiredReturnType);
       } else if (!requiredReturnType.contains(lastBranchReturned)) {
         // e.g. return type (True | False), lastBranchReturned True
         String msg = String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned);
-        errs.add(token, msg);
+        errs.add(lastToken, msg);
       }
     }
   }
