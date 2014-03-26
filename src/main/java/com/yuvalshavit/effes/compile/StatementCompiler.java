@@ -54,7 +54,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     EfType resultType;
     if (method != null) {
       resultType = method.getResultType();
-      List<EfType> expectedArgs = method.getArgTypes();
+      List<EfType> expectedArgs = method.getArgs().viewTypes();
       for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
         EfType invokeArg = invokeArgs.get(i).resultType();
         EfType expectedArg = expectedArgs.get(i);

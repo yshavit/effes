@@ -74,7 +74,7 @@ public final class Interpreter {
     EfMethod<? extends ExecutableElement> main = methodsRegistry.getMethod("main");
     StateStack states = new StateStack();
     if (main != null) {
-      if(!main.getArgTypes().isEmpty()) {
+      if(main.getArgs().length() != 0) {
         throw new BadMainException("main method may not take any arguments");
       }
       ExecutableStatement.MethodInvoke.invoke(main.getBody(), ImmutableList.of(), states);
