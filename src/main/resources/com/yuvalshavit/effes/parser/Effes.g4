@@ -62,7 +62,7 @@ dataTypeDeclr: DATA TYPE
 
 // generics and types
 
-type: TYPE_NAME
+type: TYPE_NAME                                                                 # SimpleType
     ;
 
 // blocks and statements

@@ -3,10 +3,10 @@ methodDeclr
     MULT_OPS: /
   methodArgs
     methodArg
-      type
+      SimpleType
         TYPE_NAME: Foo
   methodReturnDeclr
-    type
+    SimpleType
       TYPE_NAME: Bar
   inlinableBlock
     ReturnStat

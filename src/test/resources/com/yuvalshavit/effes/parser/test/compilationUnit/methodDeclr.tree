@@ -5,10 +5,10 @@ compilationUnit
         VAR_NAME: not
       methodArgs
         methodArg
-          type
+          SimpleType
             TYPE_NAME: True
       methodReturnDeclr
-        type
+        SimpleType
           TYPE_NAME: False
       inlinableBlock
         ReturnStat
