@@ -32,7 +32,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     String methodName = ctx.methodName().getText();
     EfMethod<?> method = methodsRegistry.getMethod(methodName);
     if (method == null) {
-      throw new ExpressionCompilationException("no such method: " + methodName);
+      throw new ExpressionCompilationException(ctx.methodName().getStart(), "no such method: " + methodName);
     }
     List<Expression> args = ctx
       .methodInvokeArgs()
@@ -51,7 +51,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     String typeName = ctx.TYPE_NAME().getText();
     SimpleType type = typeRegistry.getSimpleType(typeName);
     if (type == null) {
-      throw new ExpressionCompilationException("unknown type: " + typeName);
+      throw new ExpressionCompilationException(ctx.getStart(), "unknown type: " + typeName);
     }
     return new Expression.CtorInvoke(type);
   }

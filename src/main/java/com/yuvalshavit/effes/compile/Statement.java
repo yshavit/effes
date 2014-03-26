@@ -1,16 +1,26 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
+import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
 public abstract class Statement extends StatefulObject {
-  private Statement() {}
+  private final Token token;
+
+  private Statement(Token token) {
+    this.token = token;
+  }
+
+  public Token token() {
+    return token;
+  }
 
   public static class ReturnStatement extends Statement {
     private final Expression expression;
 
-    public ReturnStatement(Expression expression) {
+    public ReturnStatement(Token token, Expression expression) {
+      super(token);
       this.expression = expression;
     }
 
@@ -35,8 +45,9 @@ public abstract class Statement extends StatefulObject {
     private final List<Expression> args;
     private final boolean isBuiltIn;
 
-    public MethodInvoke(String methodName, List<Expression> args, SimpleType resultType, boolean isBuiltIn) {
-      this.methodName = methodName;
+    public MethodInvoke(Token token, String name, List<Expression> args, SimpleType resultType, boolean isBuiltIn) {
+      super(token);
+      this.methodName = name;
       this.args = args;
       this.resultType = resultType;
       this.isBuiltIn = isBuiltIn;

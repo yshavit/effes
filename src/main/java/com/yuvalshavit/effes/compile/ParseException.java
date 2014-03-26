@@ -1,7 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
-public final class ParseException extends RuntimeException {
-  public ParseException(String msg) {
-    super(msg);
+import org.antlr.v4.runtime.Token;
+
+public final class ParseException extends CompilationException {
+  public ParseException(Token token, String message) {
+    super(token, message);
   }
 }

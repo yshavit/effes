@@ -23,7 +23,7 @@ public final class MethodsRegistry<B> {
 
   public void registerTopLevelMethod(String name, EfMethod<? extends B> method) {
     if (topLevelMethods.containsKey(name)) {
-      throw new MethodRegistrationException("duplicate top-level method: " + name);
+      throw new DuplicateMethodNameException(name);
     }
     topLevelMethods.put(name, method);
   }
@@ -37,7 +37,7 @@ public final class MethodsRegistry<B> {
     for (Map.Entry<String, EfMethod<? extends B2>> otherEntry : other.topLevelMethods.entrySet()) {
       String otherName = otherEntry.getKey();
       if (topLevelMethods.containsKey(otherName)) {
-        throw new IllegalArgumentException("duplicate method name: " + otherName);
+        throw new DuplicateMethodNameException(otherName);
       }
       registerTopLevelMethod(otherName, otherEntry.getValue().tranform(transform));
     }

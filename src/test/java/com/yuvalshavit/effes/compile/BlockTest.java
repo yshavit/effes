@@ -36,7 +36,7 @@ public final class BlockTest {
   }
 
   private Statement.ReturnStatement returnStat(Expression expr) {
-    return new Statement.ReturnStatement(expr);
+    return new Statement.ReturnStatement(null, expr);
   }
 
   private Expression.CtorInvoke ctorExpr(String typeName) {
