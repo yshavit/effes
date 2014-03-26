@@ -17,7 +17,7 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
   @Override
   public ExecutableElement print() {
     return stack -> {
-      out.println("this is true!");
+      out.println("Your argument was: " + stack.peek());
       stack.push(typeRegistry.getSimpleType("Void"));
     };
   }
