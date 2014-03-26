@@ -1,6 +1,5 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
@@ -48,10 +47,10 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
       .map(expressionCompiler::apply).collect(Collectors.toList());
-    List<SimpleType> expectedArgs = method.getArgTypes();
+    List<EfType.SimpleType> expectedArgs = method.getArgTypes();
     for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
-      SimpleType invokeArg = invokeArgs.get(i).resultType();
-      SimpleType expectedArg = expectedArgs.get(i);
+      EfType.SimpleType invokeArg = invokeArgs.get(i).resultType();
+      EfType.SimpleType expectedArg = expectedArgs.get(i);
       // e.g. method (True | False), arg is True
       if (!expectedArg.contains(invokeArg)) {
         throw new StatementCompilationException(

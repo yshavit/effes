@@ -1,6 +1,6 @@
 package com.yuvalshavit.effes;
 
-import com.yuvalshavit.effes.compile.SimpleType;
+import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import static org.testng.Assert.assertNotNull;
@@ -8,8 +8,8 @@ import static org.testng.Assert.assertNotNull;
 public final class TUtils {
   private TUtils() {}
 
-  public static SimpleType getExistingType(TypeRegistry registry, String name) {
-    SimpleType type = registry.getSimpleType(name);
+  public static EfType.SimpleType getExistingType(TypeRegistry registry, String name) {
+    EfType.SimpleType type = registry.getSimpleType(name);
     assertNotNull(type, name);
     return type;
   }

@@ -43,7 +43,7 @@ public final class BlockTest {
     return new Expression.CtorInvoke(null, type(typeName));
   }
 
-  private SimpleType type(String typeName) {
+  private EfType.SimpleType type(String typeName) {
     return TUtils.getExistingType(typeRegistry, typeName);
   }
 }

@@ -7,21 +7,21 @@ import java.util.List;
 import java.util.function.Function;
 
 public final class EfMethod<B> {
-  private final List<SimpleType> argTypes;
-  private final SimpleType resultType;
+  private final List<EfType.SimpleType> argTypes;
+  private final EfType.SimpleType resultType;
   private final B body;
 
-  public EfMethod(List<SimpleType> argTypes, SimpleType resultType, B body) {
+  public EfMethod(List<EfType.SimpleType> argTypes, EfType.SimpleType resultType, B body) {
     this.argTypes = ImmutableList.copyOf(argTypes);
     this.resultType = resultType;
     this.body = body;
   }
 
-  public List<SimpleType> getArgTypes() {
+  public List<EfType.SimpleType> getArgTypes() {
     return argTypes;
   }
 
-  public SimpleType getResultType() {
+  public EfType.SimpleType getResultType() {
     return resultType;
   }
 

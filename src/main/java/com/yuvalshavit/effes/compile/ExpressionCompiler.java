@@ -49,7 +49,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
 
   private Expression ctorInvoke(EffesParser.CtorInvokeContext ctx) {
     String typeName = ctx.TYPE_NAME().getText();
-    SimpleType type = typeRegistry.getSimpleType(typeName);
+    EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
     if (type == null) {
       throw new ExpressionCompilationException(ctx.getStart(), "unknown type: " + typeName);
     }

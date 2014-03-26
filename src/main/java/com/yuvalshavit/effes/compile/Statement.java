@@ -40,12 +40,12 @@ public abstract class Statement extends StatefulObject {
   }
 
   public static class MethodInvoke extends Statement {
-    private final SimpleType resultType;
+    private final EfType.SimpleType resultType;
     private final String methodName;
     private final List<Expression> args;
     private final boolean isBuiltIn;
 
-    public MethodInvoke(Token token, String name, List<Expression> args, SimpleType resultType, boolean isBuiltIn) {
+    public MethodInvoke(Token token, String name, List<Expression> args, EfType.SimpleType resultType, boolean isBuiltIn) {
       super(token);
       this.methodName = name;
       this.args = args;
@@ -57,7 +57,7 @@ public abstract class Statement extends StatefulObject {
       return isBuiltIn;
     }
 
-    public SimpleType getResultType() {
+    public EfType.SimpleType getResultType() {
       return resultType;
     }
 
