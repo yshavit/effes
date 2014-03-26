@@ -72,7 +72,7 @@ inlinableBlock: stat
               ;
 
 stat: RETURN exprLine                                                           # ReturnStat
-    | methodName methodInvokeArgs                                               # MethodInvoke
+    | methodName methodInvokeArgs NL                                            # MethodInvoke
     ;
 
 exprLine: expr NL

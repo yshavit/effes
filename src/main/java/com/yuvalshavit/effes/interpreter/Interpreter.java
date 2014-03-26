@@ -20,15 +20,13 @@ import java.io.PrintStream;
 import java.util.function.Function;
 
 public final class Interpreter {
-  private final PrintStream out;
   private final MethodsRegistry<ExecutableElement> methodsRegistry;
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
-    this.out = out;
     TypeRegistry typeRegistry = new TypeRegistry();
     new TypesFinder(typeRegistry).accept(source);
 
-    BuiltInMethodsFactory<ExecutableElement> builtIns = new ExecutableBuiltInMethods(typeRegistry, this.out);
+    BuiltInMethodsFactory<ExecutableElement> builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
     MethodsRegistry<ExecutableElement> builtinsRegistry = new MethodsRegistry<>();
     builtIns.addTo(typeRegistry, builtinsRegistry);
 

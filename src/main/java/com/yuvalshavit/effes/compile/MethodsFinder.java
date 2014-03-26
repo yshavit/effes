@@ -3,7 +3,9 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.ErrorNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,16 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
       methodsRegistry.registerTopLevelMethod(name, method);
+    }
+
+    @Override
+    public void visitErrorNode(@NotNull ErrorNode node) {
+      Token t = node.getSymbol();
+      String what = node.getText().trim();
+      if (!what.isEmpty()) {
+        what = ": " + what;
+      }
+      throw new ParseException(String.format("at line %d, column %d%s", t.getLine(), t.getCharPositionInLine(), what));
     }
   }
 
