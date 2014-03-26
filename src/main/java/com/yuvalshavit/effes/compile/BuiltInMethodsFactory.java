@@ -31,7 +31,7 @@ public interface BuiltInMethodsFactory<T> {
         }
         @SuppressWarnings("unchecked")
         T casted = (T) raw; // we know this works because of the above checks of getGenericReturnType
-        MethodsFinder.TypeResolver resolver = new MethodsFinder.TypeResolver(typeRegistry, CompileErrors.throwing);
+        TypeResolver resolver = new TypeResolver(typeRegistry, CompileErrors.throwing);
         EfArgs.Builder args = new EfArgs.Builder(CompileErrors.throwing);
         Function<String, Pair<Token, EfType>> typeParser = s -> {
           EffesParser parser = ParserUtils.createParser(s);
