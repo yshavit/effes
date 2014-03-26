@@ -124,7 +124,9 @@ public abstract class EfType {
       .build();
 
     public boolean accept(EfType type) {
-      return dispatcher.apply(this, type);
+      return type != null
+        ? dispatcher.apply(this, type)
+        : accept(UNKNOWN);
     }
 
     public abstract boolean accept(SimpleType type);

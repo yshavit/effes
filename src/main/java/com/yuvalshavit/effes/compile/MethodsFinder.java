@@ -17,10 +17,14 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
   private final TypeRegistry typeRegistry;
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
+  private final CompileErrors errs;
 
-  public MethodsFinder(TypeRegistry typeRegistry, MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry) {
+  public MethodsFinder(TypeRegistry typeRegistry,
+                       MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
+                       CompileErrors errs) {
     this.typeRegistry = typeRegistry;
     this.methodsRegistry = methodsRegistry;
+    this.errs = errs;
   }
 
   @Override
@@ -44,13 +48,13 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       try {
         methodsRegistry.registerTopLevelMethod(name, method);
       } catch (DuplicateMethodNameException e) {
-        throw new MethodRegistrationException(ctx.methodName().getStart(), e.getMessage());
+        errs.add(ctx.methodName().getStart(), e.getMessage());
       }
     }
 
     @Override
     public void visitErrorNode(@NotNull ErrorNode node) {
-      throw new ParseException(node.getSymbol(), "parse error");
+      errs.add(node.getSymbol(), "parse error");
     }
   }
 
@@ -79,7 +83,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   private EfType.SimpleType lookupSimpleType(TerminalNode typeName) {
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName.getText());
     if (type == null) {
-      throw new MethodRegistrationException(typeName.getSymbol(), "unknown type: " + typeName.getText());
+      errs.add(typeName.getSymbol(), "unknown type: " + typeName.getText());
     }
     return type;
   }

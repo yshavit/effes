@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public final class BlockCompiler implements Function<EffesParser.InlinableBlockC
 
   @Override
   public Block apply(EffesParser.InlinableBlockContext inlinableBlockContext) {
+    if (inlinableBlockContext == null) {
+      return new Block(ImmutableList.of());
+    }
     List<Statement> stats = inlinableBlockContext.stat().stream().map(compiler).collect(Collectors.toList());
     return new Block(stats);
   }

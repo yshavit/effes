@@ -12,13 +12,16 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private final ExpressionCompiler expressionCompiler;
   private final MethodsRegistry<?> methodsRegistry;
   private final MethodsRegistry<?> builtInMethods;
+  private final CompileErrors errs;
 
   public StatementCompiler(ExpressionCompiler expressionCompiler,
                            MethodsRegistry<?> methodsRegistry,
-                           MethodsRegistry<?> builtInMethods) {
+                           MethodsRegistry<?> builtInMethods,
+                           CompileErrors errs) {
     this.expressionCompiler = expressionCompiler;
     this.methodsRegistry = methodsRegistry;
     this.builtInMethods = builtInMethods;
+    this.errs = errs;
   }
 
   @Override
@@ -41,25 +44,32 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     } else {
       method = builtInMethods.getMethod(methodName);
       if (method == null) {
-        throw new StatementCompilationException(ctx.methodName().getStart(), "no such method: " + methodName);
-      } isBuiltIn = true;
+        errs.add(ctx.methodName().getStart(), "no such method: " + methodName);
+      }
+      isBuiltIn = true; // if method is null, this won't matter
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
       .map(expressionCompiler::apply).collect(Collectors.toList());
-    List<EfType> expectedArgs = method.getArgTypes();
-    for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
-      EfType invokeArg = invokeArgs.get(i).resultType();
-      EfType expectedArg = expectedArgs.get(i);
-      // e.g. method (True | False), arg is True
-      if (!expectedArg.contains(invokeArg)) {
-        throw new StatementCompilationException(
-          invokeArgs.get(i).token(),
-          String.format("mismatched types: expected %s but found %s", expectedArg, invokeArg));
+    EfType resultType;
+    if (method != null) {
+      resultType = method.getResultType();
+      List<EfType> expectedArgs = method.getArgTypes();
+      for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
+        EfType invokeArg = invokeArgs.get(i).resultType();
+        EfType expectedArg = expectedArgs.get(i);
+        // e.g. method (True | False), arg is True
+        if (!expectedArg.contains(invokeArg)) {
+          errs.add(
+            invokeArgs.get(i).token(),
+            String.format("mismatched types: expected %s but found %s", expectedArg, invokeArg));
+        }
       }
+    } else {
+      resultType = EfType.UNKNOWN;
     }
 
-    return new Statement.MethodInvoke(ctx.getStart(), methodName, invokeArgs, method.getResultType(), isBuiltIn);
+    return new Statement.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn);
   }
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {

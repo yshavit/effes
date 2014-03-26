@@ -22,7 +22,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     public CtorExpression(Expression.CtorInvoke source) {
       super(source);
-      ctorType = source.resultType();
+      ctorType = source.simpleType();
     }
 
     @Override

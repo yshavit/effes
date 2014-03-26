@@ -49,10 +49,10 @@ public final class MethodsRegistry<B> {
     return new MethodsRegistry<>(transformedMethods);
   }
 
-  public MethodsRegistry<Block> compileMethods(Function<B, Block> func) {
+  public MethodsRegistry<Block> compileMethods(Function<B, Block> func, CompileErrors errs) {
     MethodsRegistry<Block> compiled = transform(func);
     for (EfMethod<? extends Block> method : compiled.topLevelMethods.values()) {
-      method.getBody().validate(method.getResultType());
+      method.getBody().validate(method.getResultType(), errs);
     }
     return compiled;
   }

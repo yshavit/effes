@@ -3,7 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.base.Joiner;
 import org.antlr.v4.runtime.Token;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class Expression extends StatefulObject {
@@ -12,7 +12,9 @@ public abstract class Expression extends StatefulObject {
 
   private Expression(Token token, EfType type) {
     this.token = token;
-    this.type = type;
+    this.type = type != null
+      ? type
+      : EfType.UNKNOWN;
   }
 
   public EfType resultType() {
@@ -25,10 +27,10 @@ public abstract class Expression extends StatefulObject {
 
   public static class CtorInvoke extends Expression {
 
-    @Nonnull
+    @Nullable
     private final EfType.SimpleType simpleType;
 
-    public CtorInvoke(Token token, @Nonnull EfType.SimpleType type) {
+    public CtorInvoke(Token token, @Nullable EfType.SimpleType type) {
       super(token, type);
       simpleType = type;
     }
@@ -38,8 +40,8 @@ public abstract class Expression extends StatefulObject {
       return resultType().toString();
     }
 
-    @Override
-    public EfType.SimpleType resultType() {
+    @Nullable
+    public EfType.SimpleType simpleType() {
       return simpleType;
     }
 
@@ -54,8 +56,8 @@ public abstract class Expression extends StatefulObject {
     private final EfMethod<?> method;
     private final List<Expression> args;
 
-    public MethodInvoke(Token token, String methodName, EfMethod<?> method, List<Expression> args) {
-      super(token, method.getResultType());
+    public MethodInvoke(Token token, String methodName, EfMethod<?> method, List<Expression> args, EfType resultType) {
+      super(token, resultType);
       this.methodName = methodName;
       this.method = method;
       this.args = args;

@@ -1,13 +1,13 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.Sets;
+import com.yuvalshavit.effes.TUtils;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 
-import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
 
 public final class TypesFinderTest {
@@ -16,7 +16,7 @@ public final class TypesFinderTest {
     EffesParser parser = ParserUtils.createParser(
       "data type True",
       "data type False");
-    TypeRegistry registry = new TypeRegistry();
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry).accept(parser.compilationUnit());
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
   }
@@ -27,7 +27,9 @@ public final class TypesFinderTest {
       "data type True",
       "data type True"
     );
-    TypeRegistry registry = new TypeRegistry();
-    assertException(TypeRegistryException.class, () -> new TypesFinder(registry).accept(parser.compilationUnit()));
+    TUtils.expectErrors(errs -> {
+      TypeRegistry registry = new TypeRegistry(errs);
+      new TypesFinder(registry).accept(parser.compilationUnit());
+    });
   }
 }
