@@ -12,10 +12,14 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   private final ExpressionCompiler expressionCompiler;
   private final MethodsRegistry<?> methodsRegistry;
+  private final MethodsRegistry<?> builtInMethods;
 
-  public StatementCompiler(ExpressionCompiler expressionCompiler, MethodsRegistry<?> methodsRegistry) {
+  public StatementCompiler(ExpressionCompiler expressionCompiler,
+                           MethodsRegistry<?> methodsRegistry,
+                           MethodsRegistry<?> builtInMethods) {
     this.expressionCompiler = expressionCompiler;
     this.methodsRegistry = methodsRegistry;
+    this.builtInMethods = builtInMethods;
   }
 
   @Override
@@ -32,9 +36,16 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement methodInvoke(EffesParser.MethodInvokeContext ctx) {
     String methodName = ctx.methodName().getText();
     EfMethod<?> method = methodsRegistry.getMethod(methodName);
-    if (method == null) {
-      throw new StatementCompilationException("no such method: " + methodName);
+    boolean isBuiltIn;
+    if (method != null) {
+      isBuiltIn = false;
+    } else {
+      method = builtInMethods.getMethod(methodName);
+      if (method == null) {
+        throw new StatementCompilationException("no such method: " + methodName);
+      } isBuiltIn = true;
     }
+
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
       .map(expressionCompiler::apply).collect(Collectors.toList());
     List<SimpleType> invokeArgTypes = Lists.transform(invokeArgs, Expression::resultType);
@@ -43,7 +54,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       throw new StatementCompilationException(
         String.format("mismatched types: expected %s but found %s", expectedArgs, invokeArgTypes));
     }
-    return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType());
+    return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType(), isBuiltIn);
   }
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {

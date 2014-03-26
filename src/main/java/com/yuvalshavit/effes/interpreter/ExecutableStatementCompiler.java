@@ -9,14 +9,17 @@ import java.util.function.Supplier;
 
 public final class ExecutableStatementCompiler implements Function<Statement, ExecutableStatement> {
 
-  private final Function<String, ExecutableBlock> methods;
+  private final Function<String, ExecutableElement> methods;
   private final ExecutableExpressionCompiler expressionCompiler;
+  private final Function<String, ExecutableElement> builtInMethods;
 
   public ExecutableStatementCompiler(ExecutableExpressionCompiler expressionCompiler,
-                                     Function<String, ExecutableBlock> methods)
+                                     Function<String, ExecutableElement> methods,
+                                     Function<String, ExecutableElement> builtInMethods)
   {
     this.expressionCompiler = expressionCompiler;
     this.methods = methods;
+    this.builtInMethods = builtInMethods;
   }
 
   @Override
@@ -30,15 +33,22 @@ public final class ExecutableStatementCompiler implements Function<Statement, Ex
       .put(Statement.ReturnStatement.class, ExecutableStatementCompiler::returnStat)
       .build();
 
-  private ExecutableStatement methodInvoke(Statement.MethodInvoke methodInvoke) {
-    com.google.common.base.Supplier<ExecutableBlock> memoized = Suppliers.memoize(() -> {
-      String methodName = methodInvoke.getMethodName();
-      ExecutableBlock method = methods.apply(methodName);
+  private ExecutableStatement methodInvoke(Statement.MethodInvoke stat) {
+    Function<String, ExecutableElement> lookup = stat.isBuiltIn()
+      ? builtInMethods
+      : methods;
+    return methodInvoke(stat, lookup);
+  }
+
+  private ExecutableStatement methodInvoke(Statement.MethodInvoke stat, Function<String, ExecutableElement> lookup) {
+    com.google.common.base.Supplier<ExecutableElement> memoized = Suppliers.memoize(() -> {
+      String methodName = stat.getMethodName();
+      ExecutableElement method = lookup.apply(methodName);
       assert method != null : methodName;
       return method;
     });
-    Supplier<ExecutableBlock> getter = memoized::get; // convert to java.lang.function.Supplier
-    return new ExecutableStatement.MethodInvoke(methodInvoke, expressionCompiler, getter);
+    Supplier<ExecutableElement> getter = memoized::get; // convert to java.lang.function.Supplier
+    return new ExecutableStatement.MethodInvoke(stat, expressionCompiler, getter);
   }
 
   private ExecutableStatement returnStat(Statement.ReturnStatement returnStatement) {

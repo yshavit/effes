@@ -29,7 +29,7 @@ public final class EfMethod<B> {
     return body;
   }
 
-  public <B2> EfMethod<B2> tranform(Function<B, B2> func) {
+  public <B2> EfMethod<B2> tranform(Function<? super B, ? extends B2> func) {
     return new EfMethod<>(argTypes, resultType, func.apply(body));
   }
 

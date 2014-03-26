@@ -33,11 +33,17 @@ public abstract class Statement extends StatefulObject {
     private final SimpleType resultType;
     private final String methodName;
     private final List<Expression> args;
+    private final boolean isBuiltIn;
 
-    public MethodInvoke(String methodName, List<Expression> args, SimpleType resultType) {
+    public MethodInvoke(String methodName, List<Expression> args, SimpleType resultType, boolean isBuiltIn) {
       this.methodName = methodName;
       this.args = args;
       this.resultType = resultType;
+      this.isBuiltIn = isBuiltIn;
+    }
+
+    public boolean isBuiltIn() {
+      return isBuiltIn;
     }
 
     public SimpleType getResultType() {
