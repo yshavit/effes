@@ -22,4 +22,9 @@ public final class StateStack {
   public List<Object> getAllStates() {
     return ImmutableList.copyOf(states);
   }
+
+  @Override
+  public String toString() {
+    return states.toString();
+  }
 }

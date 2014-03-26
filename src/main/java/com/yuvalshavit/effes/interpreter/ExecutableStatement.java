@@ -30,11 +30,11 @@ public abstract class ExecutableStatement implements ExecutableElement {
 
   public static class MethodInvoke extends ExecutableStatement {
     private final List<ExecutableExpression> args;
-    private final Supplier<ExecutableBlock> body;
+    private final Supplier<ExecutableElement> body;
 
     public MethodInvoke(Statement.MethodInvoke source,
                         ExecutableExpressionCompiler expressionCompiler,
-                        Supplier<ExecutableBlock> body)
+                        Supplier<ExecutableElement> body)
     {
       super(source);
       this.args = ImmutableList.copyOf(Lists.transform(source.getArgs(), expressionCompiler::apply));
@@ -46,7 +46,7 @@ public abstract class ExecutableStatement implements ExecutableElement {
       invoke(body.get(), args, stack);
     }
 
-    public static Object invoke(ExecutableBlock body, List<ExecutableExpression> args, StateStack stack) {
+    public static Object invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
       for (ExecutableExpression arg : args) {
         arg.execute(stack);
       }
