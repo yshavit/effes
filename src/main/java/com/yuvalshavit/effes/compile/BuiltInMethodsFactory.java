@@ -36,7 +36,7 @@ public interface BuiltInMethodsFactory<T> {
         Function<String, Pair<Token, EfType>> typeParser = s -> {
           EffesParser parser = ParserUtils.createParser(s);
           EffesParser.TypeContext parsedType = parser.type();
-          EfType type = resolver.getEfType(parsedType);
+          EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
         Stream.of(meta.args()).forEach(s -> {

@@ -5,9 +5,10 @@ import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TypeResolver {
+public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
 
@@ -16,7 +17,8 @@ public class TypeResolver {
     this.errs = errs;
   }
 
-  public EfType getEfType(EffesParser.TypeContext typeContext) {
+  @Override
+  public EfType apply(EffesParser.TypeContext typeContext) {
     return typeContext != null
       ? typesDispatcher.apply(this, typeContext)
       : EfType.UNKNOWN;
@@ -30,7 +32,7 @@ public class TypeResolver {
     .build();
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
-    List<EfType> options = ctx.type().stream().map(this::getEfType).collect(Collectors.toList());
+    List<EfType> options = ctx.type().stream().map(this::apply).collect(Collectors.toList());
     return new EfType.DisjunctiveType(options);
   }
 
