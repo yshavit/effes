@@ -8,10 +8,8 @@ import java.net.URL;
 
 public final class RelativeUrl {
   private final String pathBase;
-  private final Class<?> anchor;
 
   public RelativeUrl(Class<?> anchor) {
-    this.anchor = anchor;
     pathBase = anchor.getPackage().getName().replace('.', File.separatorChar);
   }
 
