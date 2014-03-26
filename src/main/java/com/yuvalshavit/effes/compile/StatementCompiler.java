@@ -64,6 +64,6 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {
     Expression expr = expressionCompiler.apply(ctx.exprLine().expr());
-    return new Statement.ReturnStatement(ctx.getStart(), expr);
+    return new Statement.ReturnStatement(ctx.exprLine().expr().getStart(), expr);
   }
 }

@@ -62,7 +62,8 @@ dataTypeDeclr: DATA TYPE
 
 // generics and types
 
-type: TYPE_NAME                                                                 # SimpleType
+type: type PIPE type                                                            # DisunctiveType
+    | TYPE_NAME                                                                 # SimpleType
     ;
 
 // blocks and statements

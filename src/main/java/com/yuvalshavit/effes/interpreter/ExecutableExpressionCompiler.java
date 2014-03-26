@@ -13,8 +13,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private final MethodsRegistry<ExecutableElement> methods;
 
-  public ExecutableExpressionCompiler(
-    MethodsRegistry<ExecutableElement> methods) {
+  public ExecutableExpressionCompiler(MethodsRegistry<ExecutableElement> methods) {
     this.methods = methods;
   }
 
