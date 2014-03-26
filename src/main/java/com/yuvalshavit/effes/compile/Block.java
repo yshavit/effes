@@ -49,7 +49,8 @@ public final class Block {
       if (lastBranchReturned == null) {
         throw new BlockValidationException(token, "block may not return");
       }
-      if (!lastBranchReturned.equals(requiredReturnType)) {
+      // e.g. return type (True | False), lastBranchReturned True
+      if (!requiredReturnType.contains(lastBranchReturned)) {
         throw new BlockValidationException(
           token, String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned));
       }

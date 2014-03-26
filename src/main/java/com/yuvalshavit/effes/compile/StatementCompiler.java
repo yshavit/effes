@@ -52,7 +52,8 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
       SimpleType invokeArg = invokeArgs.get(i).resultType();
       SimpleType expectedArg = expectedArgs.get(i);
-      if (!expectedArg.equals(invokeArg)) {
+      // e.g. method (True | False), arg is True
+      if (!expectedArg.contains(invokeArg)) {
         throw new StatementCompilationException(
           invokeArgs.get(i).token(),
           String.format("mismatched types: expected %s but found %s", expectedArg, invokeArg));
