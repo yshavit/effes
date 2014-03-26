@@ -62,7 +62,8 @@ dataTypeDeclr: DATA TYPE
 
 // generics and types
 
-type: type PIPE type                                                            # DisunctiveType
+type: OPEN_PAREN type CLOSE_PAREN                                               # ParenType
+    | type PIPE type                                                            # DisunctiveType
     | TYPE_NAME                                                                 # SimpleType
     ;
 

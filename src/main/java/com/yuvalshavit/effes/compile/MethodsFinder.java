@@ -61,6 +61,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     = Dispatcher.builder(MethodsFinder.class, EffesParser.TypeContext.class, EfType.class)
     .put(EffesParser.SimpleTypeContext.class, MethodsFinder::lookupSimpleType)
     .put(EffesParser.DisunctiveTypeContext.class, MethodsFinder::createDisjunctiveType)
+    .put(EffesParser.ParenTypeContext.class, MethodsFinder::parenType)
     .build();
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
@@ -75,5 +76,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       throw new MethodRegistrationException(typeContext.TYPE_NAME().getSymbol(), "unknown type: " + simpleTypeName);
     }
     return type;
+  }
+
+  private EfType parenType(EffesParser.ParenTypeContext ctx) {
+    return getEfType(ctx.type());
   }
 }
