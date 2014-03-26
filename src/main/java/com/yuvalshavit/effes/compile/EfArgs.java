@@ -45,7 +45,9 @@ public final class EfArgs {
 
     @Override
     public String toString() {
-      return name + ' ' + type;
+      return name != null
+        ? name + ' ' + type
+        : String.valueOf(type);
     }
   }
 
@@ -67,6 +69,16 @@ public final class EfArgs {
 
     public EfArgs build() {
       return new EfArgs(args);
+    }
+
+    @Override
+    public String toString() {
+      String str = args.toString();
+      if (errs != null && errs.hasErrors()) {
+        int nErrs = errs.getErrors().size();
+        str = String.format("%s (%d error%s)", str, nErrs, nErrs == 1 ? "" : "s");
+      }
+      return str;
     }
   }
 }
