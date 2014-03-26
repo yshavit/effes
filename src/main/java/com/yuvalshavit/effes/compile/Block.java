@@ -31,13 +31,13 @@ public final class Block {
     return statements.hashCode();
   }
 
-  public void validate(EfType requiredReturnType) {
+  public void validate(EfType requiredReturnType, CompileErrors errs) {
     ValidationDispatch validator = new ValidationDispatch();
     EfType lastBranchReturned = null;
     Statement lastStatement = null;
     for (Statement s : statements) {
       if (lastBranchReturned != null) {
-        throw new BlockValidationException(s.token(), "unreachable statement: " + s);
+        errs.add(s.token(), "unreachable statement: " + s);
       }
       lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
       lastStatement = s;
@@ -47,12 +47,11 @@ public final class Block {
         ? lastStatement.token()
         : null;
       if (lastBranchReturned == null) {
-        throw new BlockValidationException(token, "block may not return");
+        errs.add(token, "block may not return");
       }
       // e.g. return type (True | False), lastBranchReturned True
       if (!requiredReturnType.contains(lastBranchReturned)) {
-        throw new BlockValidationException(
-          token, String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned));
+        errs.add(token, String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned));
       }
     }
   }

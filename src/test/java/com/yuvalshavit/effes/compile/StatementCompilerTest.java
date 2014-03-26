@@ -15,8 +15,9 @@ public final class StatementCompilerTest {
     TypeRegistry registry = TUtils.typeRegistry("True");
     MethodsRegistry<?> methods = new MethodsRegistry<>();
     EffesParser.StatContext statContext = parseStatement("return True");
-    ExpressionCompiler expressionCompiler = new ExpressionCompiler(null, registry);
-    Statement compiled = new StatementCompiler(expressionCompiler, methods, null).apply(statContext);
+    CompileErrors errs = CompileErrors.throwing;
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(null, registry, errs);
+    Statement compiled = new StatementCompiler(expressionCompiler, methods, null, errs).apply(statContext);
     Expression trueExpr = new Expression.CtorInvoke(null, getExistingType(registry, "True"));
     assertEquals(compiled, new Statement.ReturnStatement(null, trueExpr));
   }

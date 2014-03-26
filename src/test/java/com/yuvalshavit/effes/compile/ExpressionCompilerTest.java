@@ -5,8 +5,8 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.testng.annotations.Test;
 
-import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public final class ExpressionCompilerTest {
 
@@ -14,7 +14,7 @@ public final class ExpressionCompilerTest {
   public void ctorInvoke() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("True");
-    Expression compiled = new ExpressionCompiler(null, registry).apply(exprContext);
+    Expression compiled = new ExpressionCompiler(null, registry, CompileErrors.throwing).apply(exprContext);
     assertEquals(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
   }
 
@@ -22,14 +22,14 @@ public final class ExpressionCompilerTest {
   public void ctorInvokeUnknownType() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("False");
-    assertException(ExpressionCompilationException.class, () -> new ExpressionCompiler(null, registry).apply(exprContext));
+    TUtils.expectErrors(errs -> new ExpressionCompiler(null, registry, errs).apply(exprContext));
   }
 
   @Test
   public void param() {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("(True)");
-    Expression compiled = new ExpressionCompiler(null, registry).apply(exprContext);
+    Expression compiled = new ExpressionCompiler(null, registry, CompileErrors.throwing).apply(exprContext);
     // Note that the compiled expression is inlined -- there's no Expression.Param
     assertEquals(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
   }

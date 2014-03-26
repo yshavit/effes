@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.Block;
+import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
@@ -18,6 +19,12 @@ public final class Interpreter {
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> new ExecutableBuiltInMethods(t, out));
+    CompileErrors errs = compiler.getErrors();
+    if (errs.hasErrors()) {
+      errs.getErrors().forEach(System.err::println);
+      throw new IllegalStateException("errors in compilation"); // TODO can do better
+    }
+
     MethodsRegistry<ExecutableElement> builtinsRegistry = compiler.getBuiltinsRegistry();
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 

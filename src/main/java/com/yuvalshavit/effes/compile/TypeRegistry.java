@@ -12,10 +12,15 @@ import java.util.Set;
 public final class TypeRegistry {
 
   private final Map<String, EfType.SimpleType> simpleTypes = new HashMap<>();
+  private final CompileErrors errs;
+
+  public TypeRegistry(CompileErrors errs) {
+    this.errs = errs;
+  }
 
   public void registerType(Token token, String name) {
     if (simpleTypes.containsKey(name)) {
-      throw new TypeRegistryException(token, "duplicate type name: " + name);
+      errs.add(token, "duplicate type name: " + name);
     }
     EfType.SimpleType r = new EfType.SimpleType(name);
     simpleTypes.put(name, r);

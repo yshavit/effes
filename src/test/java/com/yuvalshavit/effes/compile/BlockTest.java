@@ -8,18 +8,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.yuvalshavit.util.AssertException.assertException;
-
 public final class BlockTest {
   private final TypeRegistry typeRegistry = TUtils.typeRegistry("True", "False", "Unknown");
 
   @Test
   public void singleReturn() {
     Block block = new Block(ImmutableList.of(returnStat(ctorExpr("True"))));
-    block.validate(null);
-    block.validate(type("True"));
-    assertException(BlockValidationException.class, () -> block.validate(type("False")));
-    block.validate(disjunct("True", "False"));
+    CompileErrors errs = new CompileErrors();
+    block.validate(null, errs);
+    block.validate(type("True"), errs);
+    TUtils.expectErrors(errs, () -> block.validate(type("False"), errs));
   }
 
   @Test
@@ -30,9 +28,9 @@ public final class BlockTest {
   @Test
   public void noReturns() {
     Block block = new Block(ImmutableList.of());
-    block.validate(null);
-    assertException(BlockValidationException.class, () -> block.validate(type("True")));
-    assertException(BlockValidationException.class, () -> block.validate(type("False")));
+    TUtils.expectNoErrors(errs -> block.validate(null, errs));
+    TUtils.expectErrors(errs -> block.validate(type("True"), errs));
+    TUtils.expectErrors(errs -> block.validate(type("False"), errs));
   }
 
   @Test
@@ -40,9 +38,9 @@ public final class BlockTest {
     Block block = new Block(ImmutableList.of(
       returnStat(ctorExpr("True")),
       returnStat(ctorExpr("True"))));
-    assertException(BlockValidationException.class, () -> block.validate(null));
-    assertException(BlockValidationException.class, () -> block.validate(type("True")));
-    assertException(BlockValidationException.class, () -> block.validate(type("False")));
+    TUtils.expectErrors(errs -> block.validate(null, errs));
+    TUtils.expectErrors(errs -> block.validate(type("True"), errs));
+    TUtils.expectErrors(errs -> block.validate(type("False"), errs));
   }
 
   private Statement.ReturnStatement returnStat(Expression expr) {
