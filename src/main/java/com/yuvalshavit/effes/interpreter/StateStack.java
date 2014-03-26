@@ -18,6 +18,10 @@ public final class StateStack {
     return states.pop();
   }
 
+  public Object peek() {
+    return states.peek();
+  }
+
   @VisibleForTesting
   public List<Object> getAllStates() {
     return ImmutableList.copyOf(states);
