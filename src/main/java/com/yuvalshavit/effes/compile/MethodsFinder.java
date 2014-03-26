@@ -39,12 +39,11 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
-        EfType type = typeResolver.getEfType(typeContext);
-        Token token = Util.elvis(argContext.type(), EffesParser.TypeContext::getStart);
+        EfType type = typeResolver.apply(typeContext);
         String argName = Util.elvis(argContext.VAR_NAME(), TerminalNode::getText);
-        args.add(token, argName, type);
+        args.add(typeContext.getStart(), argName, type);
       }
-      EfType resultType = typeResolver.getEfType(ctx.methodReturnDeclr().type());
+      EfType resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
       try {
