@@ -26,6 +26,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
+      .put(Expression.UnrecognizedExpression.class, ExecutableExpressionCompiler::unrecognizedExpr)
       .build();
 
   private ExecutableExpression ctorInvoke(Expression.CtorInvoke expr) {
@@ -37,5 +38,9 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     EfMethod<? extends ExecutableElement> method = methods.getMethod(expr.getMethodName());
     assert method != null;
     return new ExecutableExpression.MethodInvokeExpression(expr, args, method.getBody());
+  }
+
+  private ExecutableExpression unrecognizedExpr(Expression.UnrecognizedExpression expr) {
+    throw new IllegalArgumentException(expr.toString());
   }
 }

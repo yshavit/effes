@@ -28,7 +28,13 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
       .put(EffesParser.MethodInvokeExprContext.class, ExpressionCompiler::methodInvoke)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
+      .setErrHandler(ExpressionCompiler::error)
       .build();
+
+  private Expression error(EffesParser.ExprContext ctx) {
+    errs.add(ctx.getStart(), "unrecognized expression");
+    return new Expression.UnrecognizedExpression(ctx.getStart());
+  }
 
   private Expression methodInvoke(EffesParser.MethodInvokeExprContext ctx) {
     String methodName = ctx.methodName().getText();
