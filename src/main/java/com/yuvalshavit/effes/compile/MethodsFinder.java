@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
@@ -59,7 +60,13 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   private static final Dispatcher<MethodsFinder, EffesParser.TypeContext, EfType> typesDispatcher
     = Dispatcher.builder(MethodsFinder.class, EffesParser.TypeContext.class, EfType.class)
     .put(EffesParser.SimpleTypeContext.class, MethodsFinder::lookupSimpleType)
+    .put(EffesParser.DisunctiveTypeContext.class, MethodsFinder::createDisjunctiveType)
     .build();
+
+  private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
+    List<EfType> options = ctx.type().stream().map(this::getEfType).collect(Collectors.toList());
+    return new EfType.DisjunctiveType(options);
+  }
 
   private EfType.SimpleType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
     String simpleTypeName = typeContext.TYPE_NAME().getText();

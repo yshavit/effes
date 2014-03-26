@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.base.Joiner;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nonnull;
@@ -34,7 +35,7 @@ public abstract class Expression extends StatefulObject {
 
     @Override
     public String toString() {
-      return String.format("%s()", resultType());
+      return resultType().toString();
     }
 
     @Override
@@ -75,7 +76,7 @@ public abstract class Expression extends StatefulObject {
 
     @Override
     public String toString() {
-      return methodName + method;
+      return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
   }
 }
