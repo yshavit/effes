@@ -47,11 +47,11 @@ public final class Block {
         ? lastStatement.token()
         : null;
       if (lastBranchReturned == null) {
-        errs.add(token, "block may not return");
-      }
-      // e.g. return type (True | False), lastBranchReturned True
-      if (!requiredReturnType.contains(lastBranchReturned)) {
-        errs.add(token, String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned));
+        errs.add(token, "block may not return, but needs to return " + requiredReturnType);
+      } else if (!requiredReturnType.contains(lastBranchReturned)) {
+        // e.g. return type (True | False), lastBranchReturned True
+        String msg = String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned);
+        errs.add(token, msg);
       }
     }
   }
