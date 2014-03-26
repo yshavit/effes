@@ -25,6 +25,23 @@ public abstract class Expression extends StatefulObject {
     return token;
   }
 
+  public static class UnrecognizedExpression extends Expression {
+
+    public UnrecognizedExpression(Token token) {
+      super(token, EfType.UNKNOWN);
+    }
+
+    @Override
+    protected Object[] state() {
+      return new Object[0];
+    }
+
+    @Override
+    public String toString() {
+      return "unrecognized expression";
+    }
+  }
+
   public static class CtorInvoke extends Expression {
 
     @Nullable
