@@ -7,6 +7,7 @@ import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.omg.CORBA.UNKNOWN;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,14 +77,15 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     return new EfType.DisjunctiveType(options);
   }
 
-  private EfType.SimpleType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
+  private EfType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
     return lookupSimpleType(typeContext.TYPE_NAME());
   }
 
-  private EfType.SimpleType lookupSimpleType(TerminalNode typeName) {
-    EfType.SimpleType type = typeRegistry.getSimpleType(typeName.getText());
+  private EfType lookupSimpleType(TerminalNode typeName) {
+    EfType type = typeRegistry.getSimpleType(typeName.getText());
     if (type == null) {
       errs.add(typeName.getSymbol(), "unknown type: " + typeName.getText());
+      type = EfType.UNKNOWN;
     }
     return type;
   }
