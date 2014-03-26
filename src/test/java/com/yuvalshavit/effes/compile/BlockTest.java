@@ -21,11 +21,6 @@ public final class BlockTest {
   }
 
   @Test
-  public void todo() {
-    throw new UnsupportedOperationException("need more tests"); // TODO
-  }
-
-  @Test
   public void noReturns() {
     Block block = new Block(ImmutableList.of());
     TUtils.expectNoErrors(errs -> block.validate(null, errs));

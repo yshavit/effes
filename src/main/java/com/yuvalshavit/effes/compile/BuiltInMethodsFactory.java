@@ -1,10 +1,14 @@
 package com.yuvalshavit.effes.compile;
 
+import com.yuvalshavit.effes.parser.EffesParser;
+import com.yuvalshavit.effes.parser.ParserUtils;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Pair;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
@@ -27,9 +31,20 @@ public interface BuiltInMethodsFactory<T> {
         }
         @SuppressWarnings("unchecked")
         T casted = (T) raw; // we know this works because of the above checks of getGenericReturnType
-        List<EfType> args = Stream.of(meta.args()).map(typeRegistry::getSimpleType).collect(Collectors.toList());
-        EfType resultType = typeRegistry.getSimpleType(meta.resultType());
-        outRegistry.registerTopLevelMethod(meta.name(), new EfMethod<>(args, resultType, casted));
+        MethodsFinder.TypeResolver resolver = new MethodsFinder.TypeResolver(typeRegistry, CompileErrors.throwing);
+        EfArgs.Builder args = new EfArgs.Builder(CompileErrors.throwing);
+        Function<String, Pair<Token, EfType>> typeParser = s -> {
+          EffesParser parser = ParserUtils.createParser(s);
+          EffesParser.TypeContext parsedType = parser.type();
+          EfType type = resolver.getEfType(parsedType);
+          return new Pair<>(parsedType.getStart(), type);
+        };
+        Stream.of(meta.args()).forEach(s -> {
+          Pair<Token, EfType> parse = typeParser.apply(s);
+          args.add(parse.a, null, parse.b);
+        });
+        EfType resultType = typeParser.apply(meta.resultType()).b;
+        outRegistry.registerTopLevelMethod(meta.name(), new EfMethod<>(args.build(), resultType, casted));
       }
     }
   }

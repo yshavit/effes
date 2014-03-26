@@ -48,7 +48,7 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: type
+methodArg: VAR_NAME? type
          ;
 
 methodReturnDeclr: ARROW type;
