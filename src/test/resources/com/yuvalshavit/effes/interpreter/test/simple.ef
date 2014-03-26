@@ -1,0 +1,6 @@
+data type True
+data type Void
+
+def main -> Void:
+  print True
+  return Void
