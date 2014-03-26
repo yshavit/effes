@@ -1,13 +1,14 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
 public abstract class EfType {
 
