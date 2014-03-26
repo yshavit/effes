@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
-  @BuiltInMethod(name = "print", resultType = "Void", args = "True")
+  @BuiltInMethod(name = "print", resultType = "Void", args = "True | False")
   public T print();
 
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry) {
@@ -34,8 +34,9 @@ public interface BuiltInMethodsFactory<T> {
         TypeResolver resolver = new TypeResolver(typeRegistry, CompileErrors.throwing);
         EfArgs.Builder args = new EfArgs.Builder(CompileErrors.throwing);
         Function<String, Pair<Token, EfType>> typeParser = s -> {
-          EffesParser parser = ParserUtils.createParser(s);
+          EffesParser parser = ParserUtils.createParser(String.format("(%s)", s));
           EffesParser.TypeContext parsedType = parser.type();
+          assert parsedType.getStop().getStopIndex() - 1 == s.length() : "invalid type declaration: " + s;
           EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
