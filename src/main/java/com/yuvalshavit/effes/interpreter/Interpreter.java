@@ -2,15 +2,9 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.BlockCompiler;
-import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.EfMethod;
-import com.yuvalshavit.effes.compile.ExpressionCompiler;
-import com.yuvalshavit.effes.compile.MethodsFinder;
+import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
-import com.yuvalshavit.effes.compile.StatementCompiler;
-import com.yuvalshavit.effes.compile.TypeRegistry;
-import com.yuvalshavit.effes.compile.TypesFinder;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 
@@ -23,22 +17,9 @@ public final class Interpreter {
   private final MethodsRegistry<ExecutableElement> methodsRegistry;
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
-    TypeRegistry typeRegistry = new TypeRegistry();
-    new TypesFinder(typeRegistry).accept(source);
-
-    BuiltInMethodsFactory<ExecutableElement> builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
-    MethodsRegistry<ExecutableElement> builtinsRegistry = new MethodsRegistry<>();
-    builtIns.addTo(typeRegistry, builtinsRegistry);
-
-    MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
-    new MethodsFinder(typeRegistry, unparsedMethods).accept(source);
-
-    StatementCompiler statementCompiler = new StatementCompiler(
-      new ExpressionCompiler(unparsedMethods, typeRegistry),
-      unparsedMethods,
-      builtinsRegistry);
-    BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
-    MethodsRegistry<Block> compiledMethods = unparsedMethods.compileMethods(blockCompiler);
+    IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> new ExecutableBuiltInMethods(t, out));
+    MethodsRegistry<ExecutableElement> builtinsRegistry = compiler.getBuiltinsRegistry();
+    MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     MethodsRegistry<ExecutableElement> executableMethods = new MethodsRegistry<>();
     ExecutableExpressionCompiler executableExpressionCompiler = new ExecutableExpressionCompiler(executableMethods);
@@ -47,7 +28,6 @@ public final class Interpreter {
       assert method != null : m;
       return method.getBody();
     };
-
     Function<String, ExecutableElement> builtInMethodsLookup = name -> {
       EfMethod<? extends ExecutableElement> method = builtinsRegistry.getMethod(name);
       assert method != null;
