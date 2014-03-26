@@ -16,13 +16,15 @@ import java.util.function.Function;
 
 public final class Interpreter {
   private final MethodsRegistry<ExecutableElement> methodsRegistry;
+  private final CompileErrors errs;
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> new ExecutableBuiltInMethods(t, out));
     CompileErrors errs = compiler.getErrors();
     if (errs.hasErrors()) {
-      errs.getErrors().forEach(System.err::println);
-      throw new IllegalStateException("errors in compilation"); // TODO can do better
+      this.errs = errs;
+      this.methodsRegistry = null;
+      return;
     }
 
     MethodsRegistry<ExecutableElement> builtinsRegistry = compiler.getBuiltinsRegistry();
@@ -47,6 +49,7 @@ public final class Interpreter {
     ExecutableBlockCompiler executableBlockCompiler = new ExecutableBlockCompiler(executableStatementCompiler);
     executableMethods.addAll(compiledMethods, executableBlockCompiler);
 
+    this.errs = null;
     this.methodsRegistry = executableMethods;
   }
 
@@ -54,7 +57,20 @@ public final class Interpreter {
     this(source, System.out);
   }
 
+  public boolean hasErrors() {
+    return errs != null;
+  }
+
+  public CompileErrors getErrors() {
+    return errs != null
+      ? errs
+      : new CompileErrors();
+  }
+
   public void runMain() {
+    if (hasErrors()) {
+      throw new IllegalStateException("compilation had errors");
+    }
     EfMethod<? extends ExecutableElement> main = methodsRegistry.getMethod("main");
     StateStack states = new StateStack();
     if (main != null) {
@@ -69,8 +85,16 @@ public final class Interpreter {
   public static void main(String[] args) throws IOException {
     try (FileReader tmpFile = new FileReader("/tmp/ramdisk/example.ef")) {
       EffesParser parser = ParserUtils.createParser(tmpFile);
-      new Interpreter(parser.compilationUnit()).runMain();
-      System.err.println(">> Done!");
+      Interpreter interpreter = new Interpreter(parser.compilationUnit());
+      if (interpreter.hasErrors()) {
+        interpreter.getErrors().getErrors().forEach(System.err::println);
+        System.err.println(">> Compilation had errors; not executing code.");
+      } else {
+        interpreter.runMain();
+        System.err.println(">> Done!");
+      }
     }
   }
+
+
 }
