@@ -6,6 +6,7 @@ import com.yuvalshavit.effes.parser.ParserUtils;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,14 +55,16 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   }
 
   private EfType getEfType(EffesParser.TypeContext typeContext) {
-    return typesDispatcher.apply(this, typeContext);
+    return typeContext != null
+      ? typesDispatcher.apply(this, typeContext)
+      : EfType.UNKNOWN;
   }
 
   private static final Dispatcher<MethodsFinder, EffesParser.TypeContext, EfType> typesDispatcher
     = Dispatcher.builder(MethodsFinder.class, EffesParser.TypeContext.class, EfType.class)
     .put(EffesParser.SimpleTypeContext.class, MethodsFinder::lookupSimpleType)
     .put(EffesParser.DisunctiveTypeContext.class, MethodsFinder::createDisjunctiveType)
-    .put(EffesParser.ParenTypeContext.class, MethodsFinder::parenType)
+    .put(EffesParser.ParenSingleTypeContext.class, MethodsFinder::parenType)
     .build();
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
@@ -70,15 +73,18 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   }
 
   private EfType.SimpleType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
-    String simpleTypeName = typeContext.TYPE_NAME().getText();
-    EfType.SimpleType type = typeRegistry.getSimpleType(simpleTypeName);
+    return lookupSimpleType(typeContext.TYPE_NAME());
+  }
+
+  private EfType.SimpleType lookupSimpleType(TerminalNode typeName) {
+    EfType.SimpleType type = typeRegistry.getSimpleType(typeName.getText());
     if (type == null) {
-      throw new MethodRegistrationException(typeContext.TYPE_NAME().getSymbol(), "unknown type: " + simpleTypeName);
+      throw new MethodRegistrationException(typeName.getSymbol(), "unknown type: " + typeName.getText());
     }
     return type;
   }
 
-  private EfType parenType(EffesParser.ParenTypeContext ctx) {
-    return getEfType(ctx.type());
+  private EfType parenType(EffesParser.ParenSingleTypeContext ctx) {
+    return lookupSimpleType(ctx.TYPE_NAME());
   }
 }

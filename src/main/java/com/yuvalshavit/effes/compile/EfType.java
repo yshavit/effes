@@ -2,15 +2,15 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.yuvalshavit.util.Dispatcher;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public abstract class EfType {
+
+  public static final EfType UNKNOWN = new UnknownType();
 
   private EfType() {}
 
@@ -24,6 +24,18 @@ public abstract class EfType {
 
   @Override
   public abstract String toString();
+
+  private static final class UnknownType extends EfType {
+    @Override
+    public boolean contains(EfType other) {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "<unknown type>";
+    }
+  }
 
   public static final class SimpleType extends EfType {
     private final String name;
@@ -50,43 +62,73 @@ public abstract class EfType {
     public DisjunctiveType(Collection<EfType> options) {
       // flatten them out
       Set<EfType> flattened = new HashSet<>(options.size());
-      flatAdd(options, flattened);
-      this.options = ImmutableSet.copyOf(flattened);
-    }
-
-    private void flatAdd(Collection<EfType> options, Set<EfType> flattened) {
-      for (EfType option : options) {
-        if (option instanceof SimpleType) {
-          flattened.add(option);
-        } else if (option instanceof DisjunctiveType) {
-          Collection<EfType> innerOptions = ((DisjunctiveType) option).options;
-          flatAdd(innerOptions, flattened);
-        } else {
-          throw new AssertionError(option);
+      EfTypeDispatch dispatch = new EfTypeDispatch() {
+        @Override
+        public boolean accept(SimpleType type) {
+          return flattened.add(type);
         }
-      }
+
+        @Override
+        public boolean accept(DisjunctiveType type) {
+          type.options.forEach(this::accept);
+          return true;
+        }
+
+        @Override
+        public boolean accept(UnknownType type) {
+          return flattened.add(type);
+        }
+      };
+      options.forEach(dispatch::accept);
+      this.options = ImmutableSet.copyOf(flattened);
     }
 
     @Override
     public boolean contains(EfType other) {
-      if (other instanceof SimpleType) {
-        for (EfType option : options) {
-          if (option.contains(other)) {
-            return true;
+      return new EfTypeDispatch() {
+        @Override
+        public boolean accept(SimpleType type) {
+          for (EfType option : options) {
+            if (option.contains(other)) {
+              return true;
+            }
           }
+          return false;
         }
-      } else if (other instanceof DisjunctiveType) {
-        Collection<EfType> otherComponents = ((DisjunctiveType) other).options;
-        return options.containsAll(otherComponents);
-      } else {
-        throw new AssertionError(other);
-      }
-      return false;
+
+        @Override
+        public boolean accept(DisjunctiveType type) {
+          Collection<EfType> otherComponents = type.options;
+          return options.containsAll(otherComponents);
+        }
+
+        @Override
+        public boolean accept(UnknownType type) {
+          return false;
+        }
+      }.accept(other);
     }
 
     @Override
     public String toString() {
       return String.format("(%s)", Joiner.on(" | ").join(options));
     }
+  }
+
+  private static abstract class EfTypeDispatch {
+    static final Dispatcher<EfTypeDispatch, EfType, Boolean> dispatcher
+      = Dispatcher.builder(EfTypeDispatch.class, EfType.class, Boolean.class)
+      .put(SimpleType.class, EfTypeDispatch::accept)
+      .put(DisjunctiveType.class, EfTypeDispatch::accept)
+      .put(UnknownType.class, EfTypeDispatch::accept)
+      .build();
+
+    public boolean accept(EfType type) {
+      return dispatcher.apply(this, type);
+    }
+
+    public abstract boolean accept(SimpleType type);
+    public abstract boolean accept(DisjunctiveType type);
+    public abstract boolean accept(UnknownType type);
   }
 }
