@@ -7,14 +7,14 @@ import java.util.List;
 
 public abstract class Expression extends StatefulObject {
   private final Token token;
-  private final EfType.SimpleType type;
+  private final EfType type;
 
-  private Expression(Token token, EfType.SimpleType type) {
+  private Expression(Token token, EfType type) {
     this.token = token;
     this.type = type;
   }
 
-  public final EfType.SimpleType resultType() {
+  public EfType resultType() {
     return type;
   }
 
@@ -24,13 +24,22 @@ public abstract class Expression extends StatefulObject {
 
   public static class CtorInvoke extends Expression {
 
+    @Nonnull
+    private final EfType.SimpleType simpleType;
+
     public CtorInvoke(Token token, @Nonnull EfType.SimpleType type) {
       super(token, type);
+      simpleType = type;
     }
 
     @Override
     public String toString() {
       return String.format("%s()", resultType());
+    }
+
+    @Override
+    public EfType.SimpleType resultType() {
+      return simpleType;
     }
 
     @Override

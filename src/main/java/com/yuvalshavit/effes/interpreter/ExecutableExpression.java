@@ -18,16 +18,16 @@ public abstract class ExecutableExpression implements ExecutableElement {
   }
 
   public static class CtorExpression extends ExecutableExpression {
-    private final EfType.SimpleType type;
+    private final EfType.SimpleType ctorType;
 
     public CtorExpression(Expression.CtorInvoke source) {
       super(source);
-      type = source.resultType();
+      ctorType = source.resultType();
     }
 
     @Override
     public void execute(StateStack stack) {
-      stack.push(type);
+      stack.push(ctorType);
     }
   }
 
