@@ -3,12 +3,16 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class ExpressionCompiler implements Function<EffesParser.ExprContext, Expression> {
+  private final MethodsRegistry<?> methodsRegistry;
   private final TypeRegistry typeRegistry;
 
-  public ExpressionCompiler(TypeRegistry typeRegistry) {
+  public ExpressionCompiler(MethodsRegistry<?> methodsRegistry, TypeRegistry typeRegistry) {
+    this.methodsRegistry = methodsRegistry;
     this.typeRegistry = typeRegistry;
   }
 
@@ -19,9 +23,25 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprContext, Expression> dispatcher =
     Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprContext.class, Expression.class)
+      .put(EffesParser.MethodInvokeExprContext.class, ExpressionCompiler::methodInvoke)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
       .build();
+
+  private Expression methodInvoke(EffesParser.MethodInvokeExprContext ctx) {
+    String methodName = ctx.methodName().getText();
+    EfMethod<?> method = methodsRegistry.getMethod(methodName);
+    if (method == null) {
+      throw new ExpressionCompilationException("no such method: " + methodName);
+    }
+    List<Expression> args = ctx
+      .methodInvokeArgs()
+      .expr()
+      .stream()
+      .map(this::apply)
+      .collect(Collectors.toList());
+    return new Expression.MethodInvoke(methodName, method, args);
+  }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {
     return dispatcher.apply(this, ctx.expr());

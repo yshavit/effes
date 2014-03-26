@@ -34,14 +34,14 @@ public final class Interpreter {
     new MethodsFinder(typeRegistry, unparsedMethods).accept(source);
 
     StatementCompiler statementCompiler = new StatementCompiler(
-      new ExpressionCompiler(typeRegistry),
+      new ExpressionCompiler(unparsedMethods, typeRegistry),
       unparsedMethods,
       builtinsRegistry);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
     MethodsRegistry<Block> compiledMethods = unparsedMethods.compileMethods(blockCompiler);
 
-    ExecutableExpressionCompiler executableExpressionCompiler = new ExecutableExpressionCompiler();
     MethodsRegistry<ExecutableElement> executableMethods = new MethodsRegistry<>();
+    ExecutableExpressionCompiler executableExpressionCompiler = new ExecutableExpressionCompiler(executableMethods);
     Function<String, ExecutableElement> methodLookup = m -> {
       EfMethod<? extends ExecutableElement> method = executableMethods.getMethod(m);
       assert method != null : m;
