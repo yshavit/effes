@@ -14,6 +14,11 @@ public abstract class ExecutableStatement implements ExecutableElement {
     this.source = source;
   }
 
+  @Override
+  public String toString() {
+    return source.toString();
+  }
+
   public static class ReturnStatement extends ExecutableStatement {
     private final ExecutableExpression value;
 
@@ -53,7 +58,7 @@ public abstract class ExecutableStatement implements ExecutableElement {
       body.execute(stack);
       // TODO not efficient, but we can work on that later!
       Object rv = stack.pop();
-      for (int i = 0, nArgs = args.size(); i < nArgs; ++ i) {
+      for (ExecutableExpression arg : args) {
         stack.pop(); // TODO also not efficient!
       }
       return rv; // will be useful later, when this is used in an expression

@@ -130,6 +130,7 @@ public final class EffesParserTest {
     }
     if (Boolean.getBoolean("effesParserTest.write")) {
       File outDir = new File("target/effesParserTest/" + ruleName);
+      //noinspection ResultOfMethodCallIgnored
       outDir.mkdirs();
       try (FileWriter w = new FileWriter(new File(outDir, testCaseName + ".tree"))) {
         w.append(actualTree);

@@ -20,6 +20,6 @@ public class AssertException {
   }
 
   public interface ExceptionalRunnable {
-    public void run() throws Throwable;
+    public void run() throws Exception;
   }
 }

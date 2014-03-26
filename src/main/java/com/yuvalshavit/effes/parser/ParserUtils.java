@@ -40,6 +40,7 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class ParserUtils {
   public static final String TEST_RULE_SUFFIX = "__ForTest__";
@@ -142,7 +143,7 @@ public final class ParserUtils {
       int nParams = params.length;
       if (nParams == 0) {
         quietInvoke(tree, m);
-      } else if (nParams == 1 && params[0] == int.class) {
+      } else if (nParams == 1 && int.class.equals(params[0])) {
         quietInvoke(tree, m, 0);
       }
     }
@@ -157,7 +158,7 @@ public final class ParserUtils {
           continue;
         }
         int m = field.getModifiers();
-        if (Modifier.isPublic(m) && Modifier.isStatic(m) && Modifier.isFinal(m) && field.getType() == int.class) {
+        if (Modifier.isPublic(m) && Modifier.isStatic(m) && Modifier.isFinal(m) && int.class.equals(field.getType())) {
           Integer value;
           try {
             value = field.getInt(null);
@@ -175,9 +176,9 @@ public final class ParserUtils {
     }
   }
 
-  private static Object quietInvoke(ParseTree tree, Method m, Object... args) {
+  private static void quietInvoke(ParseTree tree, Method m, Object... args) {
     try {
-      return m.invoke(tree, args);
+      m.invoke(tree, args);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -246,9 +247,7 @@ public final class ParserUtils {
             label += "[]";
             List<?> list = (List<?>) value;
             children = Lists.newArrayListWithCapacity(list.size());
-            for (Object o : list) {
-              children.add((ParseTree) o);
-            }
+            children.addAll(list.stream().map(o -> (ParseTree) o).collect(Collectors.toList()));
           } else {
             children = Lists.newArrayList((ParseTree) value);
           }
@@ -275,7 +274,7 @@ public final class ParserUtils {
     if (genericType instanceof ParameterizedType) {
       ParameterizedType paramType = (ParameterizedType) genericType;
       Type[] params = paramType.getActualTypeArguments();
-      if (paramType.getRawType() == List.class
+      if (List.class.equals(paramType.getRawType())
         && params.length == 1
         && (params[0] instanceof Class<?>)
         && ParserRuleContext.class.isAssignableFrom((Class<?>) params[0])) {
