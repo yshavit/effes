@@ -1,7 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
-public final class ExpressionCompilationException extends RuntimeException {
-  public ExpressionCompilationException(String message) {
-    super(message);
+import org.antlr.v4.runtime.Token;
+
+public final class ExpressionCompilationException extends CompilationException {
+  public ExpressionCompilationException(Token token, String message) {
+    super(token, message);
   }
 }

@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
+import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
@@ -33,19 +34,24 @@ public final class Block {
   public void validate(SimpleType requiredReturnType) {
     ValidationDispatch validator = new ValidationDispatch();
     SimpleType lastBranchReturned = null;
+    Statement lastStatement = null;
     for (Statement s : statements) {
       if (lastBranchReturned != null) {
-        throw new BlockValidationException("unreachable statement: " + s);
+        throw new BlockValidationException(s.token(), "unreachable statement: " + s);
       }
       lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
+      lastStatement = s;
     }
     if (requiredReturnType != null) {
+      Token token = lastStatement != null
+        ? lastStatement.token()
+        : null;
       if (lastBranchReturned == null) {
-        throw new BlockValidationException("block may not return");
+        throw new BlockValidationException(token, "block may not return");
       }
       if (!lastBranchReturned.equals(requiredReturnType)) {
-        throw new BlockValidationException(String.format("expected result type %s but found %s",
-          requiredReturnType, lastBranchReturned));
+        throw new BlockValidationException(
+          token, String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned));
       }
     }
   }

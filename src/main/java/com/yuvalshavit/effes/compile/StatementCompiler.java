@@ -42,7 +42,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     } else {
       method = builtInMethods.getMethod(methodName);
       if (method == null) {
-        throw new StatementCompilationException("no such method: " + methodName);
+        throw new StatementCompilationException(ctx.methodName().getStart(), "no such method: " + methodName);
       } isBuiltIn = true;
     }
 
@@ -52,13 +52,14 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     List<SimpleType> expectedArgs = method.getArgTypes();
     if (!invokeArgTypes.equals(expectedArgs)) {
       throw new StatementCompilationException(
+        ctx.methodInvokeArgs().getStart(),
         String.format("mismatched types: expected %s but found %s", expectedArgs, invokeArgTypes));
     }
-    return new Statement.MethodInvoke(methodName, invokeArgs, method.getResultType(), isBuiltIn);
+    return new Statement.MethodInvoke(ctx.getStart(), methodName, invokeArgs, method.getResultType(), isBuiltIn);
   }
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {
     Expression expr = expressionCompiler.apply(ctx.exprLine().expr());
-    return new Statement.ReturnStatement(expr);
+    return new Statement.ReturnStatement(ctx.getStart(), expr);
   }
 }

@@ -17,7 +17,7 @@ public final class TUtils {
   public static TypeRegistry typeRegistry(String... types) {
     TypeRegistry registry = new TypeRegistry();
     for (String type : types) {
-      registry.registerType(type);
+      registry.registerType(null, type);
     }
     return registry;
   }

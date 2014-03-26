@@ -4,6 +4,7 @@ import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.function.Consumer;
 
@@ -23,7 +24,8 @@ public final class TypesFinder implements Consumer<EffesParser.CompilationUnitCo
   private class Listener extends EffesBaseListener {
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
-      registry.registerType(ctx.TYPE_NAME().getText());
+      TerminalNode typeName = ctx.TYPE_NAME();
+      registry.registerType(typeName.getSymbol(), typeName.getText());
     }
   }
 }

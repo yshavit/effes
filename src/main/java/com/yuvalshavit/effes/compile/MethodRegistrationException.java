@@ -1,7 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
-public class MethodRegistrationException extends RuntimeException {
-  public MethodRegistrationException(String msg) {
-    super(msg);
+import org.antlr.v4.runtime.Token;
+
+public class MethodRegistrationException extends CompilationException {
+  public MethodRegistrationException(Token token, String message) {
+    super(token, message);
   }
 }

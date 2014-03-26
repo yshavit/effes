@@ -39,17 +39,16 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       SimpleType resultType = lookupType(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(argTypes, resultType, body);
-      methodsRegistry.registerTopLevelMethod(name, method);
+      try {
+        methodsRegistry.registerTopLevelMethod(name, method);
+      } catch (DuplicateMethodNameException e) {
+        throw new MethodRegistrationException(ctx.methodName().getStart(), e.getMessage());
+      }
     }
 
     @Override
     public void visitErrorNode(@NotNull ErrorNode node) {
-      Token t = node.getSymbol();
-      String what = node.getText().trim();
-      if (!what.isEmpty()) {
-        what = ": " + what;
-      }
-      throw new ParseException(String.format("at line %d, column %d%s", t.getLine(), t.getCharPositionInLine(), what));
+      throw new ParseException(node.getSymbol(), "parse error");
     }
   }
 
@@ -57,7 +56,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     String simpleTypeName = typeContext.TYPE_NAME().getText();
     SimpleType type = typeRegistry.getSimpleType(simpleTypeName);
     if (type == null) {
-      throw new MethodRegistrationException("unknown type: " + simpleTypeName);
+      throw new MethodRegistrationException(typeContext.TYPE_NAME().getSymbol(), "unknown type: " + simpleTypeName);
     }
     return type;
   }
