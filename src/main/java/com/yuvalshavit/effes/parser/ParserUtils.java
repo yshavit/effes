@@ -111,6 +111,12 @@ public final class ParserUtils {
     return ruleClass.cast(ruleByName(ParserUtils.createParser(code), ruleName.toString()));
   }
 
+  public static String prettyPrint(ParseTree tree, Parser parser) {
+    StringBuilder sb = new StringBuilder();
+    prettyPrint(sb, tree, parser);
+    return sb.toString();
+  }
+
   public static void prettyPrint(StringBuilder sb, ParseTree tree, Parser parser) {
     prettyPrint(sb, 0, tree, null, parser.getRuleNames(), parser.getTokenNames());
   }
