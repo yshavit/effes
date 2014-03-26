@@ -9,6 +9,11 @@ public final class SimpleType {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    throw new UnsupportedOperationException(); // TODO
+  }
+
+  @Override
   public String toString() {
     return name;
   }

@@ -40,7 +40,7 @@ public final class BlockTest {
   }
 
   private Expression.CtorInvoke ctorExpr(String typeName) {
-    return new Expression.CtorInvoke(type(typeName));
+    return new Expression.CtorInvoke(null, type(typeName));
   }
 
   private SimpleType type(String typeName) {

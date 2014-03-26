@@ -40,7 +40,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
       .stream()
       .map(this::apply)
       .collect(Collectors.toList());
-    return new Expression.MethodInvoke(methodName, method, args);
+    return new Expression.MethodInvoke(ctx.getStart(), methodName, method, args);
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {
@@ -53,6 +53,6 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     if (type == null) {
       throw new ExpressionCompilationException(ctx.getStart(), "unknown type: " + typeName);
     }
-    return new Expression.CtorInvoke(type);
+    return new Expression.CtorInvoke(ctx.getStart(), type);
   }
 }
