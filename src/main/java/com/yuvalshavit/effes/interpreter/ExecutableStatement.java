@@ -49,19 +49,14 @@ public abstract class ExecutableStatement implements ExecutableElement {
     @Override
     public void execute(StateStack stack) {
       invoke(body.get(), args, stack);
+      stack.pop(); // get rid of the return value
     }
 
-    public static Object invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
-      for (ExecutableExpression arg : args) {
-        arg.execute(stack);
-      }
+    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
+      // TODO this should actually be in ExecutableExpression
+      stack.openFrame(args);
       body.execute(stack);
-      // TODO not efficient, but we can work on that later!
-      Object rv = stack.pop();
-      for (ExecutableExpression arg : args) {
-        stack.pop(); // TODO also not efficient!
-      }
-      return rv; // will be useful later, when this is used in an expression
+      stack.closeFrame();
     }
   }
 }

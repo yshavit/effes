@@ -107,6 +107,10 @@ public abstract class Expression extends StatefulObject {
       this.pos = var.getArgPosition();
     }
 
+    public int pos() {
+      return pos;
+    }
+
     @Override
     protected Object[] state() {
       return new Object[] { pos };

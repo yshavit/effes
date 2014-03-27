@@ -43,8 +43,20 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     @Override
     public void execute(StateStack stack) {
-      Object rv = ExecutableStatement.MethodInvoke.invoke(body, args, stack);
-      stack.push(rv);
+      ExecutableStatement.MethodInvoke.invoke(body, args, stack);
+    }
+  }
+
+  public static class ArgReadExpression extends ExecutableExpression {
+    private final int pos;
+    public ArgReadExpression(Expression.ArgExpression source) {
+      super(source);
+      this.pos = source.pos();
+    }
+
+    @Override
+    public void execute(StateStack stack) {
+      stack.pushArgToStack(pos);
     }
   }
 }
