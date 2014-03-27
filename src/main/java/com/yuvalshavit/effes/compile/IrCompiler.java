@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -75,9 +76,10 @@ public final class IrCompiler<E> {
       builtinsRegistry,
       errs);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
-    return unparsedMethods.compileMethods(parsedMethod -> {
+
+    MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {
       vars.pushScope();
-      java.util.List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
+      List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
       for (int pos = 0, len = asList.size(); pos < len; ++pos) {
         EfArgs.Arg arg = asList.get(pos);
         EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
@@ -86,6 +88,10 @@ public final class IrCompiler<E> {
       Block r = blockCompiler.apply(parsedMethod.getBody());
       vars.popScope();
       return r;
-    }, errs);
+    });
+    for (EfMethod<? extends Block> method : compiled.getTopLevelMethods()) {
+      method.getBody().validate(method.getResultType(), errs);
+    }
+    return compiled;
   }
 }
