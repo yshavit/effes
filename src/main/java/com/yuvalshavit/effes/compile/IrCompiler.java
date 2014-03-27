@@ -4,7 +4,6 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class IrCompiler<E> {
