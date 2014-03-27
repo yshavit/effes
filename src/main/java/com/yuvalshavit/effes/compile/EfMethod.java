@@ -25,8 +25,8 @@ public final class EfMethod<B> {
     return body;
   }
 
-  public <B2> EfMethod<B2> tranform(Function<? super B, ? extends B2> func) {
-    return new EfMethod<>(args, resultType, func.apply(body));
+  public <B2> EfMethod<B2> tranform(Function<? super EfMethod<? extends B>, ? extends B2> func) {
+    return new EfMethod<>(args, resultType, func.apply(this));
   }
 
   @Override

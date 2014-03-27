@@ -47,7 +47,7 @@ public final class Interpreter {
       methodLookup,
       builtInMethodsLookup);
     ExecutableBlockCompiler executableBlockCompiler = new ExecutableBlockCompiler(executableStatementCompiler);
-    executableMethods.addAll(compiledMethods, executableBlockCompiler);
+    executableMethods.addAll(compiledMethods, m -> executableBlockCompiler.apply(m.getBody()));
 
     this.errs = null;
     this.methodsRegistry = executableMethods;
@@ -95,6 +95,4 @@ public final class Interpreter {
       }
     }
   }
-
-
 }

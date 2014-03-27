@@ -1,7 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
 import com.yuvalshavit.effes.parser.EffesParser;
+import org.antlr.v4.runtime.Token;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class IrCompiler<E> {
@@ -16,7 +18,7 @@ public final class IrCompiler<E> {
     errs = new CompileErrors();
     TypeRegistry typeRegistry = getTypeRegistry(source, errs);
     builtinsRegistry = getBuiltins(typeRegistry, builtInMethods);
-    compiledMethods = compilerIr(source, typeRegistry, builtinsRegistry, errs);
+    compiledMethods = compileToIntermediate(source, typeRegistry, builtinsRegistry, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source, CompileErrors errs) {
@@ -55,21 +57,35 @@ public final class IrCompiler<E> {
   }
 
 
-  private static <E> MethodsRegistry<Block> compilerIr(EffesParser.CompilationUnitContext source,
-                                                   TypeRegistry typeRegistry,
-                                                   MethodsRegistry<E> builtinsRegistry,
-                                                   CompileErrors errs)
+  private static <E> MethodsRegistry<Block> compileToIntermediate(EffesParser.CompilationUnitContext source,
+                                                                  TypeRegistry typeRegistry,
+                                                                  MethodsRegistry<E> builtinsRegistry,
+                                                                  CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
     new MethodsFinder(typeRegistry, unparsedMethods, errs).accept(source);
 
-    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, typeRegistry, errs);
+    Scopes<EfVar, Token> vars = new Scopes<>(
+      EfVar::getName,
+      (name, token) -> errs.add(token, String.format("duplicate variable name '%s'", name)));
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, typeRegistry, errs, vars);
     StatementCompiler statementCompiler = new StatementCompiler(
       expressionCompiler,
       unparsedMethods,
       builtinsRegistry,
       errs);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
-    return unparsedMethods.compileMethods(blockCompiler, errs);
+    return unparsedMethods.compileMethods(parsedMethod -> {
+      vars.pushScope();
+      java.util.List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
+      for (int pos = 0, len = asList.size(); pos < len; ++pos) {
+        EfArgs.Arg arg = asList.get(pos);
+        EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
+        vars.add(argVar, null);
+      }
+      Block r = blockCompiler.apply(parsedMethod.getBody());
+      vars.popScope();
+      return r;
+    }, errs);
   }
 }
