@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +29,10 @@ public final class MethodsRegistry<B> {
     topLevelMethods.put(name, method);
   }
 
+  public Collection<? extends EfMethod<? extends B>> getTopLevelMethods() {
+    return Collections.unmodifiableCollection(topLevelMethods.values());
+  }
+
   @Nullable
   public EfMethod<? extends B> getMethod(String name) {
     return topLevelMethods.get(name);
@@ -48,14 +53,6 @@ public final class MethodsRegistry<B> {
 
     transformedMethods = new HashMap<>(transformedMethods); // force and make mutable
     return new MethodsRegistry<>(transformedMethods);
-  }
-
-  public MethodsRegistry<Block> compileMethods(Function<EfMethod<? extends B>, Block> func, CompileErrors errs) {
-    MethodsRegistry<Block> compiled = transform(func);
-    for (EfMethod<? extends Block> method : compiled.topLevelMethods.values()) {
-      method.getBody().validate(method.getResultType(), errs);
-    }
-    return compiled;
   }
 
   @VisibleForTesting
