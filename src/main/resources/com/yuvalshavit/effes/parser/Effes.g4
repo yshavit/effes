@@ -78,7 +78,7 @@ stat: RETURN exprLine                                                           
     ;
 
 exprLine: expr NL                                                               # SingleLineExpression
-        | multilineExpr                                                         # MultiLineExpression
+        | CASE expr OF caseExprs                                                # CaseExpression
         ;
 
 // expressions
@@ -91,8 +91,15 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
 
 methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
-multilineExpr: //CASE expr OF caseExprs                                           # CaseOfExpr
-             ;
+caseExprs: INDENT caseExprPattern+ DEDENT;
+
+caseExprPattern: caseMatcher COLON exprBlock;
+
+caseMatcher: TYPE_NAME                                                          # SimpleCtorMatch
+           ;
+
+exprBlock: expr NL;
+
 /**
  * The expr rule is rewritten in such a way that it takes an int arg and needs
  * a surrounding context. For test purposes, it's convenient to have a variant
