@@ -10,6 +10,6 @@ methodDeclr
       TYPE_NAME: Bar
   inlinableBlock
     ReturnStat
-      exprLine
+      SingleLineExpression
         CtorInvoke
           TYPE_NAME: Bar
