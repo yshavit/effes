@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class ExpressionCompiler implements Function<EffesParser.ExprContext, Expression> {
+public final class ExpressionCompiler {
   private final MethodsRegistry<?> methodsRegistry;
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
@@ -26,9 +26,12 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     this.vars = vars;
   }
 
-  @Override
   public Expression apply(EffesParser.ExprContext exprContext) {
     return dispatcher.apply(this, exprContext);
+  }
+
+  public Expression apply(EffesParser.ExprLineContext exprLineContext) {
+    return exprLineDispatcher.apply(this, exprLineContext);
   }
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprContext, Expression> dispatcher =
@@ -88,5 +91,18 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
     } else {
       return new Expression.ArgExpression(name.getSymbol(), var);
     }
+  }
+
+  private static final Dispatcher<ExpressionCompiler, EffesParser.ExprLineContext, Expression> exprLineDispatcher
+    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprLineContext.class, Expression.class)
+    .put(EffesParser.SingleLineExpressionContext.class, ExpressionCompiler::singleLine)
+    .build();
+
+  private Expression singleLine(EffesParser.SingleLineExpressionContext ctx) {
+    return apply(ctx.expr());
+  }
+
+  private Expression multiLine(EffesParser.MultilineExprContext ctx) {
+    throw new UnsupportedOperationException(); // TODO
   }
 }
