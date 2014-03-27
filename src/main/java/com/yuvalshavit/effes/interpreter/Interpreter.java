@@ -9,6 +9,7 @@ import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -83,7 +84,9 @@ public final class Interpreter {
   }
 
   public static void main(String[] args) throws IOException {
-    try (FileReader tmpFile = new FileReader("/tmp/ramdisk/example.ef")) {
+    File home = new File(System.getProperty("user.home"));
+    File file = new File(home, "Desktop/example.ef");
+    try (FileReader tmpFile = new FileReader(file)) {
       EffesParser parser = ParserUtils.createParser(tmpFile);
       Interpreter interpreter = new Interpreter(parser.compilationUnit());
       if (interpreter.hasErrors()) {
