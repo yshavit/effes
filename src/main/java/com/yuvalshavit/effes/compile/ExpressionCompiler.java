@@ -6,7 +6,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class ExpressionCompiler {
@@ -96,13 +95,33 @@ public final class ExpressionCompiler {
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprLineContext, Expression> exprLineDispatcher
     = Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprLineContext.class, Expression.class)
     .put(EffesParser.SingleLineExpressionContext.class, ExpressionCompiler::singleLine)
+    .put(EffesParser.CaseExpressionContext.class, ExpressionCompiler::caseExpression)
     .build();
 
   private Expression singleLine(EffesParser.SingleLineExpressionContext ctx) {
     return apply(ctx.expr());
   }
 
-  private Expression multiLine(EffesParser.MultilineExprContext ctx) {
-    throw new UnsupportedOperationException(); // TODO
+  private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
+    Expression matchAgainst = apply(ctx.expr());
+    List<Expression.CaseExpression.CasePattern> patterns =
+      ctx.caseExprs().caseExprPattern().stream().map(this::casePattern).collect(Collectors.toList());
+    return new Expression.CaseExpression(ctx.getStart(), matchAgainst, patterns);
+  }
+
+  private Expression.CaseExpression.CasePattern casePattern(EffesParser.CaseExprPatternContext ctx) {
+    CaseMatcher caseMatcher = caseMatchDispatcher.apply(this, ctx.caseMatcher());
+    Expression ifMatches = apply(ctx.exprBlock().expr());
+    return new Expression.CaseExpression.CasePattern(caseMatcher, ifMatches);
+  }
+
+  private static final Dispatcher<ExpressionCompiler, EffesParser.CaseMatcherContext, CaseMatcher> caseMatchDispatcher =
+    Dispatcher.builder(ExpressionCompiler.class, EffesParser.CaseMatcherContext.class, CaseMatcher.class)
+      .put(EffesParser.SimpleCtorMatchContext.class, ExpressionCompiler::simpleCtorMatcher)
+      .build();
+
+  private CaseMatcher simpleCtorMatcher(EffesParser.SimpleCtorMatchContext ctx) {
+    EfType.SimpleType type = typeRegistry.getSimpleType(ctx.TYPE_NAME().getText());
+    return new CaseMatcher.SimpleCtorMatch(type);
   }
 }

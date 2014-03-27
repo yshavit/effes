@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nullable;
@@ -39,6 +40,57 @@ public abstract class Expression extends StatefulObject {
     @Override
     public String toString() {
       return "unrecognized expression";
+    }
+  }
+
+  public static class CaseExpression extends Expression {
+
+    private final Expression matchAgainst;
+    private final List<CasePattern> patterns;
+
+    public CaseExpression(Token token, Expression matchAgainst, List<CasePattern> patterns) {
+      super(token, computeType(patterns));
+      this.matchAgainst = matchAgainst;
+      this.patterns = ImmutableList.copyOf(patterns);
+    }
+
+    @Override
+    protected Object[] state() {
+      return new Object[] { matchAgainst, patterns };
+    }
+
+    @Override
+    public String toString() {
+      return String.format("case (%s) of...", matchAgainst);
+    }
+
+    private static EfType computeType(List<CasePattern> patterns) {
+      EfType result = null;
+      for (CasePattern p : patterns) {
+        EfType patternResult = p.getIfMatchedExpression().resultType();
+        result = result != null
+          ? new EfType.DisjunctiveType(ImmutableList.of(result, patternResult))
+          : patternResult;
+      }
+      return result;
+    }
+
+    public static class CasePattern {
+      private final CaseMatcher matcher;
+      private final Expression ifMatched;
+
+      public CasePattern(CaseMatcher matcher, Expression ifMatched) {
+        this.matcher = matcher;
+        this.ifMatched = ifMatched;
+      }
+
+      public Expression getIfMatchedExpression() {
+        return ifMatched;
+      }
+
+      public CaseMatcher getMatcher() {
+        return matcher;
+      }
     }
   }
 
