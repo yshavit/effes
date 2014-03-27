@@ -64,9 +64,10 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      // validate two things:
+      // validate three things:
       // 1) each matcher *can* match the given expression
       // 2) at least one matcher *will* match the given expression
+      // 3) each matcher is reachable (ie, the ones before it may not match)
       throw new UnsupportedOperationException(); // TODO
     }
 
@@ -181,7 +182,7 @@ public abstract class Expression extends Node {
 
     @Override
     public String toString() {
-      return ":" + pos;
+      return "arg$" + pos;
     }
   }
 
