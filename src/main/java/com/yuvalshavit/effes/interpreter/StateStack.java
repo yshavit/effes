@@ -34,6 +34,7 @@ public final class StateStack { // TODO rename to CallStack
 
   public void openFrame(List<? extends ExecutableElement> args) {
     push(RV_PLACEHOLDER);
+    ++esb;
     int nArgs = args.size();
     int expectedDepth = depth();
     for (int i = nArgs - 1; i >= 0; --i) {
@@ -43,7 +44,7 @@ public final class StateStack { // TODO rename to CallStack
       }
     }
     push(ArgsCount.of(nArgs));
-    esb += (nArgs + 2);
+    esb += (nArgs + 1);
   }
 
   public void closeFrame() {
@@ -109,6 +110,7 @@ public final class StateStack { // TODO rename to CallStack
         }
         sb.append("nArgs{").append(modeOrArgs).append('}');
         if (modeOrArgs == 0) {
+          sb.append(' ');
           modeOrArgs = RV;
         } else {
           sb.append(" args{");
