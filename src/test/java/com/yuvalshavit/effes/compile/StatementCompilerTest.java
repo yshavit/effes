@@ -19,7 +19,7 @@ public final class StatementCompilerTest {
     ExpressionCompiler expressionCompiler = new ExpressionCompiler(null, registry, errs, null);
     Statement compiled = new StatementCompiler(expressionCompiler, methods, null, errs).apply(statContext);
     Expression trueExpr = new Expression.CtorInvoke(null, getExistingType(registry, "True"));
-    assertEquals(compiled, new Statement.ReturnStatement(null, trueExpr));
+    assertEquals(compiled.toString(), new Statement.ReturnStatement(null, trueExpr).toString());
   }
 
   private static EffesParser.StatContext parseStatement(String code) {

@@ -12,7 +12,7 @@ compilationUnit
           TYPE_NAME: False
       inlinableBlock
         ReturnStat
-          exprLine
+          SingleLineExpression
             CtorInvoke
               TYPE_NAME: False
   EOF: <EOF>

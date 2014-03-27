@@ -14,7 +14,8 @@ public final class ExpressionCompilerTest {
     TypeRegistry registry = TUtils.typeRegistry("True");
     EffesParser.ExprContext exprContext = parseExpression("True");
     Expression compiled = new ExpressionCompiler(null, registry, CompileErrors.throwing, null).apply(exprContext);
-    assertEquals(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
+
+    assertEqualStrings(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
   }
 
   @Test
@@ -30,10 +31,14 @@ public final class ExpressionCompilerTest {
     EffesParser.ExprContext exprContext = parseExpression("(True)");
     Expression compiled = new ExpressionCompiler(null, registry, CompileErrors.throwing, null).apply(exprContext);
     // Note that the compiled expression is inlined -- there's no Expression.Param
-    assertEquals(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
+    assertEqualStrings(compiled, new Expression.CtorInvoke(null, TUtils.getExistingType(registry, "True")));
   }
 
   private static EffesParser.ExprContext parseExpression(String code) {
     return ParserUtils.parseRule(EffesParser.ExprContext.class, code);
+  }
+
+  private static void assertEqualStrings(Object one, Object two) {
+    assertEquals(one.toString(), two.toString());
   }
 }

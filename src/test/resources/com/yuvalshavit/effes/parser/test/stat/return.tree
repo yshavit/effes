@@ -1,4 +1,4 @@
 ReturnStat
-  exprLine
+  SingleLineExpression
     CtorInvoke
       TYPE_NAME: True
