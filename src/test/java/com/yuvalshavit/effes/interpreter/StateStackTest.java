@@ -187,6 +187,24 @@ public final class StateStackTest {
   }
 
   @Test
+  public void argAlsoInvokes() {
+    StateStack stack = new StateStack();
+    ExecutableElement invokingArg = s -> {
+      open(stack, pushExpr("innerMethodArg"));
+      stack.push("innerMethodRv");
+      stack.closeFrame();
+    };
+    final int initialDepth = stack.depth();
+    open(stack, pushExpr("outerMethodA0"), invokingArg);
+    assertEquals(stack.peekArg(0), "outerMethodA0");
+    assertEquals(stack.peekArg(1), "innerMethodRv");
+    stack.push("outerMethodRv");
+    stack.closeFrame();
+    assertEquals(stack.depth(), initialDepth + 1);
+    assertEquals("outerMethodRv", stack.pop());
+  }
+
+  @Test
   public void closeWithoutOpening() {
     StateStack stack = new StateStack();
     assertException(IllegalStateException.class, stack::closeFrame);
