@@ -51,6 +51,6 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   }
 
   private ExecutableExpression argExpr(Expression.ArgExpression arg) {
-    throw new UnsupportedOperationException(); // TODO
+    return new ExecutableExpression.ArgReadExpression(arg);
   }
 }

@@ -80,7 +80,6 @@ public final class Interpreter {
       }
       ExecutableStatement.MethodInvoke.invoke(main.getBody(), ImmutableList.of(), states);
     }
-    assert states.getAllStates().isEmpty() : states.getAllStates();
   }
 
   public static void main(String[] args) throws IOException {
