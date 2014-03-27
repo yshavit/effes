@@ -13,6 +13,7 @@ import java.util.function.Function;
 public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
+  private final ScopeCloser closer = new ScopeCloser();
 
   public Scopes(Function<? super T, String> namer, BiConsumer<? super String, ? super D> onDuplicate) {
     this.namer = namer;
@@ -21,8 +22,9 @@ public final class Scopes<T,D> {
 
   private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
 
-  public void pushScope() {
+  public ScopeCloser pushScope() {
     scopes.push(new HashMap<>());
+    return closer;
   }
 
   public void popScope() {
@@ -61,6 +63,16 @@ public final class Scopes<T,D> {
       onDuplicate.accept(name, duplicateId);
     } else {
       scope.put(name, var);
+    }
+  }
+
+  public class ScopeCloser implements AutoCloseable {
+
+    private ScopeCloser() {}
+
+    @Override
+    public void close() {
+      popScope();
     }
   }
 }

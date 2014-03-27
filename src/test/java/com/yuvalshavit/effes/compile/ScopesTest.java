@@ -40,6 +40,21 @@ public final class ScopesTest {
   }
 
   @Test
+  public void scopeCloser() {
+    Scopes<Elem, Id> scopes = create();
+    assertEquals(scopes.depth(), 0);
+
+    try (Scopes.ScopeCloser ignored = scopes.pushScope()) {
+      assertEquals(scopes.depth(), 1);
+      Elem one = elem("one");
+      scopes.add(one, id(1));
+      assertEquals(scopes.get("one"), one);
+    }
+
+    assertEquals(scopes.depth(), 0);
+  }
+
+  @Test
   public void duplicate() {
     Scopes<Elem, Id> scopes = create();
 

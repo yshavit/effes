@@ -78,16 +78,15 @@ public final class IrCompiler<E> {
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 
     MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {
-      vars.pushScope();
-      List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
-      for (int pos = 0, len = asList.size(); pos < len; ++pos) {
-        EfArgs.Arg arg = asList.get(pos);
-        EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
-        vars.add(argVar, null);
+      try (Scopes.ScopeCloser ignored = vars.pushScope()){
+        List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
+        for (int pos = 0, len = asList.size(); pos < len; ++pos) {
+          EfArgs.Arg arg = asList.get(pos);
+          EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
+          vars.add(argVar, null);
+        }
+        return blockCompiler.apply(parsedMethod.getBody());
       }
-      Block r = blockCompiler.apply(parsedMethod.getBody());
-      vars.popScope();
-      return r;
     });
     for (EfMethod<? extends Block> method : compiled.getTopLevelMethods()) {
       method.getBody().validate(method.getResultType(), errs);
