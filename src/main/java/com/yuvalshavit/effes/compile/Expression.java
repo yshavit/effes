@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.Token;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public abstract class Expression {
+public abstract class Expression extends Node {
   private final Token token;
   private final EfType type;
 
@@ -33,6 +33,11 @@ public abstract class Expression {
     }
 
     @Override
+    public void validate(CompileErrors errs) {
+      // assume that whoever created this already entered the error
+    }
+
+    @Override
     public String toString() {
       return "unrecognized expression";
     }
@@ -47,6 +52,14 @@ public abstract class Expression {
       super(token, computeType(patterns));
       this.matchAgainst = matchAgainst;
       this.patterns = ImmutableList.copyOf(patterns);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // validate two things:
+      // 1) each matcher *can* match the given expression
+      // 2) at least one matcher *will* match the given expression
+      throw new UnsupportedOperationException(); // TODO
     }
 
     @Override
@@ -95,6 +108,11 @@ public abstract class Expression {
     }
 
     @Override
+    public void validate(CompileErrors errs) {
+      // noting to do
+    }
+
+    @Override
     public String toString() {
       return resultType().toString();
     }
@@ -126,6 +144,11 @@ public abstract class Expression {
     }
 
     @Override
+    public void validate(CompileErrors errs) {
+      args.forEach(arg -> arg.validate(errs));
+    }
+
+    @Override
     public String toString() {
       return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
@@ -137,6 +160,11 @@ public abstract class Expression {
     public ArgExpression(Token token, EfVar var) {
       super(token, var.getType());
       this.pos = var.getArgPosition();
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // nothing to do
     }
 
     public int pos() {
@@ -155,6 +183,11 @@ public abstract class Expression {
     public VarExpression(Token token, EfVar var) {
       super(token, var.getType());
       this.name = var.getName();
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // nothing to do
     }
 
     @Override
