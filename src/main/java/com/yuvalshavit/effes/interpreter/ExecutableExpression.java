@@ -1,9 +1,11 @@
 package com.yuvalshavit.effes.interpreter;
 
+import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public abstract class ExecutableExpression implements ExecutableElement {
   private final Expression source;
@@ -15,6 +17,40 @@ public abstract class ExecutableExpression implements ExecutableElement {
   @Override
   public String toString() {
     return source.toString();
+  }
+
+  public static class CaseExpression extends ExecutableExpression {
+    private final ExecutableExpression matchAgainst;
+    private final List<CaseMatcher> caseMatchers;
+
+    public CaseExpression(Expression source, ExecutableExpression matchAgainst, List<CaseMatcher> caseMatchers) {
+      super(source);
+      this.matchAgainst = matchAgainst;
+      this.caseMatchers = ImmutableList.copyOf(caseMatchers);
+    }
+
+    @Override
+    public void execute(StateStack stack) {
+      matchAgainst.execute(stack);
+      for (CaseMatcher matcher : caseMatchers) {
+        if (matcher.match.test(stack)) {
+          stack.pop(); // the type we matched against
+          matcher.ifMatches.execute(stack);
+          return;
+        }
+      }
+      throw new AssertionError(String.format("no patterns matched (%s): %s", stack.pop(), toString()));
+    }
+
+    public static class CaseMatcher {
+      private final PatternMatch match;
+      private final ExecutableExpression ifMatches;
+
+      public CaseMatcher(PatternMatch match, ExecutableExpression ifMatches) {
+        this.match = match;
+        this.ifMatches = ifMatches;
+      }
+    }
   }
 
   public static class CtorExpression extends ExecutableExpression {
@@ -65,4 +101,6 @@ public abstract class ExecutableExpression implements ExecutableElement {
       stack.pushArgToStack(pos);
     }
   }
+
+  public interface PatternMatch extends Predicate<StateStack> {}
 }

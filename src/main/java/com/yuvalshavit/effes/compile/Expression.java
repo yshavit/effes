@@ -54,6 +54,14 @@ public abstract class Expression extends Node {
       this.patterns = ImmutableList.copyOf(patterns);
     }
 
+    public Expression getMatchAgainst() {
+      return matchAgainst;
+    }
+
+    public List<CasePattern> getPatterns() {
+      return patterns;
+    }
+
     @Override
     public void validate(CompileErrors errs) {
       // validate two things:
