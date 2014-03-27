@@ -77,7 +77,8 @@ stat: RETURN exprLine                                                           
     | methodName methodInvokeArgs NL                                            # MethodInvoke
     ;
 
-exprLine: expr NL
+exprLine: expr NL                                                               # SingleLineExpression
+        | multilineExpr                                                         # MultiLineExpression
         ;
 
 // expressions
@@ -90,6 +91,8 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
 
 methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
+multilineExpr: //CASE expr OF caseExprs                                           # CaseOfExpr
+             ;
 /**
  * The expr rule is rewritten in such a way that it takes an int arg and needs
  * a surrounding context. For test purposes, it's convenient to have a variant
