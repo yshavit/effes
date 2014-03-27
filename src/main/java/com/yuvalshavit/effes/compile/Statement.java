@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
-public abstract class Statement {
+public abstract class Statement extends Node {
   private final Token token;
 
   private Statement(Token token) {
@@ -26,6 +26,11 @@ public abstract class Statement {
 
     public Expression getExpression() {
       return expression;
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      expression.validate(errs);
     }
 
     @Override
@@ -62,6 +67,11 @@ public abstract class Statement {
 
     public List<Expression> getArgs() {
       return args;
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      args.forEach(arg -> arg.validate(errs));
     }
 
     @Override
