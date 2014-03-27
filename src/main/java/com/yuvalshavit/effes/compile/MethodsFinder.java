@@ -3,11 +3,11 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
-import com.yuvalshavit.util.Util;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
@@ -33,13 +33,12 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-//      List<EfType> argTypes = new ArrayList<>(ctx.methodArgs().methodArg().size());
       EfArgs.Builder args = new EfArgs.Builder(errs);
 
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
         EfType type = typeResolver.apply(typeContext);
-        String argName = Util.elvis(argContext.VAR_NAME(), TerminalNode::getText);
+        String argName = Optional.ofNullable(argContext.VAR_NAME()).map(TerminalNode::getText).orElseGet(null);
         args.add(typeContext.getStart(), argName, type);
       }
       EfType resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
