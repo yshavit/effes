@@ -78,7 +78,7 @@ public final class Interpreter {
       if(main.getArgs().length() != 0) {
         throw new BadMainException("main method may not take any arguments");
       }
-      ExecutableStatement.MethodInvoke.invoke(main.getBody(), ImmutableList.of(), states);
+      ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states);
     }
   }
 
