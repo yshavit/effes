@@ -48,15 +48,8 @@ public abstract class ExecutableStatement implements ExecutableElement {
 
     @Override
     public void execute(StateStack stack) {
-      invoke(body.get(), args, stack);
+      ExecutableExpression.MethodInvokeExpression.invoke(body.get(), args, stack);
       stack.pop(); // get rid of the return value
-    }
-
-    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
-      // TODO this should actually be in ExecutableExpression
-      stack.openFrame(args);
-      body.execute(stack);
-      stack.closeFrame();
     }
   }
 }

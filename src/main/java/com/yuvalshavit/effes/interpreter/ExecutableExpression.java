@@ -43,7 +43,13 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     @Override
     public void execute(StateStack stack) {
-      ExecutableStatement.MethodInvoke.invoke(body, args, stack);
+      invoke(body, args, stack);
+    }
+
+    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
+      stack.openFrame(args);
+      body.execute(stack);
+      stack.closeFrame();
     }
   }
 
