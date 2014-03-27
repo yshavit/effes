@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.Token;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public abstract class Expression extends StatefulObject {
+public abstract class Expression {
   private final Token token;
   private final EfType type;
 
@@ -33,11 +33,6 @@ public abstract class Expression extends StatefulObject {
     }
 
     @Override
-    protected Object[] state() {
-      return new Object[0];
-    }
-
-    @Override
     public String toString() {
       return "unrecognized expression";
     }
@@ -52,11 +47,6 @@ public abstract class Expression extends StatefulObject {
       super(token, computeType(patterns));
       this.matchAgainst = matchAgainst;
       this.patterns = ImmutableList.copyOf(patterns);
-    }
-
-    @Override
-    protected Object[] state() {
-      return new Object[] { matchAgainst, patterns };
     }
 
     @Override
@@ -113,11 +103,6 @@ public abstract class Expression extends StatefulObject {
     public EfType.SimpleType simpleType() {
       return simpleType;
     }
-
-    @Override
-    protected Object[] state() {
-      return new Object[] { resultType() };
-    }
   }
 
   public static class MethodInvoke extends Expression {
@@ -141,11 +126,6 @@ public abstract class Expression extends StatefulObject {
     }
 
     @Override
-    protected Object[] state() {
-      return new Object[] {methodName, method, args, resultType() };
-    }
-
-    @Override
     public String toString() {
       return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
@@ -164,11 +144,6 @@ public abstract class Expression extends StatefulObject {
     }
 
     @Override
-    protected Object[] state() {
-      return new Object[] { pos };
-    }
-
-    @Override
     public String toString() {
       return ":" + pos;
     }
@@ -180,11 +155,6 @@ public abstract class Expression extends StatefulObject {
     public VarExpression(Token token, EfVar var) {
       super(token, var.getType());
       this.name = var.getName();
-    }
-
-    @Override
-    protected Object[] state() {
-      return new Object[] { name };
     }
 
     @Override

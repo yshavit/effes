@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
-public abstract class Statement extends StatefulObject {
+public abstract class Statement {
   private final Token token;
 
   private Statement(Token token) {
@@ -31,11 +31,6 @@ public abstract class Statement extends StatefulObject {
     @Override
     public String toString() {
       return "return " + expression;
-    }
-
-    @Override
-    protected Object[] state() {
-      return new Object[] { expression };
     }
   }
 
@@ -67,11 +62,6 @@ public abstract class Statement extends StatefulObject {
 
     public List<Expression> getArgs() {
       return args;
-    }
-
-    @Override
-    protected Object[] state() {
-      return new Object[] { methodName, args };
     }
 
     @Override
