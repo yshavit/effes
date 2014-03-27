@@ -2,6 +2,8 @@ package com.yuvalshavit.effes.compile;
 
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
 import java.util.function.Function;
@@ -11,11 +13,17 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
   private final MethodsRegistry<?> methodsRegistry;
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
+  private final Scopes<EfVar, Token> vars;
 
-  public ExpressionCompiler(MethodsRegistry<?> methodsRegistry, TypeRegistry typeRegistry, CompileErrors errs) {
+  public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
+                            TypeRegistry typeRegistry,
+                            CompileErrors errs,
+                            Scopes<EfVar, Token> vars)
+  {
     this.methodsRegistry = methodsRegistry;
     this.typeRegistry = typeRegistry;
     this.errs = errs;
+    this.vars = vars;
   }
 
   @Override
@@ -28,6 +36,7 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
       .put(EffesParser.MethodInvokeExprContext.class, ExpressionCompiler::methodInvoke)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
+      .put(EffesParser.VarExprContext.class, ExpressionCompiler::varExpr)
       .setErrHandler(ExpressionCompiler::error)
       .build();
 
@@ -66,5 +75,18 @@ public final class ExpressionCompiler implements Function<EffesParser.ExprContex
       errs.add(ctx.getStart(), "unknown type: " + typeName);
     }
     return new Expression.CtorInvoke(ctx.getStart(), type);
+  }
+
+  private Expression varExpr(EffesParser.VarExprContext ctx) {
+    TerminalNode name = ctx.VAR_NAME();
+    EfVar var = vars.get(name.getText());
+    if (var == null) {
+      errs.add(name.getSymbol(), "unrecognized variable '" + name.getText() + '\'');
+      var = EfVar.unknown(name.getText());
+      vars.add(var, name.getSymbol());
+      return new Expression.VarExpression(name.getSymbol(), var);
+    } else {
+      return new Expression.ArgExpression(name.getSymbol(), var);
+    }
   }
 }

@@ -24,8 +24,10 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private static final Dispatcher<ExecutableExpressionCompiler, Expression, ExecutableExpression> dispatcher =
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
+      .put(Expression.ArgExpression.class, ExecutableExpressionCompiler::argExpr)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
+      .put(Expression.VarExpression.class, ExecutableExpressionCompiler::varExpr)
       .put(Expression.UnrecognizedExpression.class, ExecutableExpressionCompiler::unrecognizedExpr)
       .build();
 
@@ -42,5 +44,13 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private ExecutableExpression unrecognizedExpr(Expression.UnrecognizedExpression expr) {
     throw new IllegalArgumentException(expr.toString());
+  }
+
+  private ExecutableExpression varExpr(Expression.VarExpression var) {
+    throw new UnsupportedOperationException(); // TODO
+  }
+
+  private ExecutableExpression argExpr(Expression.ArgExpression arg) {
+    throw new UnsupportedOperationException(); // TODO
   }
 }

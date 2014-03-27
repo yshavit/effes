@@ -33,7 +33,7 @@ public final class MethodsRegistry<B> {
     return topLevelMethods.get(name);
   }
 
-  public <B2> void addAll(MethodsRegistry<B2> other, Function<? super B2, ? extends B> transform) {
+  public <B2> void addAll(MethodsRegistry<B2> other, Function<? super EfMethod<? extends B2>, ? extends B> transform) {
     for (Map.Entry<String, EfMethod<? extends B2>> otherEntry : other.topLevelMethods.entrySet()) {
       String otherName = otherEntry.getKey();
       if (topLevelMethods.containsKey(otherName)) {
@@ -43,13 +43,14 @@ public final class MethodsRegistry<B> {
     }
   }
 
-  public <B2> MethodsRegistry<B2> transform(Function<? super B, ? extends B2> func) {
+  public <B2> MethodsRegistry<B2> transform(Function<? super EfMethod<? extends B>, ? extends B2> func) {
     Map<String, EfMethod<? extends B2>> transformedMethods = Maps.transformValues(topLevelMethods, m -> m.tranform(func));
+
     transformedMethods = new HashMap<>(transformedMethods); // force and make mutable
     return new MethodsRegistry<>(transformedMethods);
   }
 
-  public MethodsRegistry<Block> compileMethods(Function<B, Block> func, CompileErrors errs) {
+  public MethodsRegistry<Block> compileMethods(Function<EfMethod<? extends B>, Block> func, CompileErrors errs) {
     MethodsRegistry<Block> compiled = transform(func);
     for (EfMethod<? extends Block> method : compiled.topLevelMethods.values()) {
       method.getBody().validate(method.getResultType(), errs);

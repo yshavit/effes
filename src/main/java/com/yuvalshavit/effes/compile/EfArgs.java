@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Token;
 
 import java.util.ArrayList;
@@ -14,11 +15,15 @@ public final class EfArgs {
   private final List<Arg> args;
 
   private EfArgs(List<Arg> args) {
-    this.args = args;
+    this.args = ImmutableList.copyOf(args);
   }
 
   public List<EfType> viewTypes() {
     return Collections.unmodifiableList(args.stream().map(Arg::type).collect(Collectors.toList()));
+  }
+
+  public List<Arg> asList() {
+    return args;
   }
 
   public int length() {
@@ -37,6 +42,10 @@ public final class EfArgs {
     private Arg(String name, EfType type) {
       this.name = name;
       this.type = type;
+    }
+
+    public String name() {
+      return name;
     }
 
     public EfType type() {

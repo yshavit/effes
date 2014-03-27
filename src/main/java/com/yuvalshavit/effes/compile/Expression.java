@@ -98,4 +98,42 @@ public abstract class Expression extends StatefulObject {
       return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
   }
+
+  public static class ArgExpression extends Expression {
+    private final int pos;
+
+    public ArgExpression(Token token, EfVar var) {
+      super(token, var.getType());
+      this.pos = var.getArgPosition();
+    }
+
+    @Override
+    protected Object[] state() {
+      return new Object[] { pos };
+    }
+
+    @Override
+    public String toString() {
+      return ":" + pos;
+    }
+  }
+
+  public static class VarExpression extends Expression {
+    private final String name;
+
+    public VarExpression(Token token, EfVar var) {
+      super(token, var.getType());
+      this.name = var.getName();
+    }
+
+    @Override
+    protected Object[] state() {
+      return new Object[] { name };
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
+  }
 }
