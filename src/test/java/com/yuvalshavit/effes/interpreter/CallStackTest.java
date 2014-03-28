@@ -84,7 +84,7 @@ public final class CallStackTest {
 
     final int initialDepth = stack.depth();
 
-    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(-1));
+    stack.peekArg(-1); // undefined, but doesn't throw
     assertEquals(stack.depth(), initialDepth);
 
     assertEquals("test-a0", stack.peekArg(0));
@@ -93,7 +93,8 @@ public final class CallStackTest {
     assertEquals("test-a1", stack.peekArg(1));
     assertEquals(stack.depth(), initialDepth);
 
-    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(2));
+    stack.peekArg(2); // undefined, but doesn't throw
+
     assertEquals(stack.depth(), initialDepth);
   }
 
@@ -104,19 +105,19 @@ public final class CallStackTest {
 
     final int initialDepth = stack.depth();
 
-    assertException(IndexOutOfBoundsException.class, () -> stack.pushArgToStack(-1));
-    assertEquals(stack.depth(), initialDepth);
+    stack.pushArgToStack(-1); // undefined, but doesn't throw
+    assertEquals(stack.depth(), initialDepth + 1); // ruh-roh! broke the stack!
 
     stack.pushArgToStack(0);
     assertEquals("test-a0", stack.peek());
-    assertEquals(stack.depth(), initialDepth + 1);
+    assertEquals(stack.depth(), initialDepth + 2);
 
     stack.pushArgToStack(1);
     assertEquals("test-a1", stack.peek());
-    assertEquals(stack.depth(), initialDepth + 2);
+    assertEquals(stack.depth(), initialDepth + 3);
 
-    assertException(IndexOutOfBoundsException.class, () -> stack.pushArgToStack(2));
-    assertEquals(stack.depth(), initialDepth + 2);
+    stack.pushArgToStack(2); // undefined, but doesn't throw
+    assertEquals(stack.depth(), initialDepth + 4); // ruh-roh! broke the stack!
   }
 
   @Test

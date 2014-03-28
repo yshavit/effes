@@ -52,7 +52,6 @@ public final class CallStack {
       throw new IllegalStateException("no frame to close");
     }
 
-    Object atEsp = states.get(esp);
     // top of stack is rv
     Object rv = pop();
     // pop off the local vars and esb
