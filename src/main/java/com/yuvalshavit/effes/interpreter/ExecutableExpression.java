@@ -30,7 +30,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     @Override
-    public void execute(StateStack stack) {
+    public void execute(CallStack stack) {
       matchAgainst.execute(stack);
       for (CaseMatcher matcher : caseMatchers) {
         if (matcher.match.test(stack)) {
@@ -62,7 +62,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     @Override
-    public void execute(StateStack stack) {
+    public void execute(CallStack stack) {
       stack.push(ctorType);
     }
   }
@@ -78,11 +78,11 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     @Override
-    public void execute(StateStack stack) {
+    public void execute(CallStack stack) {
       invoke(body, args, stack);
     }
 
-    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, StateStack stack) {
+    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack) {
       stack.openFrame(args);
       body.execute(stack);
       stack.closeFrame();
@@ -97,10 +97,10 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     @Override
-    public void execute(StateStack stack) {
+    public void execute(CallStack stack) {
       stack.pushArgToStack(pos);
     }
   }
 
-  public interface PatternMatch extends Predicate<StateStack> {}
+  public interface PatternMatch extends Predicate<CallStack> {}
 }

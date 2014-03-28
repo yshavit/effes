@@ -10,7 +10,7 @@ public final class ExecutableBlock implements ExecutableElement {
   }
 
   @Override
-  public void execute(StateStack stack) {
+  public void execute(CallStack stack) {
     for (ExecutableStatement s : statements) {
       s.execute(stack);
     }
