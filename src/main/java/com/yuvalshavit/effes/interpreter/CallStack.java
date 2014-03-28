@@ -34,7 +34,7 @@ public final class CallStack {
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
 
   public void openFrame(List<? extends ExecutableElement> args) {
-    ArgsCount save = new ArgsCount(states.size() - 1);
+    Esp save = new Esp(states.size() - 1);
     push(RV_PLACEHOLDER);
     int nArgs = args.size();
     int expectedDepth = depth();
@@ -55,22 +55,19 @@ public final class CallStack {
 
     // top of stack is rv
     Object rv = pop();
-
     // pop off the local vars and esb
     Object popped;
     do {
       popped = uncheckedPop();
-    } while (!(popped instanceof ArgsCount));
-    ArgsCount argsCount = (ArgsCount) popped;
+    } while (!(popped instanceof Esp));
+    Esp esp = (Esp) popped;
 
-    // pop off the frame
-    while (states.size() > argsCount.targetSize + 1) { // todo can write rv to targetSize + 1, then pop until > targetsize+2
+    // pop off the frame. We add 2 because (a) size() is 1-indexed and (b) we need room for the rv
+    states.set(esp.targetIndex + 1, rv);
+    while (states.size() > esp.targetIndex + 2) {
       states.remove(states.size() - 1);
     }
-    esb = argsCount.targetSize;
-
-    // finally, re-push that rv
-    push(rv);
+    this.esb = esp.targetIndex;
   }
 
   public void pushArgToStack(int pos) {
@@ -114,7 +111,7 @@ public final class CallStack {
 
   public Object pop() {
     Object r = uncheckedPop();
-    if (ArgsCount.class.equals(r.getClass())) {
+    if (Esp.class.equals(r.getClass())) {
       push(r);
       throw new IllegalStateException("can't pop past frame");
     }
@@ -141,7 +138,7 @@ public final class CallStack {
     StringBuilder sb = new StringBuilder();
     for (int i = states.size() - 1; i >= 0; --i) {
       Object elem = states.get(i);
-      if (elem instanceof ArgsCount) {
+      if (elem instanceof Esp) {
         // close the parens if we'd had at least one local
         if (modeOrArgs == LOCAL_CONT) {
           sb.append("} ");
@@ -213,17 +210,17 @@ public final class CallStack {
     return states.size();
   }
 
-  private static class ArgsCount {
+  private static class Esp {
 
     @Override
     public String toString() {
-      return String.format("{esb=%d}", targetSize);
+      return String.format("{esb=%d}", targetIndex);
     }
 
-    private final int targetSize;
+    private final int targetIndex;
 
-    private ArgsCount(int targetSize) {
-      this.targetSize = targetSize;
+    private Esp(int targetIndex) {
+      this.targetIndex = targetIndex;
     }
   }
 }
