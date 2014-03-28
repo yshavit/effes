@@ -73,7 +73,7 @@ public final class Interpreter {
       throw new IllegalStateException("compilation had errors");
     }
     EfMethod<? extends ExecutableElement> main = methodsRegistry.getMethod("main");
-    StateStack states = new StateStack();
+    CallStack states = new CallStack();
     if (main != null) {
       if(main.getArgs().length() != 0) {
         throw new BadMainException("main method may not take any arguments");

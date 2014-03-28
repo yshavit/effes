@@ -7,11 +7,11 @@ import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-public final class StateStackTest {
+public final class CallStackTest {
 
   @Test
   public void methodInvokeNoArgs() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     final int initialDepth = stack.depth();
     open(stack);
     assertEquals(stack.currentFrameArgsCount(), 0);
@@ -24,7 +24,7 @@ public final class StateStackTest {
 
   @Test
   public void methodInvokeOneArg() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     final int initialDepth = stack.depth();
     open(stack, pushExpr("test-a0"));
     assertEquals(stack.peekArg(0), "test-a0");
@@ -44,7 +44,7 @@ public final class StateStackTest {
 
   @Test
   public void methodInvokeThreeArgs() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     final int initialDepth = stack.depth();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"));
     assertEquals(stack.peekArg(0), "test-a0");
@@ -61,7 +61,7 @@ public final class StateStackTest {
 
   @Test
   public void peekArg() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"), pushExpr("test-a3"));
 
     final int initialDepth = stack.depth();
@@ -71,7 +71,7 @@ public final class StateStackTest {
 
   @Test
   public void pushArgToStack() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"), pushExpr("test-a3"));
 
     final int initialDepth = stack.depth();
@@ -83,7 +83,7 @@ public final class StateStackTest {
 
   @Test
   public void peekArgBounds() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"));
 
     final int initialDepth = stack.depth();
@@ -103,7 +103,7 @@ public final class StateStackTest {
 
   @Test
   public void pushArgToStackBounds() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"));
 
     final int initialDepth = stack.depth();
@@ -125,7 +125,7 @@ public final class StateStackTest {
 
   @Test
   public void pushPeekPop() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     assertEquals(stack.depth(), 0);
 
     stack.push("p0");
@@ -154,7 +154,7 @@ public final class StateStackTest {
 
   @Test
   public void popPastFrame() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     open(stack);
 
     assertNotEquals(stack.depth(), 0);
@@ -163,7 +163,7 @@ public final class StateStackTest {
 
   @Test
   public void nestedMethods() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
 
     // call method a
     final int firstCallInitialDepth = stack.depth();
@@ -188,7 +188,7 @@ public final class StateStackTest {
 
   @Test
   public void argAlsoInvokes() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     ExecutableElement invokingArg = s -> {
       open(stack, pushExpr("innerMethodArg"));
       stack.push("innerMethodRv");
@@ -206,11 +206,11 @@ public final class StateStackTest {
 
   @Test
   public void closeWithoutOpening() {
-    StateStack stack = new StateStack();
+    CallStack stack = new CallStack();
     assertException(IllegalStateException.class, stack::closeFrame);
   }
 
-  private static void open(StateStack stack, ExecutableElement... args) {
+  private static void open(CallStack stack, ExecutableElement... args) {
     stack.openFrame(ImmutableList.copyOf(args));
   }
 }

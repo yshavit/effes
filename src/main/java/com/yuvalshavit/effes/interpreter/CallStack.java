@@ -26,7 +26,7 @@ import java.util.List;
  * The "number of args" doubles as a safety check for expressions that pop from the stack; they aren't allowed to pop
  * it.
  */
-public final class StateStack { // TODO rename to CallStack
+public final class CallStack {
 
   private static final Object RV_PLACEHOLDER = null;
   private int esb = -1;
