@@ -3,6 +3,8 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.ImmutableList;
 import org.testng.annotations.Test;
 
+import java.util.function.Consumer;
+
 import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -208,6 +210,122 @@ public final class CallStackTest {
   public void closeWithoutOpening() {
     CallStack stack = new CallStack();
     assertException(IllegalStateException.class, stack::closeFrame);
+  }
+
+  @Test
+  public void pushLocalToStackWhenFresh() {
+    CallStack stack = new CallStack();
+    stack.push("Foo");
+    stack.push("Bar");
+    stack.pushLocalToStack(0);
+    assertEquals(stack.pop(), "Foo");
+    assertEquals(stack.pop(), "Bar");
+    assertEquals(stack.pop(), "Foo");
+  }
+
+  @Test
+  public void pushLocalToStackWithinFrame() {
+    CallStack stack = new CallStack();
+    final int initialDepth = stack.depth();
+    open(stack, pushExpr("a0"), pushExpr("a1"));
+
+    stack.push("Foo");
+    stack.push("Bar");
+    stack.pushLocalToStack(0);
+    assertEquals(stack.pop(), "Foo"); // from pushLocalToStack
+    assertEquals(stack.pop(), "Bar");
+
+    stack.closeFrame();
+    assertEquals(stack.pop(), "Foo"); // the "original" one
+    assertEquals(stack.depth(), initialDepth);
+  }
+
+  @Test
+  public void pushLocalToStackBounds() {
+    Consumer<Consumer<CallStack>> setupAndRun = action -> {
+      CallStack stack = new CallStack();
+      stack.push("One");
+      stack.push("Two");
+      stack.push("Three");
+      action.accept(stack);
+    };
+
+    setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.pushLocalToStack(-1)));
+    setupAndRun.accept(s -> {
+      s.pushLocalToStack(0);
+      assertEquals(s.pop(), "One");
+    });
+    setupAndRun.accept(s -> {
+      s.pushLocalToStack(1);
+      assertEquals(s.pop(), "Two");
+    });
+    setupAndRun.accept(s -> {
+      s.pushLocalToStack(2);
+      assertEquals(s.pop(), "Three");
+    });
+    setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.pushLocalToStack(3)));
+  }
+
+  @Test
+  public void popToLocalWhenFresh() {
+    CallStack stack = new CallStack();
+    final int initialDepth = stack.depth();
+    stack.push("one");
+    stack.push("two");
+    stack.push("three");
+    stack.popToLocal(0);
+    assertEquals(stack.pop(), "two");
+    assertEquals(stack.pop(), "three"); // from the write
+    assertEquals(stack.depth(), initialDepth);
+  }
+
+  @Test
+  public void popToLocalWithinFrame() {
+    CallStack stack = new CallStack();
+    final int initialDepth = stack.depth();
+    open(stack, pushExpr("a0"), pushExpr("a1"));
+
+    stack.push("one");
+    stack.push("two");
+    stack.push("three");
+    stack.popToLocal(0);
+    assertEquals(stack.pop(), "two");
+
+    stack.closeFrame();
+    assertEquals(stack.pop(), "three"); // from the write, then rv
+    assertEquals(stack.depth(), initialDepth);
+  }
+
+  @Test
+  public void popToLocalBounds() {
+    final int initialDepth;
+    {
+      CallStack stack = new CallStack();
+      initialDepth = stack.depth();
+    }
+    Consumer<Consumer<CallStack>> setupAndRun = action -> {
+      CallStack stack = new CallStack();
+      stack.push("One");
+      stack.push("Two");
+      stack.push("Three");
+      action.accept(stack);
+    };
+
+    setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(-1)));
+    setupAndRun.accept(s -> {
+      s.popToLocal(0);
+      assertEquals(s.pop(), "Two");
+      assertEquals(s.pop(), "Three");
+      assertEquals(s.depth(), initialDepth);
+    });
+    setupAndRun.accept(s -> {
+      s.popToLocal(1);
+      assertEquals(s.pop(), "Three");
+      assertEquals(s.pop(), "One");
+      assertEquals(s.depth(), initialDepth);
+    });
+    setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(2)));
+    setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(3)));
   }
 
   private static void open(CallStack stack, ExecutableElement... args) {

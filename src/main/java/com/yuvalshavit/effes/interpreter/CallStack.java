@@ -15,8 +15,8 @@ import java.util.List;
  * That format is:
  *  [ return value       ]
  *  [ argN...arg0        ]
- *  [ ArgCount           ] <-- esb
- *  [ expression scratch ]
+ *  [ ArgCount           ] <-- "esb"
+ *  [ local vars         ]
  *
  * We don't use an esx register or such because I don't think it'd help much as we go through the JVM; a "register"
  * isn't going to be much faster than just working on the stack directly. Maybe it will... something to try out later.
@@ -67,6 +67,32 @@ public final class CallStack {
   public Object peekArg(int pos) {
     checkArgPos(pos);
     return states.get(esb - pos - 1);
+  }
+
+  /**
+   * Pushes a local variable (ie, one on the stack) to the top of the stack.
+   * @param pos 0-indexed, where 0 is the first variable you pushed; the variable to read from
+   * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
+   */
+  public void pushLocalToStack(int pos) {
+    if (pos < 0) {
+      throw new IndexOutOfBoundsException(Integer.toString(pos));
+    }
+    push(states.get(esb + pos + 1));
+  }
+
+  /**
+   * Pops the top of the stack, and writes it to a local var slot. Note that the pop happens before the write, so
+   * if you pass the pos of the stack head, you'll get an {@code IllegalArgumentException} because that slot has
+   * been popped by the time the write is attempted
+   * @param pos 0-indexed, where 0 is the first variable you pushed; the variable to write to
+   * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
+   */
+  public void popToLocal(int pos) {
+    if (pos < 0) {
+      throw new IndexOutOfBoundsException(Integer.toString(pos));
+    }
+    states.set(esb + pos + 1, pop());
   }
 
   public void push(Object state) {
