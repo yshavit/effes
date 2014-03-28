@@ -16,6 +16,35 @@ public abstract class Statement extends Node {
     return token;
   }
 
+  public static class AssignStatement extends Statement {
+    private final EfVar var;
+    private final Expression value;
+
+    public AssignStatement(Token token, EfVar var, Expression value) {
+      super(token);
+      this.var = var;
+      this.value = value;
+    }
+
+    public EfVar var() {
+      return var;
+    }
+
+    public Expression value() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return var + " = " + value;
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      value.validate(errs);
+    }
+  }
+
   public static class ReturnStatement extends Statement {
     private final Expression expression;
 

@@ -75,6 +75,7 @@ inlinableBlock: stat
 
 stat: RETURN exprLine                                                           # ReturnStat
     | methodName methodInvokeArgs NL                                            # MethodInvoke
+    | VAR_NAME EQ exprLine                                                      # AssignStat
     ;
 
 exprLine: expr NL                                                               # SingleLineExpression

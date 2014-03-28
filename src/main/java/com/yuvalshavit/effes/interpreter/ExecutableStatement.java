@@ -19,6 +19,23 @@ public abstract class ExecutableStatement implements ExecutableElement {
     return source.toString();
   }
 
+  public static class AssignStatement extends ExecutableStatement {
+    private final int pos;
+    private final ExecutableExpression value;
+
+    public AssignStatement(Statement.AssignStatement source, ExecutableExpressionCompiler expressionCompiler) {
+      super(source);
+      this.pos = source.var().getArgPosition();
+      this.value = expressionCompiler.apply(source.value());
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      value.execute(stack);
+      stack.popToLocal(pos);
+    }
+  }
+
   public static class ReturnStatement extends ExecutableStatement {
     private final ExecutableExpression value;
 

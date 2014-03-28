@@ -29,9 +29,14 @@ public final class ExecutableStatementCompiler implements Function<Statement, Ex
 
   private static final Dispatcher<ExecutableStatementCompiler, Statement, ExecutableStatement> dispatcher =
     Dispatcher.builder(ExecutableStatementCompiler.class, Statement.class, ExecutableStatement.class)
+      .put(Statement.AssignStatement.class, ExecutableStatementCompiler::assignStatement)
       .put(Statement.MethodInvoke.class, ExecutableStatementCompiler::methodInvoke)
       .put(Statement.ReturnStatement.class, ExecutableStatementCompiler::returnStat)
       .build();
+
+  private ExecutableStatement assignStatement(Statement.AssignStatement stat) {
+    return new ExecutableStatement.AssignStatement(stat, expressionCompiler);
+  }
 
   private ExecutableStatement methodInvoke(Statement.MethodInvoke stat) {
     Function<String, ExecutableElement> lookup = stat.isBuiltIn()

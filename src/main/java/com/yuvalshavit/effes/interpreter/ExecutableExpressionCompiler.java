@@ -8,7 +8,6 @@ import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ExecutableExpressionCompiler implements Function<Expression, ExecutableExpression> {
@@ -60,7 +59,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   }
 
   private ExecutableExpression varExpr(Expression.VarExpression var) {
-    throw new UnsupportedOperationException(); // TODO
+    return new ExecutableExpression.VarReadExpression(var);
   }
 
   private ExecutableExpression argExpr(Expression.ArgExpression arg) {
