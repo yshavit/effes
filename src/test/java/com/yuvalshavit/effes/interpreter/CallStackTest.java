@@ -16,9 +16,7 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
     final int initialDepth = stack.depth();
     open(stack);
-    assertEquals(stack.currentFrameArgsCount(), 0);
     stack.push("Foo");
-    assertEquals(stack.currentFrameArgsCount(), 0);
     stack.closeFrame();
     assertEquals(stack.depth(), initialDepth + 1);
     assertEquals(stack.peek(), "Foo");
@@ -31,9 +29,7 @@ public final class CallStackTest {
     open(stack, pushExpr("test-a0"));
     assertEquals(stack.peekArg(0), "test-a0");
 
-    assertEquals(stack.currentFrameArgsCount(), 1);
     stack.push("Foo");
-    assertEquals(stack.currentFrameArgsCount(), 1);
 
     stack.closeFrame();
     assertEquals(stack.depth(), initialDepth + 1);
@@ -53,9 +49,7 @@ public final class CallStackTest {
     assertEquals(stack.peekArg(1), "test-a1");
     assertEquals(stack.peekArg(2), "test-a2");
 
-    assertEquals(stack.currentFrameArgsCount(), 3);
     stack.push("Foo");
-    assertEquals(stack.currentFrameArgsCount(), 3);
     stack.closeFrame();
     assertEquals(stack.depth(), initialDepth + 1);
     assertEquals(stack.peek(), "Foo");
