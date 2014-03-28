@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,7 @@ import java.util.List;
 public final class CallStack {
 
   private static final Object RV_PLACEHOLDER = "<rv>";
-  private int esb = -1;
+  private int esp = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
 
   public void openFrame(List<? extends ExecutableElement> args) {
@@ -45,7 +44,7 @@ public final class CallStack {
       }
     }
     push(save);
-    esb = states.size() - 1;
+    esp = states.size() - 1;
   }
 
   public void closeFrame() {
@@ -53,6 +52,7 @@ public final class CallStack {
       throw new IllegalStateException("no frame to close");
     }
 
+    Object atEsp = states.get(esp);
     // top of stack is rv
     Object rv = pop();
     // pop off the local vars and esb
@@ -60,14 +60,15 @@ public final class CallStack {
     do {
       popped = uncheckedPop();
     } while (!(popped instanceof Esp));
-    Esp esp = (Esp) popped;
+    Esp lastEsp = (Esp) popped;
 
     // pop off the frame. We add 2 because (a) size() is 1-indexed and (b) we need room for the rv
-    states.set(esp.targetIndex + 1, rv);
-    while (states.size() > esp.targetIndex + 2) {
+    states.set(lastEsp.targetIndex + 1, rv); // set the rv
+    while (states.size() > lastEsp.targetIndex + 2) {
       states.remove(states.size() - 1);
     }
-    this.esb = esp.targetIndex;
+
+    this.esp = lastEsp.targetIndex;
   }
 
   public void pushArgToStack(int pos) {
@@ -75,8 +76,7 @@ public final class CallStack {
   }
 
   public Object peekArg(int pos) {
-    checkArgPos(pos);
-    return states.get(esb - pos - 1);
+    return states.get(esp - pos - 1);
   }
 
   /**
@@ -88,7 +88,7 @@ public final class CallStack {
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    push(states.get(esb + pos + 1));
+    push(states.get(esp + pos + 1));
   }
 
   /**
@@ -102,7 +102,7 @@ public final class CallStack {
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    states.set(esb + pos + 1, pop());
+    states.set(esp + pos + 1, pop());
   }
 
   public void push(Object state) {
@@ -124,65 +124,18 @@ public final class CallStack {
 
   @Override
   public String toString() {
-    if ("1".equals("1")) {
-      return String.format("(esb %d) %s", esb, Lists.reverse(states));
+    int depth = states.size();
+    if (depth == 0) {
+      return "[]";
     }
-    final int LOCAL_STARTING = -1;
-    final int LOCAL_CONT = -2;
-    final int RV = -3;
-    // (esb *) 3:[local(v2, v1) nArgs(2)* args(a1, a0) rv(null)] 2:[...
-
-    // First, get each individual frame, last to first
-    List<String> frameDescriptions = new ArrayList<>();
-    int modeOrArgs = LOCAL_STARTING;
-    StringBuilder sb = new StringBuilder();
-    for (int i = states.size() - 1; i >= 0; --i) {
-      Object elem = states.get(i);
-      if (elem instanceof Esp) {
-        // close the parens if we'd had at least one local
-        if (modeOrArgs == LOCAL_CONT) {
-          sb.append("} ");
-        }
-        modeOrArgs = 666; //((ArgsCount) elem).count;
-        if (i == esb) {
-          sb.append('*');
-        }
-        sb.append("nArgs{").append(modeOrArgs).append('}');
-        if (modeOrArgs == 0) {
-          sb.append(' ');
-          modeOrArgs = RV;
-        } else {
-          sb.append(" args{");
-        }
-      } else if (modeOrArgs > 1) {
-        sb.append(elem).append(", ");
-        --modeOrArgs;
-      } else if (modeOrArgs == 1) {
-        sb.append(elem).append("} ");
-        modeOrArgs = RV;
-      } else if (modeOrArgs == LOCAL_STARTING) {
-        sb.append("local{").append(elem);
-        modeOrArgs = LOCAL_CONT;
-      } else if (modeOrArgs == LOCAL_CONT) {
-        sb.append(", ").append(elem);
-      } else if (modeOrArgs == RV) {
-        sb.append("rv{").append(elem).append("}");
-        frameDescriptions.add(sb.toString());
-        sb.setLength(0);
-      }
+    List<String> elems = new ArrayList<>(depth);
+    for (int i = depth - 1; i >= 0; --i) {
+      String fmt = (i == esp)
+        ? "%d. {%s}"
+        : "%d. %s";
+      elems.add(String.format(fmt, i, states.get(i)));
     }
-    if (sb.length() > 0) {
-      frameDescriptions.add(sb.toString());
-      sb.setLength(0);
-    }
-
-    // Transform "frame desc" to "3:[frame desc]" where the number is the frame's depth
-    for (int i = 0, nFrames = frameDescriptions.size(); i < nFrames; ++i) {
-      String desc = frameDescriptions.get(i);
-      desc = String.format("$%d$ %s", nFrames - i, desc);
-      frameDescriptions.set(i, desc);
-    }
-    return String.format("(esb %d) %s", esb, Joiner.on(" \\\\ ").join(frameDescriptions));
+    return String.format("[ %s ]", Joiner.on(" // ").join(elems));
   }
 
   private Object uncheckedPop() {
@@ -191,18 +144,6 @@ public final class CallStack {
     } catch (Exception e) {
       throw new IllegalStateException();
     }
-  }
-
-  private void checkArgPos(int pos) {
-//    if (pos < 0 || pos >= currentFrameArgsCount()) {
-//      throw new IndexOutOfBoundsException(Integer.toString(pos));
-//    }
-  }
-
-  @VisibleForTesting
-  int currentFrameArgsCount() {
-    throw new UnsupportedOperationException(); // TODO
-//    return ((ArgsCount) states.get(esb)).count;
   }
 
   @VisibleForTesting
@@ -214,7 +155,7 @@ public final class CallStack {
 
     @Override
     public String toString() {
-      return String.format("{esb=%d}", targetIndex);
+      return String.format("esp=%d", targetIndex);
     }
 
     private final int targetIndex;
