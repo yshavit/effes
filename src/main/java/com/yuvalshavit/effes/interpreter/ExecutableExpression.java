@@ -90,11 +90,6 @@ public abstract class ExecutableExpression implements ExecutableElement {
         stack.push(null); // var placeholder
       }
       body.execute(stack);
-      if (pushLocal) {
-        // TODO, this is inefficient. closeFrame should take the number of args to
-        // pop after it pops the rv. Or maybe it should just have a method, popToRv().
-        stack.popToLocal(0); // pop rv to the var placeholder, which is in rv position
-      }
       stack.closeFrame();
     }
   }
