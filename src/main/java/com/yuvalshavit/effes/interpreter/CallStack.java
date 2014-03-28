@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,13 @@ import java.util.List;
  */
 public final class CallStack {
 
-  private static final Object RV_PLACEHOLDER = null;
+  private static final Object RV_PLACEHOLDER = "<rv>";
   private int esb = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
 
   public void openFrame(List<? extends ExecutableElement> args) {
+    ArgsCount save = new ArgsCount(states.size() - 1);
     push(RV_PLACEHOLDER);
-    ++esb;
     int nArgs = args.size();
     int expectedDepth = depth();
     for (int i = nArgs - 1; i >= 0; --i) {
@@ -43,21 +44,33 @@ public final class CallStack {
         throw new IllegalArgumentException("expression " + i + " didn't push exactly one state: " + args.get(i));
       }
     }
-    push(ArgsCount.of(nArgs));
-    esb += (nArgs + 1);
+    push(save);
+    esb = states.size() - 1;
   }
 
   public void closeFrame() {
     if (states.size() <= 2) { // should have the RV_PLACEHOLDER and ArgsCount at least
       throw new IllegalStateException("no frame to close");
     }
-    states.set(esb - currentFrameArgsCount() - 1, uncheckedPop());
-    ArgsCount argsCount = (ArgsCount) uncheckedPop();
-    int nArgs = argsCount.count;
-    for (int i = 0; i < nArgs; ++i) {
+
+    // top of stack is rv
+    Object rv = pop();
+
+    // pop off the local vars and esb
+    Object popped;
+    do {
+      popped = uncheckedPop();
+    } while (!(popped instanceof ArgsCount));
+    ArgsCount argsCount = (ArgsCount) popped;
+
+    // pop off the frame
+    while (states.size() > argsCount.targetSize + 1) { // todo can write rv to targetSize + 1, then pop until > targetsize+2
       states.remove(states.size() - 1);
     }
-    esb -= (nArgs + 2);
+    esb = argsCount.targetSize;
+
+    // finally, re-push that rv
+    push(rv);
   }
 
   public void pushArgToStack(int pos) {
@@ -114,6 +127,9 @@ public final class CallStack {
 
   @Override
   public String toString() {
+    if ("1".equals("1")) {
+      return String.format("(esb %d) %s", esb, Lists.reverse(states));
+    }
     final int LOCAL_STARTING = -1;
     final int LOCAL_CONT = -2;
     final int RV = -3;
@@ -130,7 +146,7 @@ public final class CallStack {
         if (modeOrArgs == LOCAL_CONT) {
           sb.append("} ");
         }
-        modeOrArgs = ((ArgsCount) elem).count;
+        modeOrArgs = 666; //((ArgsCount) elem).count;
         if (i == esb) {
           sb.append('*');
         }
@@ -181,14 +197,15 @@ public final class CallStack {
   }
 
   private void checkArgPos(int pos) {
-    if (pos < 0 || pos >= currentFrameArgsCount()) {
-      throw new IndexOutOfBoundsException(Integer.toString(pos));
-    }
+//    if (pos < 0 || pos >= currentFrameArgsCount()) {
+//      throw new IndexOutOfBoundsException(Integer.toString(pos));
+//    }
   }
 
   @VisibleForTesting
   int currentFrameArgsCount() {
-    return ((ArgsCount) states.get(esb)).count;
+    throw new UnsupportedOperationException(); // TODO
+//    return ((ArgsCount) states.get(esb)).count;
   }
 
   @VisibleForTesting
@@ -198,31 +215,15 @@ public final class CallStack {
 
   private static class ArgsCount {
 
-    static ArgsCount of(int n) {
-      return n < cached.length
-        ? cached[n]
-        : new ArgsCount(n);
-    }
-
-    private static final ArgsCount[] cached = createCached(10);
-
     @Override
     public String toString() {
-      return String.format("{nArgs=%d}", count);
+      return String.format("{esb=%d}", targetSize);
     }
 
-    private static ArgsCount[] createCached(int n) {
-      ArgsCount[] arr = new ArgsCount[n];
-      for (int i = 0; i < arr.length; ++i) {
-        arr[i] = new ArgsCount(i);
-      }
-      return arr;
-    }
+    private final int targetSize;
 
-    private final int count;
-
-    private ArgsCount(int count) {
-      this.count = count;
+    private ArgsCount(int targetSize) {
+      this.targetSize = targetSize;
     }
   }
 }
