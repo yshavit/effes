@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
+import com.yuvalshavit.effes.compile.StatementCompiler;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -84,7 +85,16 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack) {
       stack.openFrame(args);
+      boolean pushLocal = StatementCompiler.sawOneAssignment.get();
+      if (pushLocal) {
+        stack.push(null); // var placeholder
+      }
       body.execute(stack);
+      if (pushLocal) {
+        // TODO, this is inefficient. closeFrame should take the number of args to
+        // pop after it pops the rv. Or maybe it should just have a method, popToRv().
+        stack.popToLocal(0); // pop rv to the var placeholder, which is in rv position
+      }
       stack.closeFrame();
     }
   }
@@ -99,6 +109,20 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       stack.pushArgToStack(pos);
+    }
+  }
+
+  public static class VarReadExpression extends ExecutableExpression {
+    private final int pos;
+
+    public VarReadExpression(Expression.VarExpression source) {
+      super(source);
+      this.pos = source.pos();
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      stack.pushLocalToStack(pos);
     }
   }
 

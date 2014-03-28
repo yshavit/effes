@@ -56,7 +56,8 @@ public final class Block {
   static class ValidationDispatch {
     static final Dispatcher<ValidationDispatch, Statement, EfType> dispatcher =
       Dispatcher.builder(ValidationDispatch.class, Statement.class, EfType.class)
-        .put(Statement.MethodInvoke.class, ValidationDispatch::methodInvoke)
+        .put(Statement.AssignStatement.class, ValidationDispatch::noReturn)
+        .put(Statement.MethodInvoke.class, ValidationDispatch::noReturn)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .build();
 
@@ -64,7 +65,7 @@ public final class Block {
       return stat.getExpression().resultType();
     }
 
-    public EfType methodInvoke(@SuppressWarnings("unused") Statement.MethodInvoke stat) {
+    public EfType noReturn(@SuppressWarnings("unused") Statement stat) {
       return null;
     }
   }

@@ -73,7 +73,8 @@ public final class IrCompiler<E> {
       expressionCompiler,
       unparsedMethods,
       builtinsRegistry,
-      errs);
+      errs,
+      vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 
     MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {

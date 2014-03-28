@@ -188,15 +188,21 @@ public abstract class Expression extends Node {
 
   public static class VarExpression extends Expression {
     private final String name;
+    private final int pos;
 
     public VarExpression(Token token, EfVar var) {
       super(token, var.getType());
       this.name = var.getName();
+      this.pos = var.getArgPosition();
     }
 
     @Override
     public void validate(CompileErrors errs) {
       // nothing to do
+    }
+
+    public int pos() {
+      return pos;
     }
 
     @Override
