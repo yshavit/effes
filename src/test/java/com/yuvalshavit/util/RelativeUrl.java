@@ -15,6 +15,14 @@ public final class RelativeUrl {
 
   public URL get(String... fileNameSegments) {
     String fileName = Joiner.on(File.separatorChar).join(fileNameSegments);
-    return Resources.getResource(pathBase + File.separator + fileName);
+    String fullName = pathBase + File.separator + fileName;
+    try {
+      return Resources.getResource(fullName);
+    } catch (IllegalArgumentException e) {
+      if (String.format("resource %s not found.", fullName).equals(e.getMessage())) {
+        return null;
+      }
+      throw e;
+    }
   }
 }
