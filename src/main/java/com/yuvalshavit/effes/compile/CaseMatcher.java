@@ -13,5 +13,10 @@ public abstract class CaseMatcher {
     public EfType.SimpleType getType() {
       return type;
     }
+
+    @Override
+    public String toString() {
+      return type.toString();
+    }
   }
 }

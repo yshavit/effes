@@ -35,6 +35,11 @@ public abstract class Statement extends Node {
     public void validate(CompileErrors errs) {
       value.validate(errs);
     }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child(var, value);
+    }
   }
 
   public static class ReturnStatement extends Statement {
@@ -52,6 +57,11 @@ public abstract class Statement extends Node {
     @Override
     public void validate(CompileErrors errs) {
       expression.validate(errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child(expression);
     }
 
     @Override
@@ -75,6 +85,11 @@ public abstract class Statement extends Node {
     @Override
     public void validate(CompileErrors errs) {
       methodExpr.validate(errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child("method", methodExpr);
     }
 
     @Override

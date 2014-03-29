@@ -17,4 +17,5 @@ public abstract class Node {
   @Override
   public abstract String toString(); // force overrides
   public abstract void validate(CompileErrors errs);
+  public abstract void state(NodeStateListener out);
 }
