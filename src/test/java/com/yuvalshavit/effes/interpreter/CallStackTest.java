@@ -332,31 +332,29 @@ public final class CallStackTest {
   }
 
   @Test
-  public void methodInvokeWithMethodArgAndLocalVars() {
+  public void localVarInOuterMethod() {
+    // We'll work with two methods, outer and inner. This is analogous to outer() { inner(); }
+    // Outer has one local var.
     CallStack stack = new CallStack();
     Object initial = stack.snapshot();
 
-    ExecutableElement invokingArg = s -> {
-      open(stack, pushExpr("innerMethodArg"));
-      stack.push("inner-local");
-      stack.push("innerMethodRv");
-      stack.closeFrame();
-    };
+    // open outer
+    open(stack);
+    stack.push("wrapper-local");
 
-    // open the outer frame, which will also open the inner frame during invokingArg
-    open(stack, pushExpr("a0"), invokingArg, pushExpr("a2"));
-    stack.push("local-0");
-    // check that this frame has the inner frame's rv as its second arg. Double-check that this checking process
-    // doesn't alter the stack
-    Object preCheckState = stack.snapshot();
-    stack.pushArgToStack(1);
-    assertEquals(stack.pop(), "innerMethodRv");
-    assertEquals(stack.snapshot(), preCheckState);
-
-    // return rv-obj from the outer frame
-    stack.push("rv-obj");
+    // open inner, and then instantly return from it and pop off its return value
+    Object outerState = stack.snapshot();
+    open(stack);
+    stack.push("inner-rv");
     stack.closeFrame();
-    assertEquals(stack.pop(), "rv-obj");
+    assertEquals(stack.pop(), "inner-rv");
+    // make sure the stack is as we left it
+    assertEquals(stack.snapshot(), outerState);
+
+    // and finally, return from outer
+    stack.push("wrapping-rv");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "wrapping-rv");
     assertEquals(stack.snapshot(), initial);
   }
 
