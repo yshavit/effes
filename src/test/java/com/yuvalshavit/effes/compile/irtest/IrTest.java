@@ -10,7 +10,7 @@ import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
-import com.yuvalshavit.effes.compile.NodeVisitor;
+import com.yuvalshavit.effes.compile.NodeStateListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import com.yuvalshavit.util.RelativeUrl;
@@ -45,7 +45,7 @@ public final class IrTest {
   }
 
   @Test(dataProvider = "files")
-  public void t(String fileBaseName) throws IOException {
+  public void compile(String fileBaseName) throws IOException {
     String efFileName = fileBaseName + ".ef";
     String irFileName = fileBaseName + ".ir";
     String errFileName = fileBaseName + ".err";
@@ -70,9 +70,10 @@ public final class IrTest {
     Map<? extends String, ? extends EfMethod<? extends Block>> methods = compiledMethods.getTopLevelMethodsByName();
     methods = new TreeMap<>(methods); // sort by name
     StringBuilder sb = new StringBuilder();
+    NodeStateListener listener = new NodeStateToString(sb);
     methods.forEach((name, method) -> {
-      sb.append("def ").append(name).append(' ').append(method).append(":");
-
+      sb.append("def ").append(name).append(' ').append(method).append(":\n");
+      method.getBody().statements().forEach(listener::child);
     });
     return sb.toString();
   }
@@ -82,6 +83,48 @@ public final class IrTest {
     return url != null
       ? Resources.toString(url, Charsets.UTF_8)
       : "";
+  }
+
+  private static class NodeStateToString implements NodeStateListener {
+    private final StringBuilder out;
+    private int depth = 0;
+
+    private NodeStateToString(StringBuilder out) {
+      this.out = out;
+    }
+
+    @Override
+    public void child(Object label, Node child) {
+      indent().append(label).append(":\n");
+      ++depth;
+      child(child);
+      --depth;
+    }
+
+    @Override
+    public void child(Node child) {
+      indent();
+      out.append(child.getClass().getSimpleName()).append('\n');
+      ++depth;
+      child.state(this);
+      --depth;
+    }
+
+    @Override
+    public void scalar(Object label, Object value) {
+      indent();
+      if (label != null) {
+        out.append(label).append(": ");
+      }
+      out.append(value).append('\n');
+    }
+
+    private StringBuilder indent() {
+      for (int i = 0; i < depth; ++i) {
+        out.append("  ");
+      }
+      return out;
+    }
   }
 
   private static class BuiltInMethods implements BuiltInMethodsFactory<Node> {
@@ -106,6 +149,11 @@ public final class IrTest {
     @Override
     public void validate(CompileErrors errs) {
       // valid
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("[built-in]", name);
     }
   }
 }
