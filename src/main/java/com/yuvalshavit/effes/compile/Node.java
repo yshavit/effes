@@ -2,16 +2,16 @@ package com.yuvalshavit.effes.compile;
 
 import org.antlr.v4.runtime.Token;
 
-abstract class Node {
+public abstract class Node {
 
-  private final Token startToken;
+  private final Token token;
 
-  protected Node(Token startToken) {
-    this.startToken = startToken;
+  protected Node(Token token) {
+    this.token = token;
   }
 
   public Token token() {
-    return token();
+    return token;
   }
 
   @Override
