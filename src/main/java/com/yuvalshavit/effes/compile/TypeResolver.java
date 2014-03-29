@@ -28,7 +28,6 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     = Dispatcher.builder(TypeResolver.class, EffesParser.TypeContext.class, EfType.class)
     .put(EffesParser.SimpleTypeContext.class, TypeResolver::lookupSimpleType)
     .put(EffesParser.DisunctiveTypeContext.class, TypeResolver::createDisjunctiveType)
-    .put(EffesParser.ParenSingleTypeContext.class, TypeResolver::parenType)
     .build();
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
@@ -47,9 +46,5 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
       type = EfType.UNKNOWN;
     }
     return type;
-  }
-
-  private EfType parenType(EffesParser.ParenSingleTypeContext ctx) {
-    return lookupSimpleType(ctx.TYPE_NAME());
   }
 }
