@@ -48,10 +48,13 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: VAR_NAME? type
+methodArg: (VAR_NAME COLON) ? type
+         | OPEN_PAREN VAR_NAME COLON type CLOSE_PAREN
          ;
 
-methodReturnDeclr: ARROW type;
+methodReturnDeclr: ARROW type
+                 | ARROW OPEN_PAREN type CLOSE_PAREN
+                 ;
 
 // data type declr
 
@@ -62,8 +65,7 @@ dataTypeDeclr: DATA TYPE
 
 // generics and types
 
-type: OPEN_PAREN TYPE_NAME CLOSE_PAREN                                          # ParenSingleType
-    | OPEN_PAREN type (PIPE type)+ CLOSE_PAREN                                  # DisunctiveType
+type: type (PIPE type)+                                                         # DisunctiveType
     | TYPE_NAME                                                                 # SimpleType
     ;
 
