@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -33,8 +34,10 @@ public final class CallStack {
   private static final Object RV_PLACEHOLDER = "<rv>";
   private int esp = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
+  private final Collection<Object> log = new ArrayList<>();
 
   public void openFrame(List<? extends ExecutableElement> args) {
+    log("opening frame (size=%d) with args: %s", states.size(), args);
     Esp save = new Esp(states.size() - 1);
     push(RV_PLACEHOLDER);
     int nArgs = args.size();
@@ -53,15 +56,19 @@ public final class CallStack {
     if (states.size() <= 2) { // should have the RV_PLACEHOLDER and ArgsCount at least
       throw new IllegalStateException("no frame to close");
     }
+    assert esp == -1 || (states.get(esp) instanceof Esp) : states.get(esp);
 
     // top of stack is rv
     Object rv = pop();
     // pop off the local vars and esb
     Object popped;
+    int nLocals = -1; // incremented per pop, but the last one is the Esp
     do {
       popped = uncheckedPop();
+      ++nLocals;
     } while (!(popped instanceof Esp));
     Esp lastEsp = (Esp) popped;
+    log("closing frame (esp=%s) with %d local(s)", lastEsp, nLocals);
 
     // pop off the frame. We add 2 because (a) size() is 1-indexed and (b) we need room for the rv
     states.set(lastEsp.targetIndex + 1, rv); // set the rv
@@ -73,6 +80,7 @@ public final class CallStack {
   }
 
   public void pushArgToStack(int pos) {
+    log("push arg %d to stack", pos);
     push(peekArg(pos));
   }
 
@@ -86,6 +94,7 @@ public final class CallStack {
    * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
    */
   public void pushLocalToStack(int pos) {
+    log("push local %d to stack", pos);
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
@@ -100,6 +109,7 @@ public final class CallStack {
    * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
    */
   public void popToLocal(int pos) {
+    log("pop to local %d", pos);
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
@@ -107,10 +117,12 @@ public final class CallStack {
   }
 
   public void push(Object state) {
+    log("push %s", state);
     states.add(state);
   }
 
   public Object pop() {
+    log("pop");
     Object r = uncheckedPop();
     if (Esp.class.equals(r.getClass())) {
       push(r);
@@ -149,7 +161,19 @@ public final class CallStack {
 
   @VisibleForTesting
   Object snapshot() {
+    assert esp == -1 || (states.get(esp) instanceof Esp) : states.get(esp);
     return ImmutableMap.of("esp", esp, "stack", ImmutableList.copyOf(states));
+  }
+
+  private void log(String format, Object... args) {
+    String msg = String.format(format, args);
+    log.add(new Object(){
+      final StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+      @Override
+      public String toString() {
+        return msg;
+      }
+    });
   }
   
   private static class Esp {

@@ -100,6 +100,8 @@ public final class Interpreter {
       } else {
         System.err.printf(">> %s%n", interpreter.runMain());
       }
+    } catch (Exception | AssertionError e) {
+      e.printStackTrace();
     }
   }
 }
