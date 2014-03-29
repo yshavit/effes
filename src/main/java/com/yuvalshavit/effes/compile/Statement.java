@@ -1,19 +1,11 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.base.Joiner;
 import org.antlr.v4.runtime.Token;
 
-import java.util.List;
-
 public abstract class Statement extends Node {
-  private final Token token;
 
   private Statement(Token token) {
-    this.token = token;
-  }
-
-  public Token token() {
-    return token;
+    super(token);
   }
 
   public static class AssignStatement extends Statement {
