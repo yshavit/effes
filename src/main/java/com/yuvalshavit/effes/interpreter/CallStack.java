@@ -2,9 +2,14 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * High-level representation of the call stack.
@@ -15,59 +20,49 @@ import java.util.List;
  * That format is:
  *  [ return value       ]
  *  [ argN...arg0        ]
- *  [ ArgCount           ] <-- "esb"
+ *  [ FrameInfo          ] <-- "fip"
  *  [ local vars         ]
  *
  * We don't use an esx register or such because I don't think it'd help much as we go through the JVM; a "register"
  * isn't going to be much faster than just working on the stack directly. Maybe it will... something to try out later.
  * Also, storing the ESB directly in the stack doesn't help much, because we anyways need to pop each element so that
  * the stack's slots can be nulled out for the GC; we can't insta-pop.
- *
- * The "number of args" doubles as a safety check for expressions that pop from the stack; they aren't allowed to pop
- * it.
  */
 public final class CallStack {
 
   private static final Object RV_PLACEHOLDER = "<rv>";
-  private int esp = -1;
+  private int fip = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
 
   public void openFrame(List<? extends ExecutableElement> args) {
-    Esp save = new Esp(states.size() - 1);
     push(RV_PLACEHOLDER);
+    FrameInfo frameInfo = new FrameInfo(args.size(), fip, states.size());
     int nArgs = args.size();
-    int expectedDepth = depth();
+    int expectedDepth = states.size();
     for (int i = nArgs - 1; i >= 0; --i) {
       args.get(i).execute(this);
-      if (++expectedDepth != depth()) {
+      if (++expectedDepth != states.size()) {
         throw new IllegalArgumentException("expression " + i + " didn't push exactly one state: " + args.get(i));
       }
     }
-    push(save);
-    esp = states.size() - 1;
+    fip = states.size();
+    push(frameInfo);
   }
 
   public void closeFrame() {
     if (states.size() <= 2) { // should have the RV_PLACEHOLDER and ArgsCount at least
       throw new IllegalStateException("no frame to close");
     }
+    assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
 
-    // top of stack is rv
-    Object rv = pop();
-    // pop off the local vars and esb
-    Object popped;
-    do {
-      popped = uncheckedPop();
-    } while (!(popped instanceof Esp));
-    Esp lastEsp = (Esp) popped;
-
-    // pop off the frame. We add 2 because (a) size() is 1-indexed and (b) we need room for the rv
-    states.set(lastEsp.targetIndex + 1, rv); // set the rv
-    while (states.size() > lastEsp.targetIndex + 2) {
-      states.remove(states.size() - 1);
+    popToRv(); // TODO return statement should probably do this, maybe?
+    FrameInfo frameInfo = frameInfo();
+    int targetSize = frameInfo.prevSp; // includes the rv
+    while (states.size() > targetSize) {
+      uncheckedPop();
     }
-
-    this.esp = lastEsp.targetIndex;
+    this.fip = frameInfo.prevFip;
+    assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
   }
 
   public void pushArgToStack(int pos) {
@@ -75,7 +70,11 @@ public final class CallStack {
   }
 
   public Object peekArg(int pos) {
-    return states.get(esp - pos - 1);
+    int n = frameInfo().nArgs;
+    if (pos < 0 || pos >= n) {
+      throw new IndexOutOfBoundsException(String.format("invalid arg %d for frame at fip %d (nArgs=%d)", pos, fip, n));
+    }
+    return states.get(fip - pos - 1);
   }
 
   /**
@@ -87,7 +86,7 @@ public final class CallStack {
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    push(states.get(esp + pos + 1));
+    push(states.get(fip + pos + 1));
   }
 
   /**
@@ -101,7 +100,7 @@ public final class CallStack {
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    states.set(esp + pos + 1, pop());
+    states.set(fip + pos + 1, pop());
   }
 
   public void push(Object state) {
@@ -110,7 +109,7 @@ public final class CallStack {
 
   public Object pop() {
     Object r = uncheckedPop();
-    if (Esp.class.equals(r.getClass())) {
+    if (r instanceof FrameInfo) {
       push(r);
       throw new IllegalStateException("can't pop past frame");
     }
@@ -121,20 +120,53 @@ public final class CallStack {
     return states.get(states.size() - 1);
   }
 
+  private void popToRv() {
+    states.set(fip - frameInfo().nArgs - 1, pop());
+  }
+
+  private FrameInfo frameInfo() {
+    return (FrameInfo) states.get(fip);
+  }
+
   @Override
   public String toString() {
-    int depth = states.size();
-    if (depth == 0) {
+    if (states.size() == 0) {
       return "[]";
     }
-    List<String> elems = new ArrayList<>(depth);
-    for (int i = depth - 1; i >= 0; --i) {
-      String fmt = (i == esp)
-        ? "%d. {%s}"
-        : "%d. %s";
-      elems.add(String.format(fmt, i, states.get(i)));
+    try {
+      List<Object> frameElems = new ArrayList<>();
+      List<List<Object>> frames = new ArrayList<>();
+      BiFunction<Integer, Object, String> formatter =
+        (i, o) -> String.format("[%s%d. %s]", (i == fip ? "*" : ""), i, o);
+      for (int i = states.size() - 1; i >= 0; --i) {
+        Object o = states.get(i);
+        if (o instanceof FrameInfo) {
+          FrameInfo info = (FrameInfo) o;
+          o = formatter.apply(i, o);
+          frameElems.add(o);
+          for (; i >= info.prevSp && i > 0; --i) {
+            o = states.get(i - 1);
+            frameElems.add(formatter.apply(i - 1, o));
+          }
+          frames.add(ImmutableList.copyOf(frameElems));
+          frameElems.clear();
+        } else {
+          frameElems.add(formatter.apply(i, o));
+        }
+      }
+      if (!frameElems.isEmpty()) {
+        frames.add(ImmutableList.copyOf(frameElems));
+      }
+      assert frames.stream().mapToInt(List::size).sum() == states.size();
+      List<String> frameDescs = frames
+        .stream()
+        .map(f -> Joiner.on(' ').join(f))
+        .collect(Collectors.toList());
+      return Joiner.on(" \\\\ ").join(frameDescs);
+    } catch (Exception | AssertionError e) {
+      // just in case!
+      return String.format("fip:%d %s", fip, Lists.reverse(states));
     }
-    return String.format("[ %s ]", Joiner.on(" // ").join(elems));
   }
 
   private Object uncheckedPop() {
@@ -146,21 +178,42 @@ public final class CallStack {
   }
 
   @VisibleForTesting
-  int depth() {
-    return states.size();
+  Object snapshot() {
+    return ImmutableMap.of("fip", fip, "stack", ImmutableList.copyOf(states));
   }
 
-  private static class Esp {
+  private static class FrameInfo {
+
+    private final int nArgs;
+    private final int prevFip;
+    private final int prevSp;
+
+    private FrameInfo(int nArgs, int prevFip, int prevSp) {
+      this.nArgs = nArgs;
+      this.prevFip = prevFip;
+      this.prevSp = prevSp;
+    }
 
     @Override
     public String toString() {
-      return String.format("esp=%d", targetIndex);
+      return String.format("{sp:%d, fip:%d, args:%d}", prevSp, prevFip, nArgs);
     }
 
-    private final int targetIndex;
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
 
-    private Esp(int targetIndex) {
-      this.targetIndex = targetIndex;
+      FrameInfo frameInfo = (FrameInfo) o;
+      return nArgs == frameInfo.nArgs && prevFip == frameInfo.prevFip && prevSp == frameInfo.prevSp;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = nArgs;
+      result = 31 * result + prevFip;
+      result = 31 * result + prevSp;
+      return result;
     }
   }
 }
