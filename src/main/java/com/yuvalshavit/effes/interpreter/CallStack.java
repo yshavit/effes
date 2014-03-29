@@ -4,9 +4,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * High-level representation of the call stack.
@@ -24,9 +27,6 @@ import java.util.List;
  * isn't going to be much faster than just working on the stack directly. Maybe it will... something to try out later.
  * Also, storing the ESB directly in the stack doesn't help much, because we anyways need to pop each element so that
  * the stack's slots can be nulled out for the GC; we can't insta-pop.
- *
- * The "number of args" doubles as a safety check for expressions that pop from the stack; they aren't allowed to pop
- * it.
  */
 public final class CallStack {
 
@@ -45,8 +45,8 @@ public final class CallStack {
         throw new IllegalArgumentException("expression " + i + " didn't push exactly one state: " + args.get(i));
       }
     }
+    fip = states.size();
     push(frameInfo);
-    fip = states.size() - 1;
   }
 
   public void closeFrame() {
@@ -130,18 +130,43 @@ public final class CallStack {
 
   @Override
   public String toString() {
-    int depth = states.size();
-    if (depth == 0) {
+    if (states.size() == 0) {
       return "[]";
     }
-    List<String> elems = new ArrayList<>(depth);
-    for (int i = depth - 1; i >= 0; --i) {
-      String fmt = (i == fip)
-        ? "%d. {%s}"
-        : "%d. %s";
-      elems.add(String.format(fmt, i, states.get(i)));
+    try {
+      List<Object> frameElems = new ArrayList<>();
+      List<List<Object>> frames = new ArrayList<>();
+      BiFunction<Integer, Object, String> formatter =
+        (i, o) -> String.format("[%s%d. %s]", (i == fip ? "*" : ""), i, o);
+      for (int i = states.size() - 1; i >= 0; --i) {
+        Object o = states.get(i);
+        if (o instanceof FrameInfo) {
+          FrameInfo info = (FrameInfo) o;
+          o = formatter.apply(i, o);
+          frameElems.add(o);
+          for (; i >= info.prevSp && i > 0; --i) {
+            o = states.get(i - 1);
+            frameElems.add(formatter.apply(i - 1, o));
+          }
+          frames.add(ImmutableList.copyOf(frameElems));
+          frameElems.clear();
+        } else {
+          frameElems.add(formatter.apply(i, o));
+        }
+      }
+      if (!frameElems.isEmpty()) {
+        frames.add(ImmutableList.copyOf(frameElems));
+      }
+      assert frames.stream().mapToInt(List::size).sum() == states.size();
+      List<String> frameDescs = frames
+        .stream()
+        .map(f -> Joiner.on(' ').join(f))
+        .collect(Collectors.toList());
+      return Joiner.on(" \\\\ ").join(frameDescs);
+    } catch (Exception | AssertionError e) {
+      // just in case!
+      return String.format("fip:%d %s", fip, Lists.reverse(states));
     }
-    return String.format("[ %s ]", Joiner.on(" // ").join(elems));
   }
 
   private Object uncheckedPop() {
@@ -171,7 +196,7 @@ public final class CallStack {
 
     @Override
     public String toString() {
-      return String.format("sp:%d, fip:%d, args:%d", prevSp, prevFip, nArgs);
+      return String.format("{sp:%d, fip:%d, args:%d}", prevSp, prevFip, nArgs);
     }
 
     @Override
