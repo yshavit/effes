@@ -84,7 +84,7 @@ public final class CallStackTest {
 
     Object initial = stack.snapshot();
 
-    stack.peekArg(-1); // undefined, but doesn't throw
+    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(-1));
     assertEquals(stack.snapshot(), initial);
 
     assertEquals("test-a0", stack.peekArg(0));
@@ -93,7 +93,7 @@ public final class CallStackTest {
     assertEquals("test-a1", stack.peekArg(1));
     assertEquals(stack.snapshot(), initial);
 
-    stack.peekArg(2); // undefined, but doesn't throw
+    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(2));
 
     assertEquals(stack.snapshot(), initial);
   }
