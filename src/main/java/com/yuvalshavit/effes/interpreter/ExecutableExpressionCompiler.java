@@ -1,9 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.yuvalshavit.effes.compile.CaseMatcher;
-import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.Expression;
-import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;

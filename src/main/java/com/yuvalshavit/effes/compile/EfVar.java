@@ -3,7 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.base.Preconditions;
 
 public final class EfVar {
-  private static final int IS_UNKNOWN = Integer.MIN_VALUE;
+  private static final int IS_UNKNOWN = -1;
   private final EfType type;
   private final String name;
   private final int argPosition;
@@ -24,9 +24,6 @@ public final class EfVar {
   }
 
   public int getArgPosition() {
-    if (argPosition < 0) {
-      throw new IllegalStateException("invalid arg variable (" + argPosition + ')');
-    }
     return argPosition;
   }
 
