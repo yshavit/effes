@@ -319,6 +319,47 @@ public final class CallStackTest {
     setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(3)));
   }
 
+  @Test
+  public void methodInvokeWithLocalVars() {
+    CallStack stack = new CallStack();
+    Object initial = stack.snapshot();
+    open(stack, pushExpr("a0"), pushExpr("a1"), pushExpr("a2"));
+    stack.push("local-0");
+    stack.push("rv-obj");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "rv-obj");
+    assertEquals(stack.snapshot(), initial);
+  }
+
+  @Test
+  public void methodInvokeWithMethodArgAndLocalVars() {
+    CallStack stack = new CallStack();
+    Object initial = stack.snapshot();
+
+    ExecutableElement invokingArg = s -> {
+      open(stack, pushExpr("innerMethodArg"));
+      stack.push("inner-local");
+      stack.push("innerMethodRv");
+      stack.closeFrame();
+    };
+
+    // open the outer frame, which will also open the inner frame during invokingArg
+    open(stack, pushExpr("a0"), invokingArg, pushExpr("a2"));
+    stack.push("local-0");
+    // check that this frame has the inner frame's rv as its second arg. Double-check that this checking process
+    // doesn't alter the stack
+    Object preCheckState = stack.snapshot();
+    stack.pushArgToStack(1);
+    assertEquals(stack.pop(), "innerMethodRv");
+    assertEquals(stack.snapshot(), preCheckState);
+
+    // return rv-obj from the outer frame
+    stack.push("rv-obj");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "rv-obj");
+    assertEquals(stack.snapshot(), initial);
+  }
+
   private static void open(CallStack stack, ExecutableElement... args) {
     stack.openFrame(ImmutableList.copyOf(args));
   }
