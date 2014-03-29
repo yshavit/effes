@@ -7,6 +7,7 @@ import com.yuvalshavit.effes.compile.StatementCompiler;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public abstract class ExecutableExpression implements ExecutableElement {
   private final Expression source;
@@ -70,9 +71,11 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;
-    private final ExecutableElement body;
+    private final Supplier<ExecutableElement> body;
 
-    public MethodInvokeExpression(Expression.MethodInvoke source, List<ExecutableExpression> args, ExecutableElement body) {
+    public MethodInvokeExpression(Expression.MethodInvoke source,
+                                  List<ExecutableExpression> args,
+                                  Supplier<ExecutableElement> body) {
       super(source);
       this.args = args;
       this.body = body;
@@ -80,7 +83,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     @Override
     public void execute(CallStack stack) {
-      invoke(body, args, stack);
+      invoke(body.get(), args, stack);
     }
 
     public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack) {
