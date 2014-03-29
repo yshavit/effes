@@ -68,17 +68,23 @@ public final class Interpreter {
       : new CompileErrors();
   }
 
-  public void runMain() {
+  public Object runMain() {
     if (hasErrors()) {
       throw new IllegalStateException("compilation had errors");
     }
     EfMethod<? extends ExecutableElement> main = methodsRegistry.getMethod("main");
-    CallStack states = new CallStack();
     if (main != null) {
+      CallStack states = new CallStack();
+      Object initial = states.snapshot();
       if(main.getArgs().length() != 0) {
         throw new BadMainException("main method may not take any arguments");
       }
       ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states);
+      Object rv = states.pop();
+      assert states.snapshot().equals(initial) : states.snapshot();
+      return rv;
+    } else {
+      return null;
     }
   }
 
@@ -92,9 +98,10 @@ public final class Interpreter {
         interpreter.getErrors().getErrors().forEach(System.err::println);
         System.err.println(">> Compilation had errors; not executing code.");
       } else {
-        interpreter.runMain();
-        System.err.println(">> Done!");
+        System.err.printf(">> %s%n", interpreter.runMain());
       }
+    } catch (Exception | AssertionError e) {
+      e.printStackTrace();
     }
   }
 }

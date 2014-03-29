@@ -14,36 +14,36 @@ public final class CallStackTest {
   @Test
   public void methodInvokeNoArgs() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     open(stack);
     stack.push("Foo");
     stack.closeFrame();
-    assertEquals(stack.depth(), initialDepth + 1);
-    assertEquals(stack.peek(), "Foo");
+    assertEquals(stack.pop(), "Foo");
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
   public void methodInvokeOneArg() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     open(stack, pushExpr("test-a0"));
     assertEquals(stack.peekArg(0), "test-a0");
 
     stack.push("Foo");
 
     stack.closeFrame();
-    assertEquals(stack.depth(), initialDepth + 1);
-    assertEquals(stack.peek(), "Foo");
+    assertEquals(stack.pop(), "Foo");
+    assertEquals(stack.snapshot(), initial);
   }
 
-  private ExecutableElement pushExpr(String arg) {
+  private static ExecutableElement pushExpr(String arg) {
     return s -> s.push(arg);
   }
 
   @Test
   public void methodInvokeThreeArgs() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"));
     assertEquals(stack.peekArg(0), "test-a0");
     assertEquals(stack.peekArg(1), "test-a1");
@@ -51,8 +51,8 @@ public final class CallStackTest {
 
     stack.push("Foo");
     stack.closeFrame();
-    assertEquals(stack.depth(), initialDepth + 1);
-    assertEquals(stack.peek(), "Foo");
+    assertEquals(stack.pop(), "Foo");
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
@@ -60,9 +60,9 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"), pushExpr("test-a3"));
 
-    final int initialDepth = stack.depth();
+    Object snapshot = stack.snapshot();
     assertEquals(stack.peekArg(2), "test-a2");
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), snapshot);
   }
 
   @Test
@@ -70,11 +70,11 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"), pushExpr("test-a2"), pushExpr("test-a3"));
 
-    final int initialDepth = stack.depth();
+    Object snapshot = stack.snapshot();
     assertNotEquals(stack.peek(), "test-a2");
     stack.pushArgToStack(2);
-    assertEquals(stack.depth(), initialDepth + 1);
-    assertEquals(stack.peek(), "test-a2");
+    assertEquals(stack.pop(), "test-a2");
+    assertEquals(stack.snapshot(), snapshot);
   }
 
   @Test
@@ -82,69 +82,64 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"));
 
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
 
-    stack.peekArg(-1); // undefined, but doesn't throw
-    assertEquals(stack.depth(), initialDepth);
+    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(-1));
+    assertEquals(stack.snapshot(), initial);
 
     assertEquals("test-a0", stack.peekArg(0));
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
 
     assertEquals("test-a1", stack.peekArg(1));
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
 
-    stack.peekArg(2); // undefined, but doesn't throw
+    assertException(IndexOutOfBoundsException.class, () -> stack.peekArg(2));
 
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
   }
 
-  @Test
+  @Test(enabled = false)
   public void pushArgToStackBounds() {
     CallStack stack = new CallStack();
     open(stack, pushExpr("test-a0"), pushExpr("test-a1"));
 
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
 
     stack.pushArgToStack(-1); // undefined, but doesn't throw
-    assertEquals(stack.depth(), initialDepth + 1); // ruh-roh! broke the stack!
+    assertEquals(stack.snapshot(), initial);
 
     stack.pushArgToStack(0);
-    assertEquals("test-a0", stack.peek());
-    assertEquals(stack.depth(), initialDepth + 2);
+    assertEquals("test-a0", stack.pop());
+    assertEquals(stack.snapshot(), initial);
 
     stack.pushArgToStack(1);
-    assertEquals("test-a1", stack.peek());
-    assertEquals(stack.depth(), initialDepth + 3);
+    assertEquals("test-a1", stack.pop());
+    assertEquals(stack.snapshot(), initial);
 
     stack.pushArgToStack(2); // undefined, but doesn't throw
-    assertEquals(stack.depth(), initialDepth + 4); // ruh-roh! broke the stack!
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
   public void pushPeekPop() {
     CallStack stack = new CallStack();
-    assertEquals(stack.depth(), 0);
+    Object initial = stack.snapshot();
 
     stack.push("p0");
     assertEquals(stack.peek(), "p0");
-    assertEquals(stack.depth(), 1);
 
     stack.push("p1");
     assertEquals(stack.peek(), "p1");
-    assertEquals(stack.depth(), 2);
 
     stack.push("p2");
     assertEquals(stack.peek(), "p2");
-    assertEquals(stack.depth(), 3);
 
     assertEquals(stack.pop(), "p2");
-    assertEquals(stack.depth(), 2);
 
     assertEquals(stack.pop(), "p1");
-    assertEquals(stack.depth(), 1);
 
     assertEquals(stack.pop(), "p0");
-    assertEquals(stack.depth(), 0);
+    assertEquals(stack.snapshot(), initial);
 
     assertException(IllegalStateException.class, stack::pop);
   }
@@ -154,7 +149,6 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
     open(stack);
 
-    assertNotEquals(stack.depth(), 0);
     assertException(IllegalStateException.class, stack::pop);
   }
 
@@ -163,42 +157,44 @@ public final class CallStackTest {
     CallStack stack = new CallStack();
 
     // call method a
-    final int firstCallInitialDepth = stack.depth();
+    Object beforeA = stack.snapshot();
     open(stack, pushExpr("a0"), pushExpr("a1"));
 
     // call method b
-    final int secondCallInitialDepth = stack.depth();
+    Object beforeB = stack.snapshot();
     open(stack, pushExpr("b0"), pushExpr("b1"), pushExpr("b2"));
 
     // return "rv-b" from method b
     stack.push("rv-b");
     stack.closeFrame();
-    assertEquals(stack.depth(), secondCallInitialDepth + 1);
     assertEquals(stack.pop(), "rv-b");
+    assertEquals(stack.snapshot(), beforeB);
 
     // return "rv-a" from method a
     stack.push("rv-a");
     stack.closeFrame();
-    assertEquals(stack.depth(), firstCallInitialDepth + 1);
     assertEquals(stack.pop(), "rv-a");
+    assertEquals(stack.snapshot(), beforeA);
   }
 
   @Test
   public void argAlsoInvokes() {
     CallStack stack = new CallStack();
+    Object initial = stack.snapshot();
+
     ExecutableElement invokingArg = s -> {
       open(stack, pushExpr("innerMethodArg"));
       stack.push("innerMethodRv");
       stack.closeFrame();
     };
-    final int initialDepth = stack.depth();
+
     open(stack, pushExpr("outerMethodA0"), invokingArg);
     assertEquals(stack.peekArg(0), "outerMethodA0");
     assertEquals(stack.peekArg(1), "innerMethodRv");
     stack.push("outerMethodRv");
     stack.closeFrame();
-    assertEquals(stack.depth(), initialDepth + 1);
     assertEquals("outerMethodRv", stack.pop());
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
@@ -221,7 +217,7 @@ public final class CallStackTest {
   @Test
   public void pushLocalToStackWithinFrame() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     open(stack, pushExpr("a0"), pushExpr("a1"));
 
     stack.push("Foo");
@@ -232,7 +228,7 @@ public final class CallStackTest {
 
     stack.closeFrame();
     assertEquals(stack.pop(), "Foo"); // the "original" one
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
@@ -264,20 +260,20 @@ public final class CallStackTest {
   @Test
   public void popToLocalWhenFresh() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     stack.push("one");
     stack.push("two");
     stack.push("three");
     stack.popToLocal(0);
     assertEquals(stack.pop(), "two");
     assertEquals(stack.pop(), "three"); // from the write
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
   public void popToLocalWithinFrame() {
     CallStack stack = new CallStack();
-    final int initialDepth = stack.depth();
+    Object initial = stack.snapshot();
     open(stack, pushExpr("a0"), pushExpr("a1"));
 
     stack.push("one");
@@ -288,15 +284,15 @@ public final class CallStackTest {
 
     stack.closeFrame();
     assertEquals(stack.pop(), "three"); // from the write, then rv
-    assertEquals(stack.depth(), initialDepth);
+    assertEquals(stack.snapshot(), initial);
   }
 
   @Test
   public void popToLocalBounds() {
-    final int initialDepth;
+    final Object initial;
     {
       CallStack stack = new CallStack();
-      initialDepth = stack.depth();
+      initial = stack.snapshot();
     }
     Consumer<Consumer<CallStack>> setupAndRun = action -> {
       CallStack stack = new CallStack();
@@ -311,16 +307,55 @@ public final class CallStackTest {
       s.popToLocal(0);
       assertEquals(s.pop(), "Two");
       assertEquals(s.pop(), "Three");
-      assertEquals(s.depth(), initialDepth);
+      assertEquals(s.snapshot(), initial);
     });
     setupAndRun.accept(s -> {
       s.popToLocal(1);
       assertEquals(s.pop(), "Three");
       assertEquals(s.pop(), "One");
-      assertEquals(s.depth(), initialDepth);
+      assertEquals(s.snapshot(), initial);
     });
     setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(2)));
     setupAndRun.accept(s -> assertException(IndexOutOfBoundsException.class, () -> s.popToLocal(3)));
+  }
+
+  @Test
+  public void methodInvokeWithLocalVars() {
+    CallStack stack = new CallStack();
+    Object initial = stack.snapshot();
+    open(stack, pushExpr("a0"), pushExpr("a1"), pushExpr("a2"));
+    stack.push("local-0");
+    stack.push("rv-obj");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "rv-obj");
+    assertEquals(stack.snapshot(), initial);
+  }
+
+  @Test
+  public void localVarInOuterMethod() {
+    // We'll work with two methods, outer and inner. This is analogous to outer() { inner(); }
+    // Outer has one local var.
+    CallStack stack = new CallStack();
+    Object initial = stack.snapshot();
+
+    // open outer
+    open(stack);
+    stack.push("wrapper-local");
+
+    // open inner, and then instantly return from it and pop off its return value
+    Object outerState = stack.snapshot();
+    open(stack);
+    stack.push("inner-rv");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "inner-rv");
+    // make sure the stack is as we left it
+    assertEquals(stack.snapshot(), outerState);
+
+    // and finally, return from outer
+    stack.push("wrapping-rv");
+    stack.closeFrame();
+    assertEquals(stack.pop(), "wrapping-rv");
+    assertEquals(stack.snapshot(), initial);
   }
 
   private static void open(CallStack stack, ExecutableElement... args) {
