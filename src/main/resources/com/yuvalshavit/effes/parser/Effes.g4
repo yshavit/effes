@@ -74,7 +74,7 @@ inlinableBlock: stat
               ;
 
 stat: RETURN exprLine                                                           # ReturnStat
-    | methodName methodInvokeArgs NL                                            # MethodInvoke
+    | methodInvoke NL                                                           # MethodInvokeStat
     | VAR_NAME EQ exprLine                                                      # AssignStat
     ;
 
@@ -86,9 +86,11 @@ exprLine: expr NL                                                               
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | VAR_NAME                                                                  # VarExpr
-    | methodName methodInvokeArgs                                               # MethodInvokeExpr
+    | methodInvoke                                                              # MethodInvokeExpr
     | TYPE_NAME                                                                 # CtorInvoke
     ;
+
+methodInvoke: methodName methodInvokeArgs;
 
 methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 

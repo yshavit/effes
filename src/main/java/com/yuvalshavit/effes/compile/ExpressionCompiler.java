@@ -10,16 +10,19 @@ import java.util.stream.Collectors;
 
 public final class ExpressionCompiler {
   private final MethodsRegistry<?> methodsRegistry;
+  private final MethodsRegistry<?> builtInMethods;
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final Scopes<EfVar, Token> vars;
 
   public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
+                            MethodsRegistry<?> builtInMethods,
                             TypeRegistry typeRegistry,
                             CompileErrors errs,
                             Scopes<EfVar, Token> vars)
   {
     this.methodsRegistry = methodsRegistry;
+    this.builtInMethods = builtInMethods;
     this.typeRegistry = typeRegistry;
     this.errs = errs;
     this.vars = vars;
@@ -48,22 +51,43 @@ public final class ExpressionCompiler {
   }
 
   private Expression methodInvoke(EffesParser.MethodInvokeExprContext ctx) {
+    return methodInvoke(ctx.methodInvoke());
+  }
+
+  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx) {
     String methodName = ctx.methodName().getText();
     EfMethod<?> method = methodsRegistry.getMethod(methodName);
-    EfType resultType;
-    if (method == null) {
-      errs.add(ctx.methodName().getStart(), "no such method: " + methodName);
-      resultType = EfType.UNKNOWN;
+    boolean isBuiltIn;
+    if (method != null) {
+      isBuiltIn = false;
     } else {
-      resultType = method.getResultType();
+      method = builtInMethods.getMethod(methodName);
+      if (method == null) {
+        errs.add(ctx.methodName().getStart(), "no such method: " + methodName);
+      }
+      isBuiltIn = true; // if method is null, this won't matter
     }
-    List<Expression> args = ctx
-      .methodInvokeArgs()
-      .expr()
-      .stream()
-      .map(this::apply)
-      .collect(Collectors.toList());
-    return new Expression.MethodInvoke(ctx.getStart(), methodName, method, args, resultType);
+
+    List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
+      .map(this::apply).collect(Collectors.toList());
+    EfType resultType;
+    if (method != null) {
+      resultType = method.getResultType();
+      List<EfType> expectedArgs = method.getArgs().viewTypes();
+      for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
+        EfType invokeArg = invokeArgs.get(i).resultType();
+        EfType expectedArg = expectedArgs.get(i);
+        // e.g. method (True | False), arg is True
+        if (!expectedArg.contains(invokeArg)) {
+          errs.add(
+            invokeArgs.get(i).token(),
+            String.format("mismatched types for '%s': expected %s but found %s", methodName, expectedArg, invokeArg));
+        }
+      }
+    } else {
+      resultType = EfType.UNKNOWN;
+    }
+    return new Expression.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn);
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {

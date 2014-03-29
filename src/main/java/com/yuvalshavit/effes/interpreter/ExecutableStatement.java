@@ -1,11 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.yuvalshavit.effes.compile.Expression;
 import com.yuvalshavit.effes.compile.Statement;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 public abstract class ExecutableStatement implements ExecutableElement {
   private final Statement source;
@@ -52,21 +48,19 @@ public abstract class ExecutableStatement implements ExecutableElement {
   }
 
   public static class MethodInvoke extends ExecutableStatement {
-    private final List<ExecutableExpression> args;
-    private final Supplier<ExecutableElement> body;
+    private final ExecutableExpression method;
 
     public MethodInvoke(Statement.MethodInvoke source,
                         ExecutableExpressionCompiler expressionCompiler,
-                        Supplier<ExecutableElement> body)
+                        Expression.MethodInvoke method)
     {
       super(source);
-      this.args = ImmutableList.copyOf(Lists.transform(source.getArgs(), expressionCompiler::apply));
-      this.body = body;
+      this.method = expressionCompiler.methodInvoke(method);
     }
 
     @Override
     public void execute(CallStack stack) {
-      ExecutableExpression.MethodInvokeExpression.invoke(body.get(), args, stack);
+      method.execute(stack);
       stack.pop(); // get rid of the return value
     }
   }

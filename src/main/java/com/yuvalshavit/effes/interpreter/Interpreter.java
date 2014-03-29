@@ -32,7 +32,6 @@ public final class Interpreter {
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     MethodsRegistry<ExecutableElement> executableMethods = new MethodsRegistry<>();
-    ExecutableExpressionCompiler executableExpressionCompiler = new ExecutableExpressionCompiler(executableMethods);
     Function<String, ExecutableElement> methodLookup = m -> {
       EfMethod<? extends ExecutableElement> method = executableMethods.getMethod(m);
       assert method != null : m;
@@ -43,10 +42,11 @@ public final class Interpreter {
       assert method != null;
       return method.getBody();
     };
-    ExecutableStatementCompiler executableStatementCompiler = new ExecutableStatementCompiler(
-      executableExpressionCompiler,
+    ExecutableExpressionCompiler executableExpressionCompiler = new ExecutableExpressionCompiler(
       methodLookup,
       builtInMethodsLookup);
+    ExecutableStatementCompiler executableStatementCompiler = new ExecutableStatementCompiler(
+      executableExpressionCompiler);
     ExecutableBlockCompiler executableBlockCompiler = new ExecutableBlockCompiler(executableStatementCompiler);
     executableMethods.addAll(compiledMethods, m -> executableBlockCompiler.apply(m.getBody()));
 
