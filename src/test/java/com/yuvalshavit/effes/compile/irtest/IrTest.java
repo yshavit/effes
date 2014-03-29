@@ -39,6 +39,7 @@ public final class IrTest {
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
+      .distinct()
       .map(s -> new Object[]{s})
       .collect(Collectors.toList())
       .toArray(new Object[0][]);
