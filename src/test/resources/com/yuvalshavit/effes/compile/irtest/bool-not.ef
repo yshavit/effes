@@ -1,0 +1,4 @@
+def not (bool: True | False) -> (True | False):
+  return case bool of
+    True: False
+    False: True

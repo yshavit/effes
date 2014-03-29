@@ -33,6 +33,10 @@ public final class MethodsRegistry<B> {
     return Collections.unmodifiableCollection(topLevelMethods.values());
   }
 
+  public Map<? extends String, ? extends EfMethod<? extends B>> getTopLevelMethodsByName() {
+    return Collections.unmodifiableMap(topLevelMethods);
+  }
+
   @Nullable
   public EfMethod<? extends B> getMethod(String name) {
     return topLevelMethods.get(name);
