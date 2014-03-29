@@ -134,14 +134,18 @@ public abstract class Expression extends Node {
 
   public static class MethodInvoke extends Expression {
     private final String methodName;
-    private final EfMethod<?> method;
     private final List<Expression> args;
+    private final boolean isBuiltIn;
 
-    public MethodInvoke(Token token, String methodName, EfMethod<?> method, List<Expression> args, EfType resultType) {
+    public MethodInvoke(Token token, String methodName, List<Expression> args, EfType resultType, boolean isBuiltin) {
       super(token, resultType);
       this.methodName = methodName;
-      this.method = method;
       this.args = args;
+      this.isBuiltIn = isBuiltin;
+    }
+
+    public boolean isBuiltIn() {
+      return isBuiltIn;
     }
 
     public String getMethodName() {

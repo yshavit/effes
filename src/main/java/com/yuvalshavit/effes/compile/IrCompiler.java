@@ -68,13 +68,8 @@ public final class IrCompiler<E> {
     Scopes<EfVar, Token> vars = new Scopes<>(
       EfVar::getName,
       (name, token) -> errs.add(token, String.format("duplicate variable name '%s'", name)));
-    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, typeRegistry, errs, vars);
-    StatementCompiler statementCompiler = new StatementCompiler(
-      expressionCompiler,
-      unparsedMethods,
-      builtinsRegistry,
-      errs,
-      vars);
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, builtinsRegistry, typeRegistry, errs, vars);
+    StatementCompiler statementCompiler = new StatementCompiler(expressionCompiler, vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 
     MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {

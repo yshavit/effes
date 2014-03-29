@@ -69,43 +69,25 @@ public abstract class Statement extends Node {
   }
 
   public static class MethodInvoke extends Statement {
-    private final EfType resultType;
-    private final String methodName;
-    private final List<Expression> args;
-    private final boolean isBuiltIn;
+    private final Expression.MethodInvoke methodExpr;
 
-    public MethodInvoke(Token token, String name, List<Expression> args, EfType resultType, boolean isBuiltIn) {
-      super(token);
-      this.methodName = name;
-      this.args = args;
-      this.resultType = resultType;
-      this.isBuiltIn = isBuiltIn;
+    public MethodInvoke(Expression.MethodInvoke methodExpr) {
+      super(methodExpr.token());
+      this.methodExpr = methodExpr;
     }
 
-    public boolean isBuiltIn() {
-      return isBuiltIn;
-    }
-
-    public EfType getResultType() {
-      return resultType;
-    }
-
-    public String getMethodName() {
-      return methodName;
-    }
-
-    public List<Expression> getArgs() {
-      return args;
+    public Expression.MethodInvoke methodExpr() {
+      return methodExpr;
     }
 
     @Override
     public void validate(CompileErrors errs) {
-      args.forEach(arg -> arg.validate(errs));
+      methodExpr.validate(errs);
     }
 
     @Override
     public String toString() {
-      return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
+      return methodExpr.toString();
     }
   }
 }

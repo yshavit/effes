@@ -13,10 +13,13 @@ import java.util.stream.Collectors;
 
 public final class ExecutableExpressionCompiler implements Function<Expression, ExecutableExpression> {
 
-  private final MethodsRegistry<ExecutableElement> methods;
+  private final Function<String, ExecutableElement> methods;
+  private final Function<String, ExecutableElement> builtInMethods;
 
-  public ExecutableExpressionCompiler(MethodsRegistry<ExecutableElement> methods) {
+  public ExecutableExpressionCompiler(Function<String, ExecutableElement> methods,
+                                      Function<String, ExecutableElement> builtInMethods) {
     this.methods = methods;
+    this.builtInMethods = builtInMethods;
   }
 
   @Override
@@ -48,13 +51,11 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     return new ExecutableExpression.CtorExpression(expr);
   }
 
-  private ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
+  public ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
     List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
-    Supplier<ExecutableElement> body = () -> {
-      EfMethod<? extends ExecutableElement> method = methods.getMethod(expr.getMethodName());
-      assert method != null;
-      return method.getBody();
-    };
+    Supplier<ExecutableElement> body = () -> expr.isBuiltIn()
+      ? builtInMethods.apply(expr.getMethodName())
+      : methods.apply(expr.getMethodName());
     return new ExecutableExpression.MethodInvokeExpression(expr, args, body);
   }
 
