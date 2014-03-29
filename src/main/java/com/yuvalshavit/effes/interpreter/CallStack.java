@@ -32,7 +32,7 @@ public final class CallStack {
 
   private static final Object RV_PLACEHOLDER = "<rv>";
   private int fip = -1;
-  private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
+  private final List<Object> states = new ArrayList<>(); // TODO change to Object[] or guard against stack overflows.
 
   public void openFrame(List<? extends ExecutableElement> args) {
     push(RV_PLACEHOLDER);
@@ -50,12 +50,11 @@ public final class CallStack {
   }
 
   public void closeFrame() {
-    if (states.size() <= 2) { // should have the RV_PLACEHOLDER and ArgsCount at least
+    if (states.size() < 2) { // should have the RV_PLACEHOLDER and FrameInfo at least
       throw new IllegalStateException("no frame to close");
     }
     assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
 
-    popToRv(); // TODO return statement should probably do this, maybe?
     FrameInfo frameInfo = frameInfo();
     int targetSize = frameInfo.prevSp; // includes the rv
     while (states.size() > targetSize) {
@@ -120,7 +119,7 @@ public final class CallStack {
     return states.get(states.size() - 1);
   }
 
-  private void popToRv() {
+  public void popToRv() {
     states.set(fip - frameInfo().nArgs - 1, pop());
   }
 

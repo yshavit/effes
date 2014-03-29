@@ -46,7 +46,8 @@ public abstract class ExecutableStatement implements ExecutableElement {
 
     @Override
     public void execute(CallStack stack) {
-      value.execute(stack); // just leave it on the stack
+      value.execute(stack);
+      stack.popToRv();
     }
   }
 
