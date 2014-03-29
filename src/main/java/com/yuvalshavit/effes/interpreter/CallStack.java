@@ -2,6 +2,8 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +38,10 @@ public final class CallStack {
     Esp save = new Esp(states.size() - 1);
     push(RV_PLACEHOLDER);
     int nArgs = args.size();
-    int expectedDepth = depth();
+    int expectedDepth = states.size();
     for (int i = nArgs - 1; i >= 0; --i) {
       args.get(i).execute(this);
-      if (++expectedDepth != depth()) {
+      if (++expectedDepth != states.size()) {
         throw new IllegalArgumentException("expression " + i + " didn't push exactly one state: " + args.get(i));
       }
     }
@@ -146,21 +148,35 @@ public final class CallStack {
   }
 
   @VisibleForTesting
-  int depth() {
-    return states.size();
+  Object snapshot() {
+    return ImmutableMap.of("esp", esp, "stack", ImmutableList.copyOf(states));
   }
-
+  
   private static class Esp {
+
+    private final int targetIndex;
+
+    private Esp(int targetIndex) {
+      this.targetIndex = targetIndex;
+    }
 
     @Override
     public String toString() {
       return String.format("esp=%d", targetIndex);
     }
 
-    private final int targetIndex;
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      Esp esp = (Esp) o;
+      return targetIndex == esp.targetIndex;
 
-    private Esp(int targetIndex) {
-      this.targetIndex = targetIndex;
+    }
+
+    @Override
+    public int hashCode() {
+      return targetIndex;
     }
   }
 }
