@@ -36,6 +36,11 @@ public abstract class Expression extends Node {
     public String toString() {
       return "unrecognized expression";
     }
+
+    @Override
+    public void state(NodeStateListener out) {
+      // nothing
+    }
   }
 
   public static class CaseExpression extends Expression {
@@ -64,6 +69,12 @@ public abstract class Expression extends Node {
       // 2) at least one matcher *will* match the given expression
       // 3) each matcher is reachable (ie, the ones before it may not match)
       throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child("case", matchAgainst);
+      patterns.forEach(p -> out.child("of " + p.getMatcher(), p.getIfMatchedExpression()));
     }
 
     @Override
@@ -117,6 +128,11 @@ public abstract class Expression extends Node {
     }
 
     @Override
+    public void state(NodeStateListener out) {
+      out.scalar("type", simpleType);
+    }
+
+    @Override
     public String toString() {
       return resultType().toString();
     }
@@ -157,6 +173,18 @@ public abstract class Expression extends Node {
     }
 
     @Override
+    public void state(NodeStateListener out) {
+      String name = methodName;
+      if (isBuiltIn()) {
+        name += " [built-in]";
+      }
+      out.scalar("method", name);
+      for (int i = 0; i < args.size(); ++i) {
+        out.child("arg" + i, args.get(i));
+      }
+    }
+
+    @Override
     public String toString() {
       return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
     }
@@ -173,6 +201,11 @@ public abstract class Expression extends Node {
     @Override
     public void validate(CompileErrors errs) {
       // nothing to do
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("pos", pos);
     }
 
     public int pos() {
@@ -198,6 +231,12 @@ public abstract class Expression extends Node {
     @Override
     public void validate(CompileErrors errs) {
       // nothing to do
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("name", name);
+      out.scalar("pos", pos);
     }
 
     public int pos() {

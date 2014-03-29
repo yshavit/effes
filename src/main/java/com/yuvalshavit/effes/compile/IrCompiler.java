@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.Token;
 import java.util.List;
 import java.util.function.Function;
 
-public final class IrCompiler<E> {
+public final class IrCompiler<E> { // TODO un-generic, and get rid of the builtins? Maybe?
 
   private final MethodsRegistry<E> builtinsRegistry;
   private final MethodsRegistry<Block> compiledMethods;

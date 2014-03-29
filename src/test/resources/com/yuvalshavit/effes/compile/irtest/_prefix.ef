@@ -1,0 +1,4 @@
+data type Void
+data type True
+data type False
+-- end prefix
