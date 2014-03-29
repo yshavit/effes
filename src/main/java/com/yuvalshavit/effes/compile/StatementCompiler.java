@@ -79,7 +79,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
         if (!expectedArg.contains(invokeArg)) {
           errs.add(
             invokeArgs.get(i).token(),
-            String.format("mismatched types: expected %s but found %s", expectedArg, invokeArg));
+            String.format("mismatched types for '%s': expected %s but found %s", methodName, expectedArg, invokeArg));
         }
       }
     } else {

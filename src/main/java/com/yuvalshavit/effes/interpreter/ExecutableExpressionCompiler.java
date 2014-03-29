@@ -8,6 +8,7 @@ import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class ExecutableExpressionCompiler implements Function<Expression, ExecutableExpression> {
@@ -49,9 +50,12 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
     List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
-    EfMethod<? extends ExecutableElement> method = methods.getMethod(expr.getMethodName());
-    assert method != null;
-    return new ExecutableExpression.MethodInvokeExpression(expr, args, method.getBody());
+    Supplier<ExecutableElement> body = () -> {
+      EfMethod<? extends ExecutableElement> method = methods.getMethod(expr.getMethodName());
+      assert method != null;
+      return method.getBody();
+    };
+    return new ExecutableExpression.MethodInvokeExpression(expr, args, body);
   }
 
   private ExecutableExpression unrecognizedExpr(Expression.UnrecognizedExpression expr) {

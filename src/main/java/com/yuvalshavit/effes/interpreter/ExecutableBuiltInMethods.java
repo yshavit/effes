@@ -19,6 +19,7 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
     return stack -> {
       out.println("Your argument was: " + stack.peekArg(0));
       stack.push(typeRegistry.getSimpleType("Void"));
+      stack.popToRv();
     };
   }
 }
