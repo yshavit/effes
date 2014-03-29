@@ -17,7 +17,7 @@ public final class CallStackTest {
     Object initial = stack.snapshot();
     open(stack);
     stack.push("Foo");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "Foo");
     assertEquals(stack.snapshot(), initial);
   }
@@ -31,7 +31,7 @@ public final class CallStackTest {
 
     stack.push("Foo");
 
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "Foo");
     assertEquals(stack.snapshot(), initial);
   }
@@ -50,7 +50,7 @@ public final class CallStackTest {
     assertEquals(stack.peekArg(2), "test-a2");
 
     stack.push("Foo");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "Foo");
     assertEquals(stack.snapshot(), initial);
   }
@@ -166,13 +166,13 @@ public final class CallStackTest {
 
     // return "rv-b" from method b
     stack.push("rv-b");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "rv-b");
     assertEquals(stack.snapshot(), beforeB);
 
     // return "rv-a" from method a
     stack.push("rv-a");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "rv-a");
     assertEquals(stack.snapshot(), beforeA);
   }
@@ -185,14 +185,14 @@ public final class CallStackTest {
     ExecutableElement invokingArg = s -> {
       open(stack, pushExpr("innerMethodArg"));
       stack.push("innerMethodRv");
-      stack.closeFrame();
+      close(stack);
     };
 
     open(stack, pushExpr("outerMethodA0"), invokingArg);
     assertEquals(stack.peekArg(0), "outerMethodA0");
     assertEquals(stack.peekArg(1), "innerMethodRv");
     stack.push("outerMethodRv");
-    stack.closeFrame();
+    close(stack);
     assertEquals("outerMethodRv", stack.pop());
     assertEquals(stack.snapshot(), initial);
   }
@@ -226,7 +226,7 @@ public final class CallStackTest {
     assertEquals(stack.pop(), "Foo"); // from pushLocalToStack
     assertEquals(stack.pop(), "Bar");
 
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "Foo"); // the "original" one
     assertEquals(stack.snapshot(), initial);
   }
@@ -282,7 +282,7 @@ public final class CallStackTest {
     stack.popToLocal(0);
     assertEquals(stack.pop(), "two");
 
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "three"); // from the write, then rv
     assertEquals(stack.snapshot(), initial);
   }
@@ -326,7 +326,7 @@ public final class CallStackTest {
     open(stack, pushExpr("a0"), pushExpr("a1"), pushExpr("a2"));
     stack.push("local-0");
     stack.push("rv-obj");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "rv-obj");
     assertEquals(stack.snapshot(), initial);
   }
@@ -346,19 +346,24 @@ public final class CallStackTest {
     Object outerState = stack.snapshot();
     open(stack);
     stack.push("inner-rv");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "inner-rv");
     // make sure the stack is as we left it
     assertEquals(stack.snapshot(), outerState);
 
     // and finally, return from outer
     stack.push("wrapping-rv");
-    stack.closeFrame();
+    close(stack);
     assertEquals(stack.pop(), "wrapping-rv");
     assertEquals(stack.snapshot(), initial);
   }
 
   private static void open(CallStack stack, ExecutableElement... args) {
     stack.openFrame(ImmutableList.copyOf(args));
+  }
+
+  private static void close(CallStack stack) {
+    stack.popToRv();
+    stack.closeFrame();
   }
 }
