@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ import java.util.List;
  * That format is:
  *  [ return value       ]
  *  [ argN...arg0        ]
- *  [ ArgCount           ] <-- "esb"
+ *  [ FrameInfo          ] <-- "fip"
  *  [ local vars         ]
  *
  * We don't use an esx register or such because I don't think it'd help much as we go through the JVM; a "register"
@@ -32,14 +31,12 @@ import java.util.List;
 public final class CallStack {
 
   private static final Object RV_PLACEHOLDER = "<rv>";
-  private int esp = -1;
+  private int fip = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] directly?
-  private final Collection<Object> log = new ArrayList<>();
 
   public void openFrame(List<? extends ExecutableElement> args) {
-    log("opening frame (size=%d) with args: %s", states.size(), args);
-    Esp save = new Esp(states.size() - 1);
     push(RV_PLACEHOLDER);
+    FrameInfo frameInfo = new FrameInfo(args.size(), fip, states.size());
     int nArgs = args.size();
     int expectedDepth = states.size();
     for (int i = nArgs - 1; i >= 0; --i) {
@@ -48,44 +45,36 @@ public final class CallStack {
         throw new IllegalArgumentException("expression " + i + " didn't push exactly one state: " + args.get(i));
       }
     }
-    push(save);
-    esp = states.size() - 1;
+    push(frameInfo);
+    fip = states.size() - 1;
   }
 
   public void closeFrame() {
     if (states.size() <= 2) { // should have the RV_PLACEHOLDER and ArgsCount at least
       throw new IllegalStateException("no frame to close");
     }
-    assert esp == -1 || (states.get(esp) instanceof Esp) : states.get(esp);
+    assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
 
-    // top of stack is rv
-    Object rv = pop();
-    // pop off the local vars and esb
-    Object popped;
-    int nLocals = -1; // incremented per pop, but the last one is the Esp
-    do {
-      popped = uncheckedPop();
-      ++nLocals;
-    } while (!(popped instanceof Esp));
-    Esp lastEsp = (Esp) popped;
-    log("closing frame (esp=%s) with %d local(s)", lastEsp, nLocals);
-
-    // pop off the frame. We add 2 because (a) size() is 1-indexed and (b) we need room for the rv
-    states.set(lastEsp.targetIndex + 1, rv); // set the rv
-    while (states.size() > lastEsp.targetIndex + 2) {
-      states.remove(states.size() - 1);
+    popToRv(); // TODO return statement should probably do this, maybe?
+    FrameInfo frameInfo = frameInfo();
+    int targetSize = frameInfo.prevSp; // includes the rv
+    while (states.size() > targetSize) {
+      uncheckedPop();
     }
-
-    this.esp = lastEsp.targetIndex;
+    this.fip = frameInfo.prevFip;
+    assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
   }
 
   public void pushArgToStack(int pos) {
-    log("push arg %d to stack", pos);
     push(peekArg(pos));
   }
 
   public Object peekArg(int pos) {
-    return states.get(esp - pos - 1);
+    int n = frameInfo().nArgs;
+    if (pos < 0 || pos >= n) {
+      throw new IndexOutOfBoundsException(String.format("invalid arg %d for frame at fip %d (nArgs=%d)", pos, fip, n));
+    }
+    return states.get(fip - pos - 1);
   }
 
   /**
@@ -94,11 +83,10 @@ public final class CallStack {
    * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
    */
   public void pushLocalToStack(int pos) {
-    log("push local %d to stack", pos);
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    push(states.get(esp + pos + 1));
+    push(states.get(fip + pos + 1));
   }
 
   /**
@@ -109,22 +97,19 @@ public final class CallStack {
    * @throws IllegalArgumentException if pos is negative or extends beyond the current stack size
    */
   public void popToLocal(int pos) {
-    log("pop to local %d", pos);
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    states.set(esp + pos + 1, pop());
+    states.set(fip + pos + 1, pop());
   }
 
   public void push(Object state) {
-    log("push %s", state);
     states.add(state);
   }
 
   public Object pop() {
-    log("pop");
     Object r = uncheckedPop();
-    if (Esp.class.equals(r.getClass())) {
+    if (r instanceof FrameInfo) {
       push(r);
       throw new IllegalStateException("can't pop past frame");
     }
@@ -135,6 +120,14 @@ public final class CallStack {
     return states.get(states.size() - 1);
   }
 
+  private void popToRv() {
+    states.set(fip - frameInfo().nArgs - 1, pop());
+  }
+
+  private FrameInfo frameInfo() {
+    return (FrameInfo) states.get(fip);
+  }
+
   @Override
   public String toString() {
     int depth = states.size();
@@ -143,7 +136,7 @@ public final class CallStack {
     }
     List<String> elems = new ArrayList<>(depth);
     for (int i = depth - 1; i >= 0; --i) {
-      String fmt = (i == esp)
+      String fmt = (i == fip)
         ? "%d. {%s}"
         : "%d. %s";
       elems.add(String.format(fmt, i, states.get(i)));
@@ -161,46 +154,41 @@ public final class CallStack {
 
   @VisibleForTesting
   Object snapshot() {
-    assert esp == -1 || (states.get(esp) instanceof Esp) : states.get(esp);
-    return ImmutableMap.of("esp", esp, "stack", ImmutableList.copyOf(states));
+    return ImmutableMap.of("fip", fip, "stack", ImmutableList.copyOf(states));
   }
 
-  private void log(String format, Object... args) {
-    String msg = String.format(format, args);
-    log.add(new Object(){
-      final StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-      @Override
-      public String toString() {
-        return msg;
-      }
-    });
-  }
-  
-  private static class Esp {
+  private static class FrameInfo {
 
-    private final int targetIndex;
+    private final int nArgs;
+    private final int prevFip;
+    private final int prevSp;
 
-    private Esp(int targetIndex) {
-      this.targetIndex = targetIndex;
+    private FrameInfo(int nArgs, int prevFip, int prevSp) {
+      this.nArgs = nArgs;
+      this.prevFip = prevFip;
+      this.prevSp = prevSp;
     }
 
     @Override
     public String toString() {
-      return String.format("esp=%d", targetIndex);
+      return String.format("sp:%d, fip:%d, args:%d", prevSp, prevFip, nArgs);
     }
 
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      Esp esp = (Esp) o;
-      return targetIndex == esp.targetIndex;
 
+      FrameInfo frameInfo = (FrameInfo) o;
+      return nArgs == frameInfo.nArgs && prevFip == frameInfo.prevFip && prevSp == frameInfo.prevSp;
     }
 
     @Override
     public int hashCode() {
-      return targetIndex;
+      int result = nArgs;
+      result = 31 * result + prevFip;
+      result = 31 * result + prevSp;
+      return result;
     }
   }
 }
