@@ -70,27 +70,24 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;
-    private final Supplier<ExecutableElement> body;
-    private final int nVars;
+    private final Supplier<ExecutableMethod> body;
 
     public MethodInvokeExpression(Expression.MethodInvoke source,
                                   List<ExecutableExpression> args,
-                                  Supplier<ExecutableElement> body,
-                                  int nVars) {
+                                  Supplier<ExecutableMethod> body) {
       super(source);
       this.args = args;
       this.body = body;
-      this.nVars = nVars;
     }
 
     @Override
     public void execute(CallStack stack) {
-      invoke(body.get(), args, stack, nVars);
+      invoke(body.get(), args, stack);
     }
 
-    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack, int nVars) {
+    public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack) {
       stack.openFrame(args);
-      for (; nVars > 0; --nVars) {
+      for (int nVars = body.nVars(); nVars > 0; --nVars) {
         stack.push(null); // var placeholder
       }
       body.execute(stack);

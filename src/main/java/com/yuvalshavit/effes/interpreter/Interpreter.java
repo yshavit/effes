@@ -17,13 +17,13 @@ import java.io.PrintStream;
 import java.util.function.Function;
 
 public final class Interpreter {
-  private final MethodsRegistry<ExecutableElement> methodsRegistry;
+  private final MethodsRegistry<ExecutableMethod> methodsRegistry;
   private final CompileErrors errs;
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     CompileErrors errs = new CompileErrors();
 
-    IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> getBuiltins(out, t), errs);
+    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, t -> getBuiltins(out, t), errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
@@ -32,14 +32,14 @@ public final class Interpreter {
 
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
-    MethodsRegistry<ExecutableElement> executableMethods = new MethodsRegistry<>();
-    Function<String, ExecutableElement> methodLookup = m -> {
-      EfMethod<? extends ExecutableElement> method = executableMethods.getMethod(m);
+    MethodsRegistry<ExecutableMethod> executableMethods = new MethodsRegistry<>();
+    Function<String, ExecutableMethod> methodLookup = m -> {
+      EfMethod<? extends ExecutableMethod> method = executableMethods.getMethod(m);
       assert method != null : m;
       return method.getBody();
     };
-    Function<String, ExecutableElement> builtInMethodsLookup = name -> {
-      EfMethod<? extends ExecutableElement> method = compiler.getBuiltInMethods().getMethod(name);
+    Function<String, ExecutableMethod> builtInMethodsLookup = name -> {
+      EfMethod<? extends ExecutableMethod> method = compiler.getBuiltInMethods().getMethod(name);
       assert method != null;
       return method.getBody();
     };
@@ -55,8 +55,8 @@ public final class Interpreter {
     this.methodsRegistry = executableMethods;
   }
 
-  private static MethodsRegistry<ExecutableElement> getBuiltins(PrintStream out, TypeRegistry typeRegistry) {
-    MethodsRegistry<ExecutableElement> builtInMethods = new MethodsRegistry<>();
+  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry) {
+    MethodsRegistry<ExecutableMethod> builtInMethods = new MethodsRegistry<>();
     ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
     builtIns.addTo(typeRegistry, builtInMethods);
     return builtInMethods;
@@ -80,7 +80,7 @@ public final class Interpreter {
     if (hasErrors()) {
       throw new IllegalStateException("compilation had errors");
     }
-    EfMethod<? extends ExecutableElement> main = methodsRegistry.getMethod("main");
+    EfMethod<? extends ExecutableMethod> main = methodsRegistry.getMethod("main");
     if (main != null) {
       CallStack states = new CallStack();
       Object initial = states.snapshot();
