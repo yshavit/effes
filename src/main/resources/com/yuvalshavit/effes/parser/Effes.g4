@@ -48,7 +48,7 @@ methodName: VAR_NAME
 
 methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
 
-methodArg: (VAR_NAME COLON) ? type
+methodArg: type
          | OPEN_PAREN VAR_NAME COLON type CLOSE_PAREN
          ;
 
