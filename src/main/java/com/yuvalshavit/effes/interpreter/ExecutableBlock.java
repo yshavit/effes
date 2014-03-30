@@ -2,11 +2,13 @@ package com.yuvalshavit.effes.interpreter;
 
 import java.util.List;
 
-public final class ExecutableBlock implements ExecutableElement {
+public final class ExecutableBlock implements ExecutableMethod {
   private final List<ExecutableStatement> statements;
+  private final int nVars;
 
-  public ExecutableBlock(List<ExecutableStatement> statements) {
+  public ExecutableBlock(List<ExecutableStatement> statements, int nVars) {
     this.statements = statements;
+    this.nVars = nVars;
   }
 
   @Override
@@ -14,5 +16,10 @@ public final class ExecutableBlock implements ExecutableElement {
     for (ExecutableStatement s : statements) {
       s.execute(stack);
     }
+  }
+
+  @Override
+  public int nVars() {
+    return nVars;
   }
 }

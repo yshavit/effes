@@ -64,14 +64,14 @@ public final class EndToEndTest {
     String irFileName = fileBaseName + ".ir";
     String errFileName = fileBaseName + ".err";
     String actualIr = compiler.getErrors().hasErrors()
-      ? null
+      ? ""
       : printIr(compiler.getCompiledMethods());
     assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), readIfExists(errFileName));
     assertEquals(actualIr, readIfExists(irFileName));
   }
 
   private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
-    String efFile = efPrefix + Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8);
+    String efFile = Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8) + "\n\n" + efPrefix;
     EffesParser parser = ParserUtils.createParser(efFile);
     return parser.compilationUnit();
   }
@@ -86,7 +86,7 @@ public final class EndToEndTest {
     String errFileName = fileBaseName + ".err";
     String outStr;
     if (interpreter.hasErrors()) {
-      outStr = null;
+      outStr = "";
     } else {
       Object result = interpreter.runMain();
       out.print(">> ");

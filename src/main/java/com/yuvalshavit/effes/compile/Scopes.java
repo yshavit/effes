@@ -10,17 +10,26 @@ import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+/**
+ * Scoping handler
+ * @param <T> the thing that's being scoped; vars, methods, etc
+ * @param <D> extra information that's used in the case of a duplicate; e.g. the token that a variable name came from
+ */
 public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
   private final ScopeCloser closer = new ScopeCloser();
+  private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
+  private int elemsCountOffset = 0;
 
+  /**
+   * @param namer a function that names a T; each name must be unique within a scope
+   * @param onDuplicate error handler for duplicates; takes the duplicated T and the extra information D
+   */
   public Scopes(Function<? super T, String> namer, BiConsumer<? super String, ? super D> onDuplicate) {
     this.namer = namer;
     this.onDuplicate = onDuplicate;
   }
-
-  private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
 
   public ScopeCloser pushScope() {
     scopes.push(new HashMap<>());
@@ -33,6 +42,14 @@ public final class Scopes<T,D> {
     } catch (NoSuchElementException e) {
       throw new IllegalStateException("no more scopes to pop");
     }
+  }
+
+  public int countElems() {
+    return scopes.stream().mapToInt(Map::size).sum() - elemsCountOffset;
+  }
+
+  public void setElemsCountOffset(int offset) {
+    elemsCountOffset = offset;
   }
 
   public int depth() {

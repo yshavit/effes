@@ -2,10 +2,18 @@ package com.yuvalshavit.effes.compile;
 
 import org.antlr.v4.runtime.Token;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public abstract class Statement extends Node {
 
   private Statement(Token token) {
     super(token);
+  }
+
+  @Nullable
+  public EfVar var() {
+    return null;
   }
 
   public static class AssignStatement extends Statement {
@@ -18,6 +26,7 @@ public abstract class Statement extends Node {
       this.value = value;
     }
 
+    @Nonnull
     public EfVar var() {
       return var;
     }
@@ -38,7 +47,8 @@ public abstract class Statement extends Node {
 
     @Override
     public void state(NodeStateListener out) {
-      out.child(var, value);
+      out.scalar("var", var);
+      out.child("val", value);
     }
   }
 
