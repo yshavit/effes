@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 
 import static org.testng.Assert.assertEquals;
 
-public final class IrTest {
-  private static final RelativeUrl urls = new RelativeUrl(IrTest.class);
+public final class EndToEndTest {
+  private static final RelativeUrl urls = new RelativeUrl(EndToEndTest.class);
   private final String efPrefix;
 
-  public IrTest() throws IOException {
+  public EndToEndTest() throws IOException {
     efPrefix = Resources.toString(urls.get("_prefix.ef"), Charsets.UTF_8);
   }
 
