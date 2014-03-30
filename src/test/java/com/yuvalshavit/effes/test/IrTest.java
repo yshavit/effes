@@ -4,12 +4,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.compile.Block;
+import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
 import com.yuvalshavit.effes.compile.NodeStateListener;
+import com.yuvalshavit.effes.interpreter.ExecutableBuiltInMethods;
 import com.yuvalshavit.effes.interpreter.Interpreter;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -26,7 +28,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 public final class IrTest {
   private static final RelativeUrl urls = new RelativeUrl(IrTest.class);
@@ -52,22 +53,21 @@ public final class IrTest {
   public void compile(String fileBaseName) throws IOException {
     IrCompiler<?> compiler = new IrCompiler<>(
       getParser(fileBaseName),
-      t -> new MethodsRegistry(),
+      t -> {
+        BuiltInMethodsFactory<?> factory = new ExecutableBuiltInMethods(t, null);
+        MethodsRegistry<Object> reg = new MethodsRegistry<>();
+        factory.addTo(t, reg);
+        return reg;
+      },
       new CompileErrors());
-    MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     String irFileName = fileBaseName + ".ir";
-    String expectedIr = readIfExists(irFileName);
-    String expectedErrs;
-    if (expectedIr != null) {
-      expectedErrs = "";
-    } else {
-      String errFileName = fileBaseName + ".err";
-      expectedErrs = readIfExists(errFileName);
-      assertNotNull(expectedErrs, "one of '" + irFileName + "' or " + errFileName + "'");
-    }
-    assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), expectedErrs);
-    assertEquals(printIr(compiledMethods), expectedIr);
+    String errFileName = fileBaseName + ".err";
+    String actualIr = compiler.getErrors().hasErrors()
+      ? null
+      : printIr(compiler.getCompiledMethods());
+    assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), readIfExists(errFileName));
+    assertEquals(actualIr, readIfExists(irFileName));
   }
 
   private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
@@ -83,27 +83,21 @@ public final class IrTest {
     Interpreter interpreter = new Interpreter(getParser(fileBaseName), out);
 
     String outFileName = fileBaseName + ".out";
-    String expectedOut = readIfExists(outFileName);
-    String expectedErrs;
-    String actualOut;
-    if (expectedOut != null) {
-      expectedErrs = "";
+    String errFileName = fileBaseName + ".err";
+    String outStr;
+    if (interpreter.hasErrors()) {
+      outStr = null;
+    } else {
       Object result = interpreter.runMain();
       out.print(">> ");
       out.println(result);
       out.flush();
       out.close();
-
-      actualOut = baos.toString("utf-8");
-
-    } else {
-      String errFileName = fileBaseName + ".err";
-      expectedErrs = readIfExists(errFileName);
-      assertNotNull(expectedErrs, "one of '" + outFileName + "' or " + errFileName + "'");
-      actualOut = null; // don't even run it
+      outStr = baos.toString("utf-8");
     }
-    assertEquals(Joiner.on('\n').join(interpreter.getErrors().getErrors()), expectedErrs);
-    assertEquals(actualOut, expectedOut);
+
+    assertEquals(Joiner.on('\n').join(interpreter.getErrors().getErrors()), readIfExists(errFileName));
+    assertEquals(outStr, readIfExists(outFileName));
   }
 
   private String printIr(MethodsRegistry<Block> compiledMethods) {
@@ -122,7 +116,7 @@ public final class IrTest {
     URL url = urls.get(fileName);
     return url != null
       ? Resources.toString(url, Charsets.UTF_8)
-      : null;
+      : "";
   }
 
   private static class NodeStateToString implements NodeStateListener {
