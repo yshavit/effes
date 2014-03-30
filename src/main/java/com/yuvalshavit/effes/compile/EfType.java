@@ -12,6 +12,7 @@ import java.util.TreeSet;
 public abstract class EfType {
 
   public static final EfType UNKNOWN = new UnknownType();
+  public static final Comparator<EfType> comparator = new EfTypeComparator();
 
   private EfType() {}
 
@@ -62,7 +63,7 @@ public abstract class EfType {
 
     public DisjunctiveType(Collection<EfType> options) {
       // flatten them out
-      SortedSet<EfType> optionsBuilder = new TreeSet<>(EfTypeComparator.instance);
+      SortedSet<EfType> optionsBuilder = new TreeSet<>(comparator);
       EfTypeDispatch dispatch = new EfTypeDispatch() {
         @Override
         public boolean accept(SimpleType type) {
@@ -151,12 +152,11 @@ public abstract class EfType {
   }
 
   private static class EfTypeComparator implements Comparator<EfType> {
-    private static final Comparator<EfType> instance = new EfTypeComparator();
     private enum TypeOrdinal {
       NULL,
+      UNKNOWN,
       SIMPLE,
-      DISJUNCTIVE,
-      UNKNOWN
+      DISJUNCTIVE
     }
     static final Dispatcher<?, EfType, TypeOrdinal> typeClassOrdinal
       = Dispatcher.builder(Object.class, EfType.class, TypeOrdinal.class)
@@ -195,10 +195,10 @@ public abstract class EfType {
         }
         // all the elements were the same, so which is longer?
         if (d1Iter.hasNext()) {
-          return -1; // d2 was longer, so d1 < d2
+          return 1; // d1 was longer, so d1 > d2
         }
         return d2Iter.hasNext()
-          ? 1 // d1 was longer
+          ? -1 // d2 was longer
           : 0;
       default:
         throw new AssertionError("unknown type ordinal: " + o1Ordinal);
