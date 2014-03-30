@@ -6,6 +6,7 @@ import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
+import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 
@@ -20,15 +21,18 @@ public final class Interpreter {
   private final CompileErrors errs;
 
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
-    IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> new ExecutableBuiltInMethods(t, out));
-    CompileErrors errs = compiler.getErrors();
+    CompileErrors errs = new CompileErrors();
+
+    TypeRegistry typeRegistry = new TypeRegistry(errs);
+    MethodsRegistry<ExecutableElement> builtInMethods = gerBuiltins(out, typeRegistry);
+
+    IrCompiler compiler = new IrCompiler(source, typeRegistry, builtInMethods, errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
       return;
     }
 
-    MethodsRegistry<ExecutableElement> builtinsRegistry = compiler.getBuiltinsRegistry();
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     MethodsRegistry<ExecutableElement> executableMethods = new MethodsRegistry<>();
@@ -38,7 +42,7 @@ public final class Interpreter {
       return method.getBody();
     };
     Function<String, ExecutableElement> builtInMethodsLookup = name -> {
-      EfMethod<? extends ExecutableElement> method = builtinsRegistry.getMethod(name);
+      EfMethod<? extends ExecutableElement> method = builtInMethods.getMethod(name);
       assert method != null;
       return method.getBody();
     };
@@ -52,6 +56,13 @@ public final class Interpreter {
 
     this.errs = null;
     this.methodsRegistry = executableMethods;
+  }
+
+  private static MethodsRegistry<ExecutableElement> gerBuiltins(PrintStream out, TypeRegistry typeRegistry) {
+    MethodsRegistry<ExecutableElement> builtInMethods = new MethodsRegistry<>();
+    ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
+    builtIns.addTo(typeRegistry, builtInMethods);
+    return builtInMethods;
   }
 
   public Interpreter(EffesParser.CompilationUnitContext source) {

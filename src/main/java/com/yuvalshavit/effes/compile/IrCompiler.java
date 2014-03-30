@@ -4,36 +4,31 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
-import java.util.function.Function;
 
-public final class IrCompiler<E> { // TODO un-generic, and get rid of the builtins? Maybe?
+public final class IrCompiler { // TODO un-generic, and get rid of the builtins? Maybe?
 
-  private final MethodsRegistry<E> builtinsRegistry;
   private final MethodsRegistry<Block> compiledMethods;
   private final CompileErrors errs;
 
   public IrCompiler(EffesParser.CompilationUnitContext source,
-                    Function<TypeRegistry, BuiltInMethodsFactory<E>> builtInMethods)
+                    TypeRegistry baseTypeRegistry,
+                    MethodsRegistry<?> builtinsRegistry,
+                    CompileErrors errs)
   {
-    errs = new CompileErrors();
-    TypeRegistry typeRegistry = getTypeRegistry(source, errs);
-    builtinsRegistry = getBuiltins(typeRegistry, builtInMethods);
+    this.errs = errs;
+    TypeRegistry typeRegistry = getTypeRegistry(source, errs, baseTypeRegistry);
     compiledMethods = compileToIntermediate(source, typeRegistry, builtinsRegistry, errs);
   }
 
-  private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source, CompileErrors errs) {
-    TypeRegistry typeRegistry = new TypeRegistry(errs);
+  private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
+                                              CompileErrors errs,
+                                              TypeRegistry typeRegistry) {
     new TypesFinder(typeRegistry).accept(source);
     return typeRegistry;
   }
 
   public CompileErrors getErrors() {
     return errs;
-  }
-
-  public MethodsRegistry<E> getBuiltinsRegistry() {
-    checkNoErrors();
-    return builtinsRegistry;
   }
 
   public MethodsRegistry<Block> getCompiledMethods() {
@@ -47,20 +42,11 @@ public final class IrCompiler<E> { // TODO un-generic, and get rid of the builti
     }
   }
 
-  private static <E> MethodsRegistry<E> getBuiltins(TypeRegistry typeRegistry,
-                                                    Function<TypeRegistry, BuiltInMethodsFactory<E>> builtInMethods)
-  {
-    BuiltInMethodsFactory<E> builtIns = builtInMethods.apply(typeRegistry);
-    MethodsRegistry<E> builtinsRegistry = new MethodsRegistry<>();
-    builtIns.addTo(typeRegistry, builtinsRegistry);
-    return builtinsRegistry;
-  }
 
-
-  private static <E> MethodsRegistry<Block> compileToIntermediate(EffesParser.CompilationUnitContext source,
-                                                                  TypeRegistry typeRegistry,
-                                                                  MethodsRegistry<E> builtinsRegistry,
-                                                                  CompileErrors errs)
+  private static MethodsRegistry<Block> compileToIntermediate(EffesParser.CompilationUnitContext source,
+                                                              TypeRegistry typeRegistry,
+                                                              MethodsRegistry<?> builtinsRegistry,
+                                                              CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
     new MethodsFinder(typeRegistry, unparsedMethods, errs).accept(source);

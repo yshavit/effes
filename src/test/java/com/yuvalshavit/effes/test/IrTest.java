@@ -4,13 +4,13 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
 import com.yuvalshavit.effes.compile.NodeStateListener;
+import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import com.yuvalshavit.util.RelativeUrl;
@@ -53,7 +53,9 @@ public final class IrTest {
 
     String efFile = efPrefix + Resources.toString(urls.get(efFileName), Charsets.UTF_8);
     EffesParser parser = ParserUtils.createParser(efFile);
-    IrCompiler<?> compiler = new IrCompiler<>(parser.compilationUnit(), t -> new BuiltInMethods());
+    CompileErrors errs = new CompileErrors();
+    TypeRegistry typeRegistry = new TypeRegistry(errs);
+    IrCompiler compiler = new IrCompiler(parser.compilationUnit(), typeRegistry, new MethodsRegistry<>(), errs);
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
     CompileErrors errors = compiler.getErrors();
 
@@ -125,36 +127,6 @@ public final class IrTest {
         out.append("  ");
       }
       return out;
-    }
-  }
-
-  private static class BuiltInMethods implements BuiltInMethodsFactory<Node> {
-    @Override
-    public Node print() {
-      return new BuiltInMethod("print");
-    }
-  }
-
-  private static class BuiltInMethod extends Node {
-    private final String name;
-    BuiltInMethod(String name) {
-      super(null);
-      this.name = name;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("built-in method '%s'", name);
-    }
-
-    @Override
-    public void validate(CompileErrors errs) {
-      // valid
-    }
-
-    @Override
-    public void state(NodeStateListener out) {
-      out.scalar("[built-in]", name);
     }
   }
 }
