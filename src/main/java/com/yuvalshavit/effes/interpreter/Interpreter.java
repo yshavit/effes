@@ -23,10 +23,7 @@ public final class Interpreter {
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     CompileErrors errs = new CompileErrors();
 
-    TypeRegistry typeRegistry = new TypeRegistry(errs);
-    MethodsRegistry<ExecutableElement> builtInMethods = gerBuiltins(out, typeRegistry);
-
-    IrCompiler compiler = new IrCompiler(source, typeRegistry, builtInMethods, errs);
+    IrCompiler<ExecutableElement> compiler = new IrCompiler<>(source, t -> getBuiltins(out, t), errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
@@ -42,7 +39,7 @@ public final class Interpreter {
       return method.getBody();
     };
     Function<String, ExecutableElement> builtInMethodsLookup = name -> {
-      EfMethod<? extends ExecutableElement> method = builtInMethods.getMethod(name);
+      EfMethod<? extends ExecutableElement> method = compiler.getBuiltInMethods().getMethod(name);
       assert method != null;
       return method.getBody();
     };
@@ -58,7 +55,7 @@ public final class Interpreter {
     this.methodsRegistry = executableMethods;
   }
 
-  private static MethodsRegistry<ExecutableElement> gerBuiltins(PrintStream out, TypeRegistry typeRegistry) {
+  private static MethodsRegistry<ExecutableElement> getBuiltins(PrintStream out, TypeRegistry typeRegistry) {
     MethodsRegistry<ExecutableElement> builtInMethods = new MethodsRegistry<>();
     ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
     builtIns.addTo(typeRegistry, builtInMethods);

@@ -4,26 +4,32 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.function.Function;
 
-public final class IrCompiler {
+public final class IrCompiler<E> {
 
   private final MethodsRegistry<Block> compiledMethods;
   private final CompileErrors errs;
+  private final MethodsRegistry<E> builtInMethods;
 
   public IrCompiler(EffesParser.CompilationUnitContext source,
-                    TypeRegistry baseTypeRegistry,
-                    MethodsRegistry<?> builtinsRegistry,
+                    Function<TypeRegistry, MethodsRegistry<E>> builtinsRegistryF,
                     CompileErrors errs)
   {
     this.errs = errs;
-    TypeRegistry typeRegistry = getTypeRegistry(source, baseTypeRegistry);
-    compiledMethods = compileToIntermediate(source, typeRegistry, builtinsRegistry, errs);
+    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs));
+    builtInMethods = builtinsRegistryF.apply(typeRegistry);
+    compiledMethods = compileToIntermediate(source, typeRegistry, builtInMethods, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
                                               TypeRegistry typeRegistry) {
     new TypesFinder(typeRegistry).accept(source);
     return typeRegistry;
+  }
+
+  public MethodsRegistry<E> getBuiltInMethods() {
+    return builtInMethods;
   }
 
   public CompileErrors getErrors() {

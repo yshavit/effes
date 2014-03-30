@@ -10,20 +10,23 @@ import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
 import com.yuvalshavit.effes.compile.NodeStateListener;
-import com.yuvalshavit.effes.compile.TypeRegistry;
+import com.yuvalshavit.effes.interpreter.Interpreter;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import com.yuvalshavit.util.RelativeUrl;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public final class IrTest {
   private static final RelativeUrl urls = new RelativeUrl(IrTest.class);
@@ -47,29 +50,60 @@ public final class IrTest {
 
   @Test(dataProvider = "files")
   public void compile(String fileBaseName) throws IOException {
-    String efFileName = fileBaseName + ".ef";
-    String irFileName = fileBaseName + ".ir";
-    String errFileName = fileBaseName + ".err";
-
-    String efFile = efPrefix + Resources.toString(urls.get(efFileName), Charsets.UTF_8);
-    EffesParser parser = ParserUtils.createParser(efFile);
-    CompileErrors errs = new CompileErrors();
-    IrCompiler compiler = new IrCompiler(
-      parser.compilationUnit(),
-      new TypeRegistry(errs),
-      new MethodsRegistry<>(),
-      errs);
+    IrCompiler<?> compiler = new IrCompiler<>(
+      getParser(fileBaseName),
+      t -> new MethodsRegistry(),
+      new CompileErrors());
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
-    CompileErrors errors = compiler.getErrors();
 
-    String errsFile = readIfExists(errFileName);
-    String irFile = readIfExists(irFileName);
+    String irFileName = fileBaseName + ".ir";
+    String expectedIr = readIfExists(irFileName);
+    String expectedErrs;
+    if (expectedIr != null) {
+      expectedErrs = "";
+    } else {
+      String errFileName = fileBaseName + ".err";
+      expectedErrs = readIfExists(errFileName);
+      assertNotNull(expectedErrs, "one of '" + irFileName + "' or " + errFileName + "'");
+    }
+    assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), expectedErrs);
+    assertEquals(printIr(compiledMethods), expectedIr);
+  }
 
-    String actualErrs = Joiner.on('\n').join(errors.getErrors());
-    String actualir = printIr(compiledMethods);
+  private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
+    String efFile = efPrefix + Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8);
+    EffesParser parser = ParserUtils.createParser(efFile);
+    return parser.compilationUnit();
+  }
 
-    assertEquals(actualErrs, errsFile);
-    assertEquals(actualir, irFile);
+  @Test(dataProvider = "files")
+  public void run(String fileBaseName) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream out = new PrintStream(baos);
+    Interpreter interpreter = new Interpreter(getParser(fileBaseName), out);
+
+    String outFileName = fileBaseName + ".out";
+    String expectedOut = readIfExists(outFileName);
+    String expectedErrs;
+    String actualOut;
+    if (expectedOut != null) {
+      expectedErrs = "";
+      Object result = interpreter.runMain();
+      out.print(">> ");
+      out.println(result);
+      out.flush();
+      out.close();
+
+      actualOut = baos.toString("utf-8");
+
+    } else {
+      String errFileName = fileBaseName + ".err";
+      expectedErrs = readIfExists(errFileName);
+      assertNotNull(expectedErrs, "one of '" + outFileName + "' or " + errFileName + "'");
+      actualOut = null; // don't even run it
+    }
+    assertEquals(Joiner.on('\n').join(interpreter.getErrors().getErrors()), expectedErrs);
+    assertEquals(actualOut, expectedOut);
   }
 
   private String printIr(MethodsRegistry<Block> compiledMethods) {
@@ -88,7 +122,7 @@ public final class IrTest {
     URL url = urls.get(fileName);
     return url != null
       ? Resources.toString(url, Charsets.UTF_8)
-      : "";
+      : null;
   }
 
   private static class NodeStateToString implements NodeStateListener {
