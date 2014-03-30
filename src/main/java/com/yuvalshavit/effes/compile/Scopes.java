@@ -19,6 +19,7 @@ public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
   private final ScopeCloser closer = new ScopeCloser();
+  private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
 
   /**
    * @param namer a function that names a T; each name must be unique within a scope
@@ -28,8 +29,6 @@ public final class Scopes<T,D> {
     this.namer = namer;
     this.onDuplicate = onDuplicate;
   }
-
-  private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
 
   public ScopeCloser pushScope() {
     scopes.push(new HashMap<>());
