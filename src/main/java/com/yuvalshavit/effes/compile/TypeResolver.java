@@ -32,7 +32,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
     List<EfType> options = ctx.type().stream().map(this::apply).collect(Collectors.toList());
-    return new EfType.DisjunctiveType(options);
+    return EfType.disjunction(options);
   }
 
   private EfType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {

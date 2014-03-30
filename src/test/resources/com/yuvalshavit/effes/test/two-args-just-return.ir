@@ -1,0 +1,4 @@
+def foo (bool: False | True) (strict: True | Void) -> False:
+  ReturnStatement
+    CtorInvoke
+      type: False

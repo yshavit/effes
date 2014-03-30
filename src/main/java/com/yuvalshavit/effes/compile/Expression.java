@@ -87,7 +87,7 @@ public abstract class Expression extends Node {
       for (CasePattern p : patterns) {
         EfType patternResult = p.getIfMatchedExpression().resultType();
         result = result != null
-          ? new EfType.DisjunctiveType(ImmutableList.of(result, patternResult))
+          ? EfType.disjunction(result, patternResult)
           : patternResult;
       }
       return result;

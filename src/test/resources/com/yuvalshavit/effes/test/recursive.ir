@@ -1,0 +1,21 @@
+def recurse (in: One | Three | Two) -> One:
+  ReturnStatement
+    CaseExpression
+      case:
+        ArgExpression
+          pos: 0
+      of One:
+        CtorInvoke
+          type: One
+      of Two:
+        MethodInvoke
+          method: recurse
+          arg0:
+            CtorInvoke
+              type: One
+      of Three:
+        MethodInvoke
+          method: recurse
+          arg0:
+            CtorInvoke
+              type: Two

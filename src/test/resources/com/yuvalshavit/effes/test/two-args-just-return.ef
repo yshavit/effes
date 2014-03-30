@@ -1,0 +1,1 @@
+def foo (bool: True | False): (strict: True | Void) -> False: return False
