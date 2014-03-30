@@ -113,7 +113,7 @@ public abstract class EfType {
 
     @Override
     public String toString() {
-      return String.format("(%s)", Joiner.on(" | ").join(options));
+      return Joiner.on(" | ").join(options);
     }
 
     @Override

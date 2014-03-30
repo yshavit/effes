@@ -31,6 +31,6 @@ public final class EfMethod<B> {
 
   @Override
   public String toString() {
-    return String.format("(%s) -> %s", args, resultType);
+    return String.format("%s -> %s", args, resultType);
   }
 }
