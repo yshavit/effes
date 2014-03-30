@@ -64,7 +64,7 @@ public final class EndToEndTest {
     String irFileName = fileBaseName + ".ir";
     String errFileName = fileBaseName + ".err";
     String actualIr = compiler.getErrors().hasErrors()
-      ? null
+      ? ""
       : printIr(compiler.getCompiledMethods());
     assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), readIfExists(errFileName));
     assertEquals(actualIr, readIfExists(irFileName));
@@ -86,7 +86,7 @@ public final class EndToEndTest {
     String errFileName = fileBaseName + ".err";
     String outStr;
     if (interpreter.hasErrors()) {
-      outStr = null;
+      outStr = "";
     } else {
       Object result = interpreter.runMain();
       out.print(">> ");

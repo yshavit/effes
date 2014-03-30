@@ -1,0 +1,24 @@
+def foo (True) -> True:
+  AssignStatement
+    var: t1 (pos=0)
+    val:
+      CtorInvoke
+        type: True
+  AssignStatement
+    var: t2 (pos=1)
+    val:
+      VarExpression
+        name: t1
+        pos: 0
+  MethodInvoke
+    method:
+      MethodInvoke
+        method: print [built-in]
+        arg0:
+          VarExpression
+            name: t2
+            pos: 1
+  ReturnStatement
+    VarExpression
+      name: t2
+      pos: 1

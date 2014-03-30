@@ -25,7 +25,8 @@ public final class Block {
       .filter(v -> v != null)
       .mapToInt(EfVar::getArgPosition)
       .max()
-      .orElse(0);
+      .orElse(-1)
+      + 1;
   }
 
   @Override
