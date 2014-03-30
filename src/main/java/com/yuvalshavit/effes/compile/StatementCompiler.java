@@ -31,7 +31,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
     Expression value = expressionCompiler.apply(ctx.exprLine());
     int pos = vars.countElems();
-    EfVar var = EfVar.arg(ctx.VAR_NAME().getText(), pos, value.resultType());
+    EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, value.resultType());
     vars.add(var, ctx.VAR_NAME().getSymbol());
     return new Statement.AssignStatement(ctx.getStart(), var, value);
   }

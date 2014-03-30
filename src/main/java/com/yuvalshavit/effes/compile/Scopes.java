@@ -20,6 +20,7 @@ public final class Scopes<T,D> {
   private final BiConsumer<? super String, ? super D> onDuplicate;
   private final ScopeCloser closer = new ScopeCloser();
   private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
+  private int elemsCountOffset = 0;
 
   /**
    * @param namer a function that names a T; each name must be unique within a scope
@@ -44,7 +45,11 @@ public final class Scopes<T,D> {
   }
 
   public int countElems() {
-    return scopes.stream().mapToInt(Map::size).sum();
+    return scopes.stream().mapToInt(Map::size).sum() - elemsCountOffset;
+  }
+
+  public void setElemsCountOffset(int offset) {
+    elemsCountOffset = offset;
   }
 
   public int depth() {

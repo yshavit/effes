@@ -112,7 +112,9 @@ public final class ExpressionCompiler {
       vars.add(var, name.getSymbol());
       return new Expression.VarExpression(name.getSymbol(), var);
     } else {
-      return new Expression.ArgExpression(name.getSymbol(), var);
+      return var.isArg()
+        ? new Expression.ArgExpression(name.getSymbol(), var)
+        : new Expression.VarExpression(name.getSymbol(), var);
     }
   }
 
