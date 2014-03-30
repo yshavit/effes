@@ -37,6 +37,6 @@ public final class EfVar {
 
   @Override
   public String toString() {
-    return name;
+    return String.format("%s (pos=%d)", name, argPosition);
   }
 }

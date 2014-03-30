@@ -1,4 +1,4 @@
 def foo -> Void:
-  t1 = True
+  t1 = Void
   t2 = t1
-  return Void
+  return t2
