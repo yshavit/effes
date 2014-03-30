@@ -43,6 +43,10 @@ public final class Scopes<T,D> {
     }
   }
 
+  public int countElems() {
+    return scopes.stream().mapToInt(Map::size).sum();
+  }
+
   public int depth() {
     return scopes.size();
   }
