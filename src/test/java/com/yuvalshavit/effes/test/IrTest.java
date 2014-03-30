@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.compile.irtest;
+package com.yuvalshavit.effes.test;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
