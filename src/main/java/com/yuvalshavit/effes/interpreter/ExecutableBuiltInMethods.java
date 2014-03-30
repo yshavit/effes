@@ -5,7 +5,7 @@ import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import java.io.PrintStream;
 
-public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<ExecutableElement> {
+public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<ExecutableMethod> {
   private final TypeRegistry typeRegistry;
   private final PrintStream out;
 
@@ -15,11 +15,25 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
   }
 
   @Override
-  public ExecutableElement print() {
-    return stack -> {
+  public ExecutableMethod print() {
+    return method(stack -> {
       out.println("Your argument was: " + stack.peekArg(0));
       stack.push(typeRegistry.getSimpleType("Void"));
       stack.popToRv();
+    });
+  }
+
+  private static ExecutableMethod method(ExecutableElement body) {
+    return new ExecutableMethod() {
+      @Override
+      public int nVars() {
+        return 0; // the body's code is Java and can just use normal Java vars
+      }
+
+      @Override
+      public void execute(CallStack stack) {
+        body.execute(stack);
+      }
     };
   }
 }
