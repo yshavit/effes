@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
-public final class IrCompiler { // TODO un-generic, and get rid of the builtins? Maybe?
+public final class IrCompiler {
 
   private final MethodsRegistry<Block> compiledMethods;
   private final CompileErrors errs;
@@ -16,12 +16,11 @@ public final class IrCompiler { // TODO un-generic, and get rid of the builtins?
                     CompileErrors errs)
   {
     this.errs = errs;
-    TypeRegistry typeRegistry = getTypeRegistry(source, errs, baseTypeRegistry);
+    TypeRegistry typeRegistry = getTypeRegistry(source, baseTypeRegistry);
     compiledMethods = compileToIntermediate(source, typeRegistry, builtinsRegistry, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
-                                              CompileErrors errs,
                                               TypeRegistry typeRegistry) {
     new TypesFinder(typeRegistry).accept(source);
     return typeRegistry;
