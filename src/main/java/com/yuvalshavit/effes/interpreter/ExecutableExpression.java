@@ -3,7 +3,6 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
-import com.yuvalshavit.effes.compile.StatementCompiler;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -72,24 +71,26 @@ public abstract class ExecutableExpression implements ExecutableElement {
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;
     private final Supplier<ExecutableElement> body;
+    private final int nVars;
 
     public MethodInvokeExpression(Expression.MethodInvoke source,
                                   List<ExecutableExpression> args,
-                                  Supplier<ExecutableElement> body) {
+                                  Supplier<ExecutableElement> body,
+                                  int nVars) {
       super(source);
       this.args = args;
       this.body = body;
+      this.nVars = nVars;
     }
 
     @Override
     public void execute(CallStack stack) {
-      invoke(body.get(), args, stack);
+      invoke(body.get(), args, stack, nVars);
     }
 
-    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack) {
+    public static void invoke(ExecutableElement body, List<ExecutableExpression> args, CallStack stack, int nVars) {
       stack.openFrame(args);
-      boolean pushLocal = StatementCompiler.sawOneAssignment.get();
-      if (pushLocal) {
+      for (; nVars > 0; --nVars) {
         stack.push(null); // var placeholder
       }
       body.execute(stack);
