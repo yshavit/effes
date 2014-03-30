@@ -1,12 +1,13 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public abstract class EfType {
 
@@ -57,15 +58,15 @@ public abstract class EfType {
   }
 
   public static final class DisjunctiveType extends EfType {
-    private final Collection<EfType> options;
+    private final SortedSet<EfType> options;
 
     public DisjunctiveType(Collection<EfType> options) {
       // flatten them out
-      Set<EfType> flattened = new HashSet<>(options.size());
+      SortedSet<EfType> optionsBuilder = new TreeSet<>(EfTypeComparator.instance);
       EfTypeDispatch dispatch = new EfTypeDispatch() {
         @Override
         public boolean accept(SimpleType type) {
-          return flattened.add(type);
+          return optionsBuilder.add(type);
         }
 
         @Override
@@ -76,11 +77,11 @@ public abstract class EfType {
 
         @Override
         public boolean accept(UnknownType type) {
-          return flattened.add(type);
+          return optionsBuilder.add(type);
         }
       };
       options.forEach(dispatch::accept);
-      this.options = ImmutableSet.copyOf(flattened);
+      this.options = optionsBuilder;
     }
 
     @Override
@@ -113,6 +114,21 @@ public abstract class EfType {
     public String toString() {
       return String.format("(%s)", Joiner.on(" | ").join(options));
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      DisjunctiveType that = (DisjunctiveType) o;
+      return options.equals(that.options);
+
+    }
+
+    @Override
+    public int hashCode() {
+      return options.hashCode();
+    }
   }
 
   private static abstract class EfTypeDispatch {
@@ -132,5 +148,69 @@ public abstract class EfType {
     public abstract boolean accept(SimpleType type);
     public abstract boolean accept(DisjunctiveType type);
     public abstract boolean accept(UnknownType type);
+  }
+
+  private static class EfTypeComparator implements Comparator<EfType> {
+    private static final Comparator<EfType> instance = new EfTypeComparator();
+    private enum TypeOrdinal {
+      NULL,
+      SIMPLE,
+      DISJUNCTIVE,
+      UNKNOWN
+    }
+    static final Dispatcher<?, EfType, TypeOrdinal> typeClassOrdinal
+      = Dispatcher.builder(Object.class, EfType.class, TypeOrdinal.class)
+      .put(SimpleType.class, (d, i) -> TypeOrdinal.SIMPLE)
+      .put(DisjunctiveType.class, (d, i) -> TypeOrdinal.DISJUNCTIVE)
+      .put(UnknownType.class, (d, i) -> TypeOrdinal.UNKNOWN)
+      .build();
+
+    @Override
+    public int compare(EfType o1, EfType o2) {
+      // First, compare type ordinals
+      TypeOrdinal o1Ordinal = typeOrdinal(o1);
+      TypeOrdinal o2Ordinal = typeOrdinal(o2);
+      int ordinalCmp = o1Ordinal.compareTo(o2Ordinal);
+      if (ordinalCmp != 0) {
+        return ordinalCmp;
+      }
+      switch (o1Ordinal) {
+      case NULL:
+      case UNKNOWN:
+        return 0; // null == null, UNKNOWN == UNKNOWN
+      case SIMPLE:
+        SimpleType s1 = (SimpleType) o1;
+        SimpleType s2 = (SimpleType) o2;
+        return s1.toString().compareTo(s2.toString());
+      case DISJUNCTIVE:
+        Iterator<EfType> d1Iter = ((DisjunctiveType) o1).options.iterator();
+        Iterator<EfType> d2Iter = ((DisjunctiveType) o2).options.iterator();
+        while (d1Iter.hasNext() && d2Iter.hasNext()) {
+          EfType e1 = d1Iter.next();
+          EfType e2 = d2Iter.next();
+          int cmp = compare(e1, e2);
+          if (cmp != 0) {
+            return cmp;
+          }
+        }
+        // all the elements were the same, so which is longer?
+        if (d1Iter.hasNext()) {
+          return -1; // d2 was longer, so d1 < d2
+        }
+        return d2Iter.hasNext()
+          ? 1 // d1 was longer
+          : 0;
+      default:
+        throw new AssertionError("unknown type ordinal: " + o1Ordinal);
+      }
+    }
+
+    private TypeOrdinal typeOrdinal(EfType o) {
+      if (o == null) {
+        return TypeOrdinal.NULL;
+      }
+      return typeClassOrdinal.apply(null, o);
+    }
+
   }
 }

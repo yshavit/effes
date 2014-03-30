@@ -1,4 +1,4 @@
 def foo () -> Void:
-ReturnStatement
-  CtorInvoke
-    type: Void
+  ReturnStatement
+    CtorInvoke
+      type: Void

@@ -1,12 +1,12 @@
-def not (bool (True | False)) -> (True | False):
-ReturnStatement
-  CaseExpression
-    case:
-      ArgExpression
-        pos: 0
-    of True:
-      CtorInvoke
-        type: False
-    of False:
-      CtorInvoke
-        type: True
+def not (bool (False | True)) -> (False | True):
+  ReturnStatement
+    CaseExpression
+      case:
+        ArgExpression
+          pos: 0
+      of True:
+        CtorInvoke
+          type: False
+      of False:
+        CtorInvoke
+          type: True

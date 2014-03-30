@@ -106,8 +106,10 @@ public final class IrTest {
     StringBuilder sb = new StringBuilder();
     NodeStateListener listener = new NodeStateToString(sb);
     methods.forEach((name, method) -> {
-      sb.append("def ").append(name).append(' ').append(method).append(":\n");
-      method.getBody().statements().forEach(listener::child);
+      if(!"main".equals(name)) {
+        sb.append("def ").append(name).append(' ').append(method).append(":\n");
+        method.getBody().statements().forEach(listener::child);
+      }
     });
     return sb.toString();
   }
@@ -154,7 +156,7 @@ public final class IrTest {
     }
 
     private StringBuilder indent() {
-      for (int i = 0; i < depth; ++i) {
+      for (int i = 0; i < depth + 1; ++i) {
         out.append("  ");
       }
       return out;
