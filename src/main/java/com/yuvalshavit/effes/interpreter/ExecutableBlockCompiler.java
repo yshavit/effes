@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class ExecutableBlockCompiler implements Function<Block, ExecutableBlock> {
+public final class ExecutableBlockCompiler implements Function<Block, ExecutableMethod> {
 
   private final ExecutableStatementCompiler statementCompiler;
 
@@ -15,8 +15,8 @@ public final class ExecutableBlockCompiler implements Function<Block, Executable
   }
 
   @Override
-  public ExecutableBlock apply(Block block) {
+  public ExecutableMethod apply(Block block) {
     List<ExecutableStatement> body = block.statements().stream().map(statementCompiler).collect(Collectors.toList());
-    return new ExecutableBlock(body);
+    return new ExecutableBlock(body, block.nVars());
   }
 }

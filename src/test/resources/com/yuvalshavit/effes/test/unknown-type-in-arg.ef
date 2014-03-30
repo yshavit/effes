@@ -1,1 +1,1 @@
-def foo Bar -> Baz: return Baz
+def foo Foo -> Void: return Void

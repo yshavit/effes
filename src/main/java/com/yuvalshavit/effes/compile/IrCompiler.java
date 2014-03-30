@@ -66,6 +66,7 @@ public final class IrCompiler<E> {
     MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {
       try (Scopes.ScopeCloser ignored = vars.pushScope()){
         List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
+        vars.setElemsCountOffset(asList.size());
         for (int pos = 0, len = asList.size(); pos < len; ++pos) {
           EfArgs.Arg arg = asList.get(pos);
           EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());

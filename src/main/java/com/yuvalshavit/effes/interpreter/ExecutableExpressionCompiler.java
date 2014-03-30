@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 public final class ExecutableExpressionCompiler implements Function<Expression, ExecutableExpression> {
 
-  private final Function<String, ExecutableElement> methods;
-  private final Function<String, ExecutableElement> builtInMethods;
+  private final Function<String, ExecutableMethod> methods;
+  private final Function<String, ExecutableMethod> builtInMethods;
 
-  public ExecutableExpressionCompiler(Function<String, ExecutableElement> methods,
-                                      Function<String, ExecutableElement> builtInMethods) {
+  public ExecutableExpressionCompiler(Function<String, ExecutableMethod> methods,
+                                      Function<String, ExecutableMethod> builtInMethods) {
     this.methods = methods;
     this.builtInMethods = builtInMethods;
   }
@@ -51,7 +51,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   public ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
     List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
-    Supplier<ExecutableElement> body = () -> expr.isBuiltIn()
+    Supplier<ExecutableMethod> body = () -> expr.isBuiltIn()
       ? builtInMethods.apply(expr.getMethodName())
       : methods.apply(expr.getMethodName());
     return new ExecutableExpression.MethodInvokeExpression(expr, args, body);

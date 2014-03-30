@@ -17,6 +17,17 @@ public final class Block {
   public List<Statement> statements() {
     return statements;
   }
+  
+  public int nVars() {
+    return statements
+      .stream()
+      .map(Statement::var)
+      .filter(v -> v != null)
+      .mapToInt(EfVar::getArgPosition)
+      .max()
+      .orElse(-1)
+      + 1;
+  }
 
   @Override
   public boolean equals(Object o) {
