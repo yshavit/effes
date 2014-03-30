@@ -54,8 +54,11 @@ public final class IrTest {
     String efFile = efPrefix + Resources.toString(urls.get(efFileName), Charsets.UTF_8);
     EffesParser parser = ParserUtils.createParser(efFile);
     CompileErrors errs = new CompileErrors();
-    TypeRegistry typeRegistry = new TypeRegistry(errs);
-    IrCompiler compiler = new IrCompiler(parser.compilationUnit(), typeRegistry, new MethodsRegistry<>(), errs);
+    IrCompiler compiler = new IrCompiler(
+      parser.compilationUnit(),
+      new TypeRegistry(errs),
+      new MethodsRegistry<>(),
+      errs);
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
     CompileErrors errors = compiler.getErrors();
 
