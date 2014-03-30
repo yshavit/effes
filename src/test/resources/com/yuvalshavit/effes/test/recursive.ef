@@ -1,0 +1,9 @@
+data type Two
+data type One
+data type Three
+
+def recurse (in: One | Two | Three) -> One:
+  return case in of
+    One: One
+    Two: recurse One
+    Three: recurse Two

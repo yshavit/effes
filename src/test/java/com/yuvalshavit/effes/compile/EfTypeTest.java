@@ -1,6 +1,5 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.collect.ImmutableList;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -18,7 +17,7 @@ public final class EfTypeTest {
 
   @Test
   public void simpleOrdering() {
-    EfType dis = disjunctive(simpleA, simpleB);
+    EfType dis = EfType.disjunction(simpleA, simpleB);
     List<EfType> unordered = Arrays.asList(simpleA, simpleB, simpleB, simpleC, UNKNOWN, UNKNOWN, null, null, dis);
     Collections.shuffle(unordered);
     Collections.sort(unordered, EfType.comparator);
@@ -29,8 +28,8 @@ public final class EfTypeTest {
 
   @Test
   public void disjunctivesSameUntilDifferentLengths() {
-    EfType d1 = disjunctive(simpleA, simpleB, simpleC);
-    EfType d2 = disjunctive(simpleA, simpleB);
+    EfType d1 = EfType.disjunction(simpleA, simpleB, simpleC);
+    EfType d2 = EfType.disjunction(simpleA, simpleB);
     assertEquals(cmp(d1, d2), 1);
     assertEquals(cmp(d2, d1), -1);
     assertEquals(cmp(d1, d1), 0);
@@ -39,8 +38,8 @@ public final class EfTypeTest {
 
   @Test
   public void disjunctivesDifferentWithDifferentLengths() {
-    EfType d1 = disjunctive(simpleA, simpleB, UNKNOWN);
-    EfType d2 = disjunctive(simpleA, simpleC);
+    EfType d1 = EfType.disjunction(simpleA, simpleB, UNKNOWN);
+    EfType d2 = EfType.disjunction(simpleA, simpleC);
     // if we only compared lengths, d2 would be first. But we compare by elements (in order) first, so d1 is first
     assertEquals(cmp(d1, d2), -1);
     assertEquals(cmp(d2, d1), 1);
@@ -54,21 +53,17 @@ public final class EfTypeTest {
     // That means there's no there's no recursion by the time we get to it here; d1 is (UNKNOWN | A | B ), not
     // (UNKNOWN | (A|B)).
     // This will change once we get conjunctive types.
-    EfType innerA = disjunctive(simpleA, simpleB);
-    EfType innerB = disjunctive(simpleA, simpleC);
+    EfType innerA = EfType.disjunction(simpleA, simpleB);
+    EfType innerB = EfType.disjunction(simpleA, simpleC);
 
     // innerA < innerB, so d1 < d2
-    EfType d1 = disjunctive(UNKNOWN, innerA);
-    EfType d2 = disjunctive(UNKNOWN, innerB);
+    EfType d1 = EfType.disjunction(UNKNOWN, innerA);
+    EfType d2 = EfType.disjunction(UNKNOWN, innerB);
 
     assertEquals(cmp(d1, d2), -1);
     assertEquals(cmp(d2, d1), 1);
     assertEquals(cmp(d1, d1), 0);
     assertEquals(cmp(d2, d2), 0);
-  }
-
-  private static EfType disjunctive(EfType... options) {
-    return new EfType.DisjunctiveType(ImmutableList.copyOf(options));
   }
 
   private static int cmp(EfType t1, EfType t2) {

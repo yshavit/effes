@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.Collection;
@@ -58,10 +59,24 @@ public abstract class EfType {
     }
   }
 
+  public static EfType disjunction(EfType t1, EfType... rest) {
+    return disjunction(ImmutableList.<EfType>builder().add(t1).add(rest).build());
+  }
+
+  public static EfType disjunction(Collection<? extends EfType> options) {
+    if (options.isEmpty()) {
+      throw new IllegalArgumentException("can't disjoin an empty set");
+    }
+    DisjunctiveType d = new DisjunctiveType(options);
+    return d.options.size() == 1
+      ? d.options.first()
+      : d;
+  }
+
   public static final class DisjunctiveType extends EfType {
     private final SortedSet<EfType> options;
 
-    public DisjunctiveType(Collection<EfType> options) {
+    private DisjunctiveType(Collection<? extends EfType> options) {
       // flatten them out
       SortedSet<EfType> optionsBuilder = new TreeSet<>(comparator);
       EfTypeDispatch dispatch = new EfTypeDispatch() {
