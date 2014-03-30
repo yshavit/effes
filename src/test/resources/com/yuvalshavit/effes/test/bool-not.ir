@@ -1,4 +1,4 @@
-def not (bool (False | True)) -> (False | True):
+def not (bool: False | True) -> False | True:
   ReturnStatement
     CaseExpression
       case:

@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,7 +33,9 @@ public final class EfArgs {
 
   @Override
   public String toString() {
-    return Joiner.on(", ").join(args);
+    return args.isEmpty()
+      ? "()"
+      : Joiner.on(' ').join(args.stream().map(a -> "(" + a + ")").iterator());
   }
 
   public static class Arg {
@@ -55,7 +58,7 @@ public final class EfArgs {
     @Override
     public String toString() {
       return name != null
-        ? name + ' ' + type
+        ? name + ": " + type
         : String.valueOf(type);
     }
   }
