@@ -1,3 +1,4 @@
+-- start prefix
 data type Void
 data type True
 data type False

@@ -71,7 +71,7 @@ public final class EndToEndTest {
   }
 
   private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
-    String efFile = efPrefix + Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8);
+    String efFile = Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8) + "\n\n" + efPrefix;
     EffesParser parser = ParserUtils.createParser(efFile);
     return parser.compilationUnit();
   }

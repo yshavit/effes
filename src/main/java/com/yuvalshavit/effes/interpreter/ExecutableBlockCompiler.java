@@ -17,8 +17,6 @@ public final class ExecutableBlockCompiler implements Function<Block, Executable
   @Override
   public ExecutableMethod apply(Block block) {
     List<ExecutableStatement> body = block.statements().stream().map(statementCompiler).collect(Collectors.toList());
-    Integer nVars = "".isEmpty() ? null : 1; // NPE yo!
-    assert nVars != null;
-    return new ExecutableBlock(body, nVars);
+    return new ExecutableBlock(body, block.nVars());
   }
 }
