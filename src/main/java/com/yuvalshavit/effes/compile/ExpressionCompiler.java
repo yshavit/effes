@@ -162,6 +162,7 @@ public final class ExpressionCompiler {
   }
 
   private CaseMatcher unknownMatcher(EffesParser.CaseMatcherContext ctx) {
+    // I can't figure out how to actually get here!
     errs.add(ctx.getStart(), "unrecognized case pattern");
     return CaseMatcher.ErrorMatch.instance;
   }
