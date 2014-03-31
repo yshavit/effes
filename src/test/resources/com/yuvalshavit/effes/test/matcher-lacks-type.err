@@ -1,0 +1,6 @@
+parse error (at line 2, column 19: :)
+parse error (at line 4, column 5: :)
+parse error (at line 6, column 16: newline)
+pattern type (Void) can never match expression type (False | True) (at line 2, column 15: a)
+expression alternative is never matched: False (at line 2, column 15: a)
+expected result type Void but found <unknown type> | Void (at line 2, column 10: case)
