@@ -97,7 +97,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
   public static class ArgReadExpression extends ExecutableExpression {
     private final int pos;
-    public ArgReadExpression(Expression.ArgExpression source) {
+    public ArgReadExpression(Expression.VarExpression source) {
       super(source);
       this.pos = source.pos();
     }

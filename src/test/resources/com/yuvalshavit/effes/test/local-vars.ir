@@ -8,7 +8,7 @@ def foo (True) -> True:
     var: t2 (pos=1)
     val:
       VarExpression
-        name: t1
+        var: t1
         pos: 0
   MethodInvoke
     method:
@@ -16,9 +16,9 @@ def foo (True) -> True:
         method: print [built-in]
         arg0:
           VarExpression
-            name: t2
+            var: t2
             pos: 1
   ReturnStatement
     VarExpression
-      name: t2
+      var: t2
       pos: 1

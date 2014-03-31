@@ -2,7 +2,8 @@ def not (bool: False | True) -> False | True:
   ReturnStatement
     CaseExpression
       case:
-        ArgExpression
+        VarExpression
+          arg: bool
           pos: 0
       of True:
         CtorInvoke

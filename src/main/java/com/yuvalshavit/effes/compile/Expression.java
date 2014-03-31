@@ -214,42 +214,16 @@ public abstract class Expression extends Node {
     }
   }
 
-  public static class ArgExpression extends Expression {
-    private final int pos;
-
-    public ArgExpression(Token token, EfVar var) {
-      super(token, var.getType());
-      this.pos = var.getArgPosition();
-    }
-
-    @Override
-    public void validate(CompileErrors errs) {
-      // nothing to do
-    }
-
-    @Override
-    public void state(NodeStateListener out) {
-      out.scalar("pos", pos);
-    }
-
-    public int pos() {
-      return pos;
-    }
-
-    @Override
-    public String toString() {
-      return "arg$" + pos;
-    }
-  }
-
   public static class VarExpression extends Expression {
     private final String name;
     private final int pos;
+    private final boolean isArg;
 
     public VarExpression(Token token, EfVar var) {
       super(token, var.getType());
       this.name = var.getName();
       this.pos = var.getArgPosition();
+      this.isArg = var.isArg();
     }
 
     @Override
@@ -259,12 +233,19 @@ public abstract class Expression extends Node {
 
     @Override
     public void state(NodeStateListener out) {
-      out.scalar("name", name);
+      String label = isArg
+        ? "arg"
+        : "var";
+      out.scalar(label, name);
       out.scalar("pos", pos);
     }
 
     public int pos() {
       return pos;
+    }
+
+    public boolean isArg() {
+      return isArg;
     }
 
     @Override
