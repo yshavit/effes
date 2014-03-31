@@ -2,7 +2,8 @@ def recurse (in: One | Three | True | Two) -> True:
   ReturnStatement
     CaseExpression
       case:
-        ArgExpression
+        VarExpression
+          arg: in
           pos: 0
       of True:
         CtorInvoke
