@@ -58,10 +58,13 @@ methodReturnDeclr: ARROW type
 
 // data type declr
 
-dataTypeDeclr: DATA TYPE
-               TYPE_NAME
-               NL
-             ;
+dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr? NL;
+
+dataTypeArgsDeclr: OPEN_PAREN
+                   dataTypeArgDeclr (COMMA dataTypeArgDeclr)+
+                   CLOSE_PAREN;
+
+dataTypeArgDeclr: VAR_NAME COLON type;
 
 // generics and types
 
@@ -89,7 +92,7 @@ exprLine: expr NL                                                               
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | VAR_NAME                                                                  # VarExpr
     | methodInvoke                                                              # MethodInvokeExpr
-    | TYPE_NAME                                                                 # CtorInvoke
+    | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN )?                  # CtorInvoke
     ;
 
 methodInvoke: methodName methodInvokeArgs;
