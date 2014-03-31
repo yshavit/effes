@@ -30,7 +30,7 @@ public class Dispatcher<D,I,O> implements BiFunction<D, I, O> {
 
   @Override
   public O apply(D dispatch, I input) {
-    @SuppressWarnings("SuspiciousMethodCalls")
+    @SuppressWarnings("SuspiciousMethodCalls") // to dispatches.get, due to erasure
     BiFunction<? super D, I, ? extends O> dispatchFunc = dispatches.get(input.getClass());
     if (dispatchFunc == null) {
       throw new IllegalArgumentException("no dispatch function for " + input.getClass());
@@ -38,7 +38,9 @@ public class Dispatcher<D,I,O> implements BiFunction<D, I, O> {
     return dispatchFunc.apply(dispatch, input);
   }
 
-  public static <D, I, O> Builder<D, I, O> builder(Class<D> dispatchClass, Class<I> baseClass, Class<O> resultClass) {
+  public static <D, I, O> Builder<D, I, O> builder(@SuppressWarnings("unused") Class<D> dispatchClass,
+                                                   Class<I> baseClass,
+                                                   @SuppressWarnings("unused") Class<O> resultClass) {
     return new Builder<>(baseClass);
   }
 
