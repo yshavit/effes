@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -59,15 +60,35 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
+    private List<EfVar> args;
 
     public SimpleType(String name) {
       assert name != null;
       this.name = name;
     }
 
+    public void setArgs(List<EfVar> args) {
+      if (args == null) {
+        throw new IllegalStateException("args already set" + this.args);
+      }
+      for (int pos = 0; pos < args.size(); ++pos) {
+        if (pos != args.get(pos).getArgPosition()) {
+          throw new IllegalArgumentException("invalid args list: " + args);
+        }
+      }
+      this.args = ImmutableList.copyOf(args);
+    }
+
     @Override
     public String toString() {
-      return name;
+      StringBuilder sb = new StringBuilder(name);
+      if (args!= null && !args.isEmpty()) {
+        sb.append('(');
+        Iterator<String> descs = args.stream().map(v -> String.format("%s: %s", v.getName(), v.getType())).iterator();
+        Joiner.on(", ").appendTo(sb, descs);
+        sb.append(')');
+      }
+      return sb.toString();
     }
 
     @Override
@@ -88,6 +109,7 @@ public abstract class EfType {
     public int hashCode() {
       return name.hashCode();
     }
+
   }
 
   public static EfType disjunction(EfType t1, EfType... rest) {
