@@ -140,7 +140,9 @@ public final class ExpressionCompiler {
 
   private Expression.CaseExpression.CasePattern casePattern(EffesParser.CaseExprPatternContext ctx) {
     CaseMatcher caseMatcher = caseMatchDispatcher.apply(this, ctx.caseMatcher());
-    Expression ifMatches = apply(ctx.exprBlock().expr());
+    Expression ifMatches = ctx.exprBlock() != null
+      ? apply(ctx.exprBlock().expr())
+      : new Expression.UnrecognizedExpression(ctx.getStart());
     return new Expression.CaseExpression.CasePattern(caseMatcher, ifMatches);
   }
 
