@@ -151,6 +151,11 @@ public final class ExpressionCompiler {
 
   private CaseMatcher simpleCtorMatcher(EffesParser.SimpleCtorMatchContext ctx) {
     EfType.SimpleType type = typeRegistry.getSimpleType(ctx.TYPE_NAME().getText());
+    if (type == null) {
+      TerminalNode tok = ctx.TYPE_NAME();
+      errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
+      return CaseMatcher.ErrorMatch.instance;
+    }
     return new CaseMatcher.SimpleCtorMatch(type);
   }
 

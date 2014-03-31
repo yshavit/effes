@@ -1,0 +1,4 @@
+def foo (a: True | False) -> Void:
+  return case unknown of
+    True: Void
+    False: Void
