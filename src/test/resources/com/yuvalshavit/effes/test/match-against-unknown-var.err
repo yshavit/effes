@@ -1,0 +1,2 @@
+unrecognized variable 'unknown' (at line 2, column 15: unknown)
+case requires a disjunctive type (found <unknown type>) (at line 2, column 10: case)
