@@ -17,14 +17,15 @@ public final class IrCompiler<E> {
                     CompileErrors errs)
   {
     this.errs = errs;
-    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs));
+    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), errs);
     builtInMethods = builtinsRegistryF.apply(typeRegistry);
     compiledMethods = compileToIntermediate(source, typeRegistry, builtInMethods, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
-                                              TypeRegistry typeRegistry) {
-    new TypesFinder(typeRegistry).accept(source);
+                                              TypeRegistry typeRegistry,
+                                              CompileErrors errs) {
+    new TypesFinder(typeRegistry, errs).accept(source);
     return typeRegistry;
   }
 

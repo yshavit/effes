@@ -17,7 +17,7 @@ public final class TypesFinderTest {
       "data type True",
       "data type False");
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry).accept(parser.compilationUnit());
+    new TypesFinder(registry, null).accept(parser.compilationUnit());
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
   }
 
@@ -29,7 +29,7 @@ public final class TypesFinderTest {
     );
     TUtils.expectErrors(errs -> {
       TypeRegistry registry = new TypeRegistry(errs);
-      new TypesFinder(registry).accept(parser.compilationUnit());
+      new TypesFinder(registry, null).accept(parser.compilationUnit());
     });
   }
 }
