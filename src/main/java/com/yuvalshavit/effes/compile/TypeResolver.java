@@ -28,7 +28,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     = Dispatcher.builder(TypeResolver.class, EffesParser.TypeContext.class, EfType.class)
     .put(EffesParser.SimpleTypeContext.class, TypeResolver::lookupSimpleType)
     .put(EffesParser.DisunctiveTypeContext.class, TypeResolver::createDisjunctiveType)
-    .build();
+    .build((me, t) -> EfType.UNKNOWN);
 
   private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
     List<EfType> options = ctx.type().stream().map(this::apply).collect(Collectors.toList());

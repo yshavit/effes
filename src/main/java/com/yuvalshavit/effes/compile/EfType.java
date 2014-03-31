@@ -188,7 +188,7 @@ public abstract class EfType {
       .put(SimpleType.class, EfTypeDispatch::accept)
       .put(DisjunctiveType.class, EfTypeDispatch::accept)
       .put(UnknownType.class, EfTypeDispatch::accept)
-      .build();
+      .build((me, t) -> { throw new AssertionError(t); });
 
     public boolean accept(EfType type) {
       return type != null
@@ -213,7 +213,7 @@ public abstract class EfType {
       .put(SimpleType.class, (d, i) -> TypeOrdinal.SIMPLE)
       .put(DisjunctiveType.class, (d, i) -> TypeOrdinal.DISJUNCTIVE)
       .put(UnknownType.class, (d, i) -> TypeOrdinal.UNKNOWN)
-      .build();
+      .build((me, t) -> {throw new AssertionError(t); });
 
     @Override
     public int compare(EfType o1, EfType o2) {

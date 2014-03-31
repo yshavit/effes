@@ -26,8 +26,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       .put(EffesParser.AssignStatContext.class, StatementCompiler::assignStatement)
       .put(EffesParser.MethodInvokeStatContext.class, StatementCompiler::methodInvoke)
       .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
-      .setErrHandler(StatementCompiler::error)
-      .build();
+      .build(StatementCompiler::error);
 
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
     Expression value = expressionCompiler.apply(ctx.exprLine());

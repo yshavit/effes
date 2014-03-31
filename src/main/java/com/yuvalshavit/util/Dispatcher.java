@@ -44,7 +44,6 @@ public class Dispatcher<D,I,O> implements BiFunction<D, I, O> {
 
   public static class Builder<D, I, O> {
     private final Class<I> baseClass;
-    private BiFunction<? super D, I, ? extends O> errHandler = null;
 
     private Builder(Class<I> baseClass) {
       this.baseClass = Preconditions.checkNotNull(baseClass);
@@ -64,19 +63,8 @@ public class Dispatcher<D,I,O> implements BiFunction<D, I, O> {
       return this;
     }
 
-    public Builder<D, I, O> setErrHandler(BiFunction<? super D, I, ? extends O> errHandler) {
-      if (this.errHandler != null) {
-        throw new IllegalStateException("error handler already set");
-      }
-      this.errHandler = errHandler;
-      return this;
-    }
-
-    public Dispatcher<D, I, O> build() {
-
-      BiFunction<? super D, I, ? extends O> errHandler = this.errHandler != null
-        ? this.errHandler
-        : (d, i) -> { throw new IllegalArgumentException(String.valueOf(i)); };
+    public Dispatcher<D, I, O> build(BiFunction<? super D, I, ? extends O> errHandler) {
+      Preconditions.checkNotNull(errHandler, "err handler may not be null");
       return new Dispatcher<>(baseClass, dispatches, errHandler);
     }
   }
