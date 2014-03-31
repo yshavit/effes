@@ -24,6 +24,7 @@ public final class ExecutableStatementCompiler implements Function<Statement, Ex
       .put(Statement.AssignStatement.class, ExecutableStatementCompiler::assignStatement)
       .put(Statement.MethodInvoke.class, ExecutableStatementCompiler::methodInvoke)
       .put(Statement.ReturnStatement.class, ExecutableStatementCompiler::returnStat)
+      .put(Statement.UnrecognizedStatement.class, (me, s) -> { throw new AssertionError(s); })
       .build((c, s) -> {throw new AssertionError(s);});
 
   private ExecutableStatement assignStatement(Statement.AssignStatement stat) {
