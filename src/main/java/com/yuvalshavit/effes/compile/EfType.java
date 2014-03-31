@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,28 +68,40 @@ public abstract class EfType {
       this.name = name;
     }
 
+    @Nonnull
+    public List<EfVar> getArgs() {
+      return args != null
+        ? args
+        : ImmutableList.of();
+    }
+
     public void setArgs(List<EfVar> args) {
       if (args == null) {
         throw new IllegalStateException("args already set" + this.args);
       }
       for (int pos = 0; pos < args.size(); ++pos) {
-        if (pos != args.get(pos).getArgPosition()) {
+        EfVar arg = args.get(pos);
+        if (pos != arg.getArgPosition() || !arg.isArg()) {
           throw new IllegalArgumentException("invalid args list: " + args);
         }
       }
       this.args = ImmutableList.copyOf(args);
     }
 
+    /**
+     * Returns just the simple type's name &mdash; not its args.
+     *
+     * Printing the args has some problems. If the type's args are somewhat complex, this recursion would get
+     * unwieldy: Foo(hello: World(solarSystem: Star(name: String))), for instance. In the extreme case, for recursive
+     * types we'd have an infinitely long string: Cons(head: E, tail: Empty | Cons(head: E, tail : Empty | Cons...)).
+     *
+     * So we can't print out the arg's types. What about just the names? "Cons(head, tail)" for instance. That'd be
+     * okay, but the half-loaf approach isn't very compelling. Instead, if someone wants to write custom code to print
+     * out something reasonable for a given context, they can (for instance, recursing only one level down).
+     */
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder(name);
-      if (args!= null && !args.isEmpty()) {
-        sb.append('(');
-        Iterator<String> descs = args.stream().map(v -> String.format("%s: %s", v.getName(), v.getType())).iterator();
-        Joiner.on(", ").appendTo(sb, descs);
-        sb.append(')');
-      }
-      return sb.toString();
+      return name;
     }
 
     @Override
