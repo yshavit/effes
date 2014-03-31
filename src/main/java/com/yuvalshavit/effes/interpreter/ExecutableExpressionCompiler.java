@@ -27,7 +27,6 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private static final Dispatcher<ExecutableExpressionCompiler, Expression, ExecutableExpression> dispatcher =
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
-      .put(Expression.ArgExpression.class, ExecutableExpressionCompiler::argExpr)
       .put(Expression.CaseExpression.class, ExecutableExpressionCompiler::caseExpr)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
@@ -63,10 +62,6 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private ExecutableExpression varExpr(Expression.VarExpression var) {
     return new ExecutableExpression.VarReadExpression(var);
-  }
-
-  private ExecutableExpression argExpr(Expression.ArgExpression arg) {
-    return new ExecutableExpression.ArgReadExpression(arg);
   }
 
   private static final Dispatcher<ExecutableExpressionCompiler, CaseMatcher, ExecutableExpression.PatternMatch>

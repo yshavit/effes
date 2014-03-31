@@ -95,30 +95,23 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
-  public static class ArgReadExpression extends ExecutableExpression {
-    private final int pos;
-    public ArgReadExpression(Expression.ArgExpression source) {
-      super(source);
-      this.pos = source.pos();
-    }
-
-    @Override
-    public void execute(CallStack stack) {
-      stack.pushArgToStack(pos);
-    }
-  }
-
   public static class VarReadExpression extends ExecutableExpression {
     private final int pos;
+    private final boolean isArg;
 
     public VarReadExpression(Expression.VarExpression source) {
       super(source);
       this.pos = source.pos();
+      this.isArg = source.isArg();
     }
 
     @Override
     public void execute(CallStack stack) {
-      stack.pushLocalToStack(pos);
+      if (isArg) {
+        stack.pushArgToStack(pos);
+      } else {
+        stack.pushLocalToStack(pos);
+      }
     }
   }
 
