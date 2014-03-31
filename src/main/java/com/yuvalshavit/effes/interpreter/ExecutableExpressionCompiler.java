@@ -73,6 +73,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     caseMatcherDispatch =
     Dispatcher.builder(ExecutableExpressionCompiler.class, CaseMatcher.class, ExecutableExpression.PatternMatch.class)
       .put(CaseMatcher.SimpleCtorMatch.class, ExecutableExpressionCompiler::simpleCtorMatch)
+      .put(CaseMatcher.ErrorMatch.class, (me, c) -> { throw new AssertionError(c); })
       .build((me, c) -> { throw new AssertionError(c); });
 
   private ExecutableExpression.PatternMatch simpleCtorMatch(CaseMatcher.SimpleCtorMatch matcher) {
