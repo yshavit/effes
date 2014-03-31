@@ -61,9 +61,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   }
 
   private ExecutableExpression varExpr(Expression.VarExpression var) {
-    return var.isArg()
-      ? new ExecutableExpression.ArgReadExpression(var)
-      : new ExecutableExpression.VarReadExpression(var);
+    return new ExecutableExpression.VarReadExpression(var);
   }
 
   private static final Dispatcher<ExecutableExpressionCompiler, CaseMatcher, ExecutableExpression.PatternMatch>
