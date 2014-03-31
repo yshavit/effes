@@ -1,9 +1,0 @@
-data type True
-data type False
-data type Void
-
-def not False -> True: return True
-
-def main -> Void:
-  print not False
-  return Void
