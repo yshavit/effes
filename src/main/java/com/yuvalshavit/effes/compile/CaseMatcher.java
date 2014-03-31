@@ -21,4 +21,15 @@ public abstract class CaseMatcher {
       return type.toString();
     }
   }
+
+  public static class ErrorMatch extends CaseMatcher {
+    public static final CaseMatcher instance = new ErrorMatch();
+
+    private ErrorMatch() {}
+
+    @Override
+    public EfType getType() {
+      return EfType.UNKNOWN;
+    }
+  }
 }

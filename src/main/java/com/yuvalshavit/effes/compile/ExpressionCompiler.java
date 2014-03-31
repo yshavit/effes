@@ -42,8 +42,7 @@ public final class ExpressionCompiler {
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
       .put(EffesParser.VarExprContext.class, ExpressionCompiler::varExpr)
-      .setErrHandler(ExpressionCompiler::error)
-      .build();
+      .build(ExpressionCompiler::error);
 
   private Expression error(EffesParser.ExprContext ctx) {
     errs.add(ctx.getStart(), "unrecognized expression");
@@ -122,7 +121,7 @@ public final class ExpressionCompiler {
     = Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprLineContext.class, Expression.class)
     .put(EffesParser.SingleLineExpressionContext.class, ExpressionCompiler::singleLine)
     .put(EffesParser.CaseExpressionContext.class, ExpressionCompiler::caseExpression)
-    .build();
+    .build(ExpressionCompiler::exprLineErr);
 
   private Expression singleLine(EffesParser.SingleLineExpressionContext ctx) {
     return apply(ctx.expr());
@@ -135,6 +134,10 @@ public final class ExpressionCompiler {
     return new Expression.CaseExpression(ctx.getStart(), matchAgainst, patterns);
   }
 
+  private Expression exprLineErr(EffesParser.ExprLineContext ctx) {
+    return new Expression.UnrecognizedExpression(ctx.getStart());
+  }
+
   private Expression.CaseExpression.CasePattern casePattern(EffesParser.CaseExprPatternContext ctx) {
     CaseMatcher caseMatcher = caseMatchDispatcher.apply(this, ctx.caseMatcher());
     Expression ifMatches = apply(ctx.exprBlock().expr());
@@ -144,10 +147,15 @@ public final class ExpressionCompiler {
   private static final Dispatcher<ExpressionCompiler, EffesParser.CaseMatcherContext, CaseMatcher> caseMatchDispatcher =
     Dispatcher.builder(ExpressionCompiler.class, EffesParser.CaseMatcherContext.class, CaseMatcher.class)
       .put(EffesParser.SimpleCtorMatchContext.class, ExpressionCompiler::simpleCtorMatcher)
-      .build();
+      .build(ExpressionCompiler::unknownMatcher);
 
   private CaseMatcher simpleCtorMatcher(EffesParser.SimpleCtorMatchContext ctx) {
     EfType.SimpleType type = typeRegistry.getSimpleType(ctx.TYPE_NAME().getText());
     return new CaseMatcher.SimpleCtorMatch(type);
+  }
+
+  private CaseMatcher unknownMatcher(EffesParser.CaseMatcherContext ctx) {
+    errs.add(ctx.getStart(), "unrecognized case pattern");
+    return CaseMatcher.ErrorMatch.instance;
   }
 }

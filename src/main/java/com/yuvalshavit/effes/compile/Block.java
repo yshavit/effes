@@ -72,7 +72,7 @@ public final class Block {
         .put(Statement.MethodInvoke.class, ValidationDispatch::noReturn)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
         .put(Statement.UnrecognizedStatement.class, ValidationDispatch::noReturn)
-        .build();
+        .build(ValidationDispatch::noReturn);
 
     public EfType returnStat(Statement.ReturnStatement stat) {
       return stat.getExpression().resultType();

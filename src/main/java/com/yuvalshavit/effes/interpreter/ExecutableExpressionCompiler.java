@@ -33,7 +33,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
       .put(Expression.VarExpression.class, ExecutableExpressionCompiler::varExpr)
       .put(Expression.UnrecognizedExpression.class, ExecutableExpressionCompiler::unrecognizedExpr)
-      .build();
+      .build((me, e) -> {throw new AssertionError(e); });
 
   private ExecutableExpression caseExpr(Expression.CaseExpression expr) {
     ExecutableExpression matchAgainst = apply(expr.getMatchAgainst());
@@ -73,7 +73,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     caseMatcherDispatch =
     Dispatcher.builder(ExecutableExpressionCompiler.class, CaseMatcher.class, ExecutableExpression.PatternMatch.class)
       .put(CaseMatcher.SimpleCtorMatch.class, ExecutableExpressionCompiler::simpleCtorMatch)
-    .build();
+      .build((me, c) -> { throw new AssertionError(c); });
 
   private ExecutableExpression.PatternMatch simpleCtorMatch(CaseMatcher.SimpleCtorMatch matcher) {
     return s -> matcher.getType().equals(s.peek());
