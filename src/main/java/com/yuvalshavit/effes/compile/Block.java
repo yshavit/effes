@@ -47,6 +47,7 @@ public final class Block {
     EfType lastBranchReturned = null;
     Token lastToken = null;
     for (Statement s : statements) {
+      s.validate(errs);
       if (lastBranchReturned != null) {
         errs.add(s.token(), "unreachable statement: " + s);
       }
@@ -70,6 +71,7 @@ public final class Block {
         .put(Statement.AssignStatement.class, ValidationDispatch::noReturn)
         .put(Statement.MethodInvoke.class, ValidationDispatch::noReturn)
         .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
+        .put(Statement.UnrecognizedStatement.class, ValidationDispatch::noReturn)
         .build();
 
     public EfType returnStat(Statement.ReturnStatement stat) {

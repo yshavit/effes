@@ -5,8 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -14,6 +16,11 @@ public abstract class EfType {
 
   public static final EfType UNKNOWN = new UnknownType();
   public static final Comparator<EfType> comparator = new EfTypeComparator();
+
+  @Override
+  public abstract boolean equals(Object obj);
+  @Override
+  public abstract int hashCode();
 
   private EfType() {}
 
@@ -38,6 +45,16 @@ public abstract class EfType {
     public String toString() {
       return "<unknown type>";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this; // assume singleton
+    }
+
+    @Override
+    public int hashCode() {
+      return 37;
+    }
   }
 
   public static final class SimpleType extends EfType {
@@ -56,6 +73,20 @@ public abstract class EfType {
     @Override
     public boolean contains(EfType other) {
       return equals(other);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      SimpleType that = (SimpleType) o;
+      return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+      return name.hashCode();
     }
   }
 
@@ -98,6 +129,10 @@ public abstract class EfType {
       };
       options.forEach(dispatch::accept);
       this.options = optionsBuilder;
+    }
+
+    public Set<EfType> getAlternatives() {
+      return Collections.unmodifiableSet(options);
     }
 
     @Override
