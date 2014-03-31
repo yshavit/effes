@@ -2,10 +2,13 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class Expression extends Node {
   private final EfType type;
@@ -68,7 +71,28 @@ public abstract class Expression extends Node {
       // 1) each matcher *can* match the given expression
       // 2) at least one matcher *will* match the given expression
       // 3) each matcher is reachable (ie, the ones before it may not match)
-      throw new UnsupportedOperationException(); // TODO
+      matchAgainst.validate(errs);
+
+      EfType matchType = matchAgainst.resultType();
+      if (matchType instanceof EfType.DisjunctiveType) {
+        EfType.DisjunctiveType dis = (EfType.DisjunctiveType) matchType;
+        Set<EfType> matchAgainstTypes = dis.getAlternatives();
+        Set<EfType> patternTypes = patterns
+          .stream()
+          .map(CasePattern::getMatcher)
+          .map(CaseMatcher::getType)
+          .collect(Collectors.toSet());
+        // extra types
+        Sets.difference(patternTypes, matchAgainstTypes).forEach(t -> errs.add(
+          matchAgainst.token(),
+          String.format("pattern type (%s) can never match expression type (%s)", t, matchType)));
+        // missing types
+        Sets.difference(matchAgainstTypes, patternTypes).forEach(t -> errs.add(
+          matchAgainst.token(),
+          "expression alternative is never matched: " + t));
+      } else {
+        errs.add(token(), "case requires a disjunctive type (found " + matchType + ")");
+      }
     }
 
     @Override

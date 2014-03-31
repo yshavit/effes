@@ -107,4 +107,26 @@ public abstract class Statement extends Node {
       return methodExpr.toString();
     }
   }
+
+  public static class UnrecognizedStatement extends Statement {
+
+    public UnrecognizedStatement(Token token) {
+      super(token);
+    }
+
+    @Override
+    public String toString() {
+      return "<unrecognized statement>";
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      errs.add(token(), "unrecognized statement");
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      throw new UnsupportedOperationException(); // TODO
+    }
+  }
 }

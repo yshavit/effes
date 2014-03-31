@@ -26,6 +26,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       .put(EffesParser.AssignStatContext.class, StatementCompiler::assignStatement)
       .put(EffesParser.MethodInvokeStatContext.class, StatementCompiler::methodInvoke)
       .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
+      .setErrHandler(StatementCompiler::error)
       .build();
 
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
@@ -43,5 +44,9 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {
     Expression expr = expressionCompiler.apply(ctx.exprLine());
     return new Statement.ReturnStatement(ctx.exprLine().getStart(), expr);
+  }
+
+  private Statement error(EffesParser.StatContext ctx) {
+    return new Statement.UnrecognizedStatement(ctx.getStart());
   }
 }
