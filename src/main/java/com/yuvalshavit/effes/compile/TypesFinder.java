@@ -55,7 +55,7 @@ public final class TypesFinder implements Consumer<EffesParser.CompilationUnitCo
     public void enterDataTypeArgDeclr(@NotNull EffesParser.DataTypeArgDeclrContext ctx) {
       String argName = ctx.VAR_NAME().getText();
       EfType argType = resolver.apply(ctx.type());
-      EfVar arg = EfVar.var(argName, argsBuilder.size(), argType);
+      EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);
     }
   }
