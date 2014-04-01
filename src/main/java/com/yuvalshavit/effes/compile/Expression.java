@@ -79,7 +79,7 @@ public abstract class Expression extends Node {
         Set<EfType> matchAgainstTypes = dis.getAlternatives();
         Set<EfType> patternTypes = patterns
           .stream()
-          .map(CasePattern::getMatcher)
+          .map(CasePattern::getType)
           .collect(Collectors.toSet());
         // extra types
         Sets.difference(patternTypes, matchAgainstTypes).forEach(t -> errs.add(
@@ -97,7 +97,7 @@ public abstract class Expression extends Node {
     @Override
     public void state(NodeStateListener out) {
       out.child("case", matchAgainst);
-      patterns.forEach(p -> out.child("of " + p.getMatcher(), p.getIfMatchedExpression()));
+      patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatchedExpression()));
     }
 
     @Override
@@ -117,11 +117,11 @@ public abstract class Expression extends Node {
     }
 
     public static class CasePattern {
-      private final EfType.SimpleType matcher;
+      private final EfType.SimpleType type;
       private final Expression ifMatched;
 
-      public CasePattern(EfType.SimpleType matcher, Expression ifMatched) {
-        this.matcher = matcher;
+      public CasePattern(EfType.SimpleType type, Expression ifMatched) {
+        this.type = type;
         this.ifMatched = ifMatched;
       }
 
@@ -129,8 +129,8 @@ public abstract class Expression extends Node {
         return ifMatched;
       }
 
-      public EfType.SimpleType getMatcher() {
-        return matcher;
+      public EfType.SimpleType getType() {
+        return type;
       }
     }
   }
