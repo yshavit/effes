@@ -101,7 +101,9 @@ methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
 caseExprs: INDENT caseAlternative+ DEDENT;
 
-caseAlternative: TYPE_NAME COLON exprBlock;
+caseAlternative: casePattern COLON exprBlock;
+
+casePattern: TYPE_NAME;
 
 exprBlock: expr NL;
 
