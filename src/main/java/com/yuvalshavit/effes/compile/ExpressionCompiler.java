@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -146,9 +147,25 @@ public final class ExpressionCompiler {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
+    // TODO intellij doesn't like the binding, how about javac?
+    List<TerminalNode> bindingTokens = ctx.casePattern().VARNAME();
+    List<EfVar> matchtypeArgs = matchType.getArgs();
+    vars.pushScope();
+    List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
+    for (int i = 0; i < bindingTokens.size(); ++i) {
+      TerminalNode bindingToken = bindingTokens.get(i);
+      String bindingName = bindingToken.getText();
+      EfType bindingType = i < matchtypeArgs.size()
+        ? matchtypeArgs.get(i).getType()
+        : EfType.UNKNOWN;
+      EfVar binding = EfVar.arg(bindingName, vars.countElems(), bindingType);
+      vars.add(binding, bindingToken.getSymbol());
+      bindingArgs.add(binding);
+    }
     Expression ifMatches = ctx.exprBlock() != null
       ? apply(ctx.exprBlock().expr())
       : new Expression.UnrecognizedExpression(ctx.getStart());
-    return new Expression.CaseExpression.CaseAlternative(matchType, ifMatches);
+    vars.popScope();
+    return new Expression.CaseExpression.CaseAlternative(matchType, bindingArgs, ifMatches);
   }
 }

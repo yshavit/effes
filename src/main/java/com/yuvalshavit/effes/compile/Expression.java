@@ -119,10 +119,12 @@ public abstract class Expression extends Node {
     public static class CaseAlternative {
       private final EfType.SimpleType type;
       private final Expression ifMatched;
+      private final List<EfVar> bindings;
 
-      public CaseAlternative(EfType.SimpleType type, Expression ifMatched) {
+      public CaseAlternative(EfType.SimpleType type, List<EfVar> bindings, Expression ifMatched) {
         this.type = type;
         this.ifMatched = ifMatched;
+        this.bindings = ImmutableList.copyOf(bindings);
       }
 
       public Expression getIfMatchedExpression() {
@@ -131,6 +133,10 @@ public abstract class Expression extends Node {
 
       public EfType.SimpleType getType() {
         return type;
+      }
+
+      public List<EfVar> getBindings() {
+        return bindings;
       }
     }
   }
