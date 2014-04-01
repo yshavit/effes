@@ -99,9 +99,9 @@ methodInvoke: methodName methodInvokeArgs;
 
 methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
-caseExprs: INDENT caseExprPattern+ DEDENT;
+caseExprs: INDENT caseAlternative+ DEDENT;
 
-caseExprPattern: TYPE_NAME COLON exprBlock;
+caseAlternative: TYPE_NAME COLON exprBlock;
 
 exprBlock: expr NL;
 
