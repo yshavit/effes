@@ -140,9 +140,9 @@ public final class ExpressionCompiler {
 
   @Nullable
   private Expression.CaseExpression.CaseAlternative caseAlternative(EffesParser.CaseAlternativeContext ctx) {
-    EfType.SimpleType matchType = typeRegistry.getSimpleType(ctx.TYPE_NAME().getText());
+    TerminalNode tok = ctx.casePattern().TYPE_NAME();
+    EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
     if (matchType == null) {
-      TerminalNode tok = ctx.TYPE_NAME();
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
