@@ -103,7 +103,7 @@ caseExprs: INDENT caseAlternative+ DEDENT;
 
 caseAlternative: casePattern COLON exprBlock;
 
-casePattern: TYPE_NAME;
+casePattern: TYPE_NAME (OPEN_PAREN VAR_NAME (COMMA VARNAME)+ CLOSE_PAREN)?;
 
 exprBlock: expr NL;
 
