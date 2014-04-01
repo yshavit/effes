@@ -101,10 +101,7 @@ methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
 
 caseExprs: INDENT caseExprPattern+ DEDENT;
 
-caseExprPattern: caseMatcher COLON exprBlock;
-
-caseMatcher: TYPE_NAME                                                          # SimpleCtorMatch
-           ;
+caseExprPattern: TYPE_NAME COLON exprBlock;
 
 exprBlock: expr NL;
 
