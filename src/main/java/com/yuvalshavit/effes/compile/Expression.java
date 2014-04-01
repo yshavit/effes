@@ -49,9 +49,9 @@ public abstract class Expression extends Node {
   public static class CaseExpression extends Expression {
 
     private final Expression matchAgainst;
-    private final List<CasePattern> patterns;
+    private final List<CaseAlternative> patterns;
 
-    public CaseExpression(Token token, Expression matchAgainst, List<CasePattern> patterns) {
+    public CaseExpression(Token token, Expression matchAgainst, List<CaseAlternative> patterns) {
       super(token, computeType(patterns));
       this.matchAgainst = matchAgainst;
       this.patterns = ImmutableList.copyOf(patterns);
@@ -61,7 +61,7 @@ public abstract class Expression extends Node {
       return matchAgainst;
     }
 
-    public List<CasePattern> getPatterns() {
+    public List<CaseAlternative> getPatterns() {
       return patterns;
     }
 
@@ -79,7 +79,7 @@ public abstract class Expression extends Node {
         Set<EfType> matchAgainstTypes = dis.getAlternatives();
         Set<EfType> patternTypes = patterns
           .stream()
-          .map(CasePattern::getType)
+          .map(CaseAlternative::getType)
           .collect(Collectors.toSet());
         // extra types
         Sets.difference(patternTypes, matchAgainstTypes).forEach(t -> errs.add(
@@ -105,9 +105,9 @@ public abstract class Expression extends Node {
       return String.format("case (%s) of...", matchAgainst);
     }
 
-    private static EfType computeType(List<CasePattern> patterns) {
+    private static EfType computeType(List<CaseAlternative> patterns) {
       EfType result = null;
-      for (CasePattern p : patterns) {
+      for (CaseAlternative p : patterns) {
         EfType patternResult = p.getIfMatchedExpression().resultType();
         result = result != null
           ? EfType.disjunction(result, patternResult)
@@ -116,11 +116,11 @@ public abstract class Expression extends Node {
       return result;
     }
 
-    public static class CasePattern {
+    public static class CaseAlternative {
       private final EfType.SimpleType type;
       private final Expression ifMatched;
 
-      public CasePattern(EfType.SimpleType type, Expression ifMatched) {
+      public CaseAlternative(EfType.SimpleType type, Expression ifMatched) {
         this.type = type;
         this.ifMatched = ifMatched;
       }
