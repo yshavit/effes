@@ -36,9 +36,11 @@ public final class CallStack {
   private int fip = -1;
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] or guard against stack overflows.
 
-  public void openFrame(List<? extends ExecutableElement> args) {
-    pushUnsafe(RV_PLACEHOLDER);
-    FrameInfo frameInfo = new FrameInfo(args.size(), fip, states.size());
+  public void openFrame(List<? extends ExecutableElement> args, boolean hasRv) {
+    if (hasRv) {
+      pushUnsafe(RV_PLACEHOLDER);
+    }
+    FrameInfo frameInfo = new FrameInfo(args.size(), fip, states.size(), hasRv);
     int nArgs = args.size();
     int expectedDepth = states.size();
     for (int i = nArgs - 1; i >= 0; --i) {
@@ -52,7 +54,7 @@ public final class CallStack {
   }
 
   public void closeFrame() {
-    if (states.size() < 2) { // should have the RV_PLACEHOLDER and FrameInfo at least
+    if (states.size() < 1) { // should have the FrameInfo at least
       throw new IllegalStateException("no frame to close");
     }
     assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
@@ -137,7 +139,11 @@ public final class CallStack {
   }
 
   public void popToRv() {
-    states.set(fip - frameInfo().nArgs - 1, pop());
+    FrameInfo frameInfo = frameInfo();
+    if (!frameInfo.hasRv) {
+      throw new IllegalStateException("no rv slot allocated");
+    }
+    states.set(fip - frameInfo.nArgs - 1, pop());
   }
 
   private FrameInfo frameInfo() {
@@ -203,16 +209,19 @@ public final class CallStack {
     private final int nArgs;
     private final int prevFip;
     private final int prevSp;
+    private final boolean hasRv;
 
-    private FrameInfo(int nArgs, int prevFip, int prevSp) {
+    private FrameInfo(int nArgs, int prevFip, int prevSp, boolean hasRv) {
       this.nArgs = nArgs;
       this.prevFip = prevFip;
       this.prevSp = prevSp;
+      this.hasRv = hasRv;
     }
 
     @Override
     public String toString() {
-      return String.format("{sp:%d, fip:%d, args:%d}", prevSp, prevFip, nArgs);
+      String noRv = hasRv ? "" : " (no rv)";
+      return String.format("{sp:%d, fip:%d, args:%d%s}", prevSp, prevFip, nArgs, noRv);
     }
 
     @Override

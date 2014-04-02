@@ -201,12 +201,15 @@ public abstract class Expression extends Node {
     private final String methodName;
     private final List<Expression> args;
     private final boolean isBuiltIn;
+    private final boolean usedAsExpression;
 
-    public MethodInvoke(Token token, String methodName, List<Expression> args, EfType resultType, boolean isBuiltin) {
+    public MethodInvoke(Token token, String methodName, List<Expression> args, EfType resultType, boolean isBuiltin,
+                        boolean usedAsExpression) {
       super(token, resultType);
       this.methodName = methodName;
       this.args = args;
       this.isBuiltIn = isBuiltin;
+      this.usedAsExpression = usedAsExpression;
     }
 
     public boolean isBuiltIn() {
@@ -224,6 +227,9 @@ public abstract class Expression extends Node {
     @Override
     public void validate(CompileErrors errs) {
       args.forEach(arg -> arg.validate(errs));
+      if (usedAsExpression && EfType.VOID.equals(resultType())) {
+        errs.add(token(), String.format("method '%s' has no return value", methodName));
+      }
     }
 
     @Override

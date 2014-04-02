@@ -48,7 +48,7 @@ public abstract class ExecutableStatement implements ExecutableElement {
   }
 
   public static class MethodInvoke extends ExecutableStatement {
-    private final ExecutableExpression method;
+    private final ExecutableExpression.MethodInvokeExpression method;
 
     public MethodInvoke(Statement.MethodInvoke source,
                         ExecutableExpressionCompiler expressionCompiler,
@@ -61,7 +61,9 @@ public abstract class ExecutableStatement implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       method.execute(stack);
-      stack.pop(); // get rid of the return value
+      if (method.hasRv()) {
+        stack.pop(); // get rid of the return value
+      }
     }
   }
 }

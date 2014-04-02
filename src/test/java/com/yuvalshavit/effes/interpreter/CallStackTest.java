@@ -385,8 +385,28 @@ public final class CallStackTest {
     assertEquals(stack.snapshot(), snapshot);
   }
 
+  @Test
+  public void noRv() {
+    CallStack stack = new CallStack();
+    Object snapshot = stack.snapshot();
+    stack.openFrame(ImmutableList.of(), false);
+    stack.closeFrame();
+    assertEquals(stack.snapshot(), snapshot);
+  }
+
+  @Test
+  public void noRvButPoppedToRv() {
+    CallStack stack = new CallStack();
+    Object snapshot = stack.snapshot();
+    stack.openFrame(ImmutableList.of(), false);
+    push(stack, "not a return value");
+    assertException(IllegalStateException.class, stack::popToRv);
+    stack.closeFrame();
+    assertEquals(stack.snapshot(), snapshot);
+  }
+
   private static void open(CallStack stack, ExecutableElement... args) {
-    stack.openFrame(ImmutableList.copyOf(args));
+    stack.openFrame(ImmutableList.copyOf(args), true);
   }
 
   private static void close(CallStack stack) {

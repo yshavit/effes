@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.Block;
 import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
+import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.TypeRegistry;
@@ -87,8 +88,14 @@ public final class Interpreter {
       if(main.getArgs().length() != 0) {
         throw new BadMainException("main method may not take any arguments");
       }
-      ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states);
-      Object rv = states.pop();
+      boolean hasRv = !EfType.VOID.equals(main.getResultType());
+      ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states, hasRv);
+      Object rv;
+      if (hasRv) {
+        rv = states.pop();
+      } else {
+        rv = null;
+      }
       assert states.snapshot().equals(initial) : states.snapshot();
       return rv;
     } else {
