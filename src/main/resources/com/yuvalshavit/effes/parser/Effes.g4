@@ -61,7 +61,7 @@ methodReturnDeclr: ARROW type
 dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr? NL;
 
 dataTypeArgsDeclr: OPEN_PAREN
-                   dataTypeArgDeclr (COMMA dataTypeArgDeclr)+
+                   dataTypeArgDeclr (COMMA dataTypeArgDeclr)*
                    CLOSE_PAREN;
 
 dataTypeArgDeclr: VAR_NAME COLON type;
@@ -92,7 +92,7 @@ exprLine: expr NL                                                               
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | VAR_NAME                                                                  # VarExpr
     | methodInvoke                                                              # MethodInvokeExpr
-    | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)+ CLOSE_PAREN )?                  # CtorInvoke
+    | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?                  # CtorInvoke
     ;
 
 methodInvoke: methodName methodInvokeArgs;
@@ -103,7 +103,7 @@ caseExprs: INDENT caseAlternative+ DEDENT;
 
 caseAlternative: casePattern COLON exprBlock;
 
-casePattern: TYPE_NAME (OPEN_PAREN VAR_NAME (COMMA VARNAME)+ CLOSE_PAREN)?;
+casePattern: TYPE_NAME (OPEN_PAREN VAR_NAME (COMMA VAR_NAME)* CLOSE_PAREN)?;
 
 exprBlock: expr NL;
 

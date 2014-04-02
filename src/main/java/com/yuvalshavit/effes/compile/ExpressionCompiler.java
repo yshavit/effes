@@ -148,7 +148,7 @@ public final class ExpressionCompiler {
       return null;
     }
     // TODO intellij doesn't like the binding, how about javac?
-    List<TerminalNode> bindingTokens = ctx.casePattern().VARNAME();
+    List<TerminalNode> bindingTokens = ctx.casePattern().VAR_NAME();
     List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
@@ -158,7 +158,7 @@ public final class ExpressionCompiler {
       EfType bindingType = i < matchtypeArgs.size()
         ? matchtypeArgs.get(i).getType()
         : EfType.UNKNOWN;
-      EfVar binding = EfVar.arg(bindingName, vars.countElems(), bindingType);
+      EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
       vars.add(binding, bindingToken.getSymbol());
       bindingArgs.add(binding);
     }
