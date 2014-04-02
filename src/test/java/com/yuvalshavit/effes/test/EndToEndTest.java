@@ -39,7 +39,7 @@ public final class EndToEndTest {
 
   @DataProvider(name = "files")
   public static Object[][] getBaseNames() throws IOException{
-    String suffixRegex = "^(.*)\\.(ef|ir|err)$";
+    String suffixRegex = "^(simple-binding)\\.(ef|ir|err)$";
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))

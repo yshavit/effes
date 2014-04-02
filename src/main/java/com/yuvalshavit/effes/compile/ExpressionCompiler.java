@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
@@ -99,10 +100,14 @@ public final class ExpressionCompiler {
   private Expression ctorInvoke(EffesParser.CtorInvokeContext ctx) {
     String typeName = ctx.TYPE_NAME().getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
+    List<Expression> args;
     if (type == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
+      args = ImmutableList.of();
+    }else {
+      args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
     }
-    return new Expression.CtorInvoke(ctx.getStart(), type);
+    return new Expression.CtorInvoke(ctx.getStart(), type, args);
   }
 
   private Expression varExpr(EffesParser.VarExprContext ctx) {
