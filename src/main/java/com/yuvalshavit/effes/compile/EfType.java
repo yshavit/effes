@@ -68,6 +68,10 @@ public abstract class EfType {
       this.name = name;
     }
 
+    public String getName() {
+      return name;
+    }
+
     @Nonnull
     public List<EfVar> getArgs() {
       return args != null
