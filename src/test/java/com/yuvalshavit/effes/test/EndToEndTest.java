@@ -42,7 +42,7 @@ public final class EndToEndTest {
   @DataProvider(name = "files")
   public static Object[][] getBaseNames() throws IOException {
     String regexPattern = System.getProperty("test.regex", "");
-    String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err)$";
+    String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err|out)$";
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
       .flatMap(EndToEndTest::readFileOrDir)
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
