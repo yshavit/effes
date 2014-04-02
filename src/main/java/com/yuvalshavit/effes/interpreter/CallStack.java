@@ -5,9 +5,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.yuvalshavit.effes.compile.EfType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -35,7 +37,7 @@ public final class CallStack {
   private final List<Object> states = new ArrayList<>(); // TODO change to Object[] or guard against stack overflows.
 
   public void openFrame(List<? extends ExecutableElement> args) {
-    push(RV_PLACEHOLDER);
+    pushUnsafe(RV_PLACEHOLDER);
     FrameInfo frameInfo = new FrameInfo(args.size(), fip, states.size());
     int nArgs = args.size();
     int expectedDepth = states.size();
@@ -46,7 +48,7 @@ public final class CallStack {
       }
     }
     fip = states.size();
-    push(frameInfo);
+    pushUnsafe(frameInfo);
   }
 
   public void closeFrame() {
@@ -65,15 +67,15 @@ public final class CallStack {
   }
 
   public void pushArgToStack(int pos) {
-    push(peekArg(pos));
+    pushUnsafe(peekArg(pos));
   }
 
-  public Object peekArg(int pos) {
+  public EfValue peekArg(int pos) {
     int n = frameInfo().nArgs;
     if (pos < 0 || pos >= n) {
       throw new IndexOutOfBoundsException(String.format("invalid arg %d for frame at fip %d (nArgs=%d)", pos, fip, n));
     }
-    return states.get(fip - pos - 1);
+    return (EfValue) states.get(fip - pos - 1);
   }
 
   /**
@@ -85,7 +87,7 @@ public final class CallStack {
     if (pos < 0) {
       throw new IndexOutOfBoundsException(Integer.toString(pos));
     }
-    push(states.get(fip + pos + 1));
+    pushUnsafe(states.get(fip + pos + 1));
   }
 
   /**
@@ -102,21 +104,36 @@ public final class CallStack {
     states.set(fip + pos + 1, pop());
   }
 
-  public void push(Object state) {
+  public void push(EfType.SimpleType type) {
+    List<EfValue> argValues = new ArrayList<>(type.getArgs().size());
+    type.getArgs().forEach(a -> argValues.add(pop()));
+    push(EfValue.of(type, argValues));
+  }
+  
+  public void push(EfValue value) {
+    pushUnsafe(value);
+  }
+
+  // internally, we can push whatever we want; externally, only E's
+  private void pushUnsafe(Object state) {
     states.add(state);
   }
 
-  public Object pop() {
+  public EfValue pop() {
     Object r = uncheckedPop();
     if (r instanceof FrameInfo) {
-      push(r);
+      pushUnsafe(r);
       throw new IllegalStateException("can't pop past frame");
     }
-    return r;
+    return (EfValue) r;
   }
 
-  public Object peek() {
-    return states.get(states.size() - 1);
+  public EfValue peek() {
+    Object r = states.get(states.size() - 1);
+    if (r instanceof FrameInfo) {
+      throw new NoSuchElementException();
+    }
+    return (EfValue) r;
   }
 
   public void popToRv() {
