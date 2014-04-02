@@ -1,0 +1,7 @@
+def true -> True: return True
+
+def fakeMain -> False:
+  true = False
+  return true
+
+def main -> False: return fakeMain

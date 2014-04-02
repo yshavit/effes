@@ -1,0 +1,14 @@
+def fakeMain () -> False:
+  AssignStatement
+    var: true (pos=0)
+    val:
+      CtorInvoke
+        type: False
+  ReturnStatement
+    VarExpression
+      var: true
+      pos: 0
+def true () -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

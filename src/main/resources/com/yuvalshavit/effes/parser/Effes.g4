@@ -90,8 +90,7 @@ exprLine: expr NL                                                               
 // expressions
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
-    | VAR_NAME                                                                  # VarExpr
-    | methodInvoke                                                              # MethodInvokeExpr
+    | methodInvoke                                                              # MethodInvokeOrVarExpr
     | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?                  # CtorInvoke
     ;
 

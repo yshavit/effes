@@ -1,0 +1,4 @@
+def foo () -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

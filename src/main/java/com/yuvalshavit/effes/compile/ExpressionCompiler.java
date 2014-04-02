@@ -42,10 +42,9 @@ public final class ExpressionCompiler {
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprContext, Expression> dispatcher =
     Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprContext.class, Expression.class)
-      .put(EffesParser.MethodInvokeExprContext.class, ExpressionCompiler::methodInvoke)
+      .put(EffesParser.MethodInvokeOrVarExprContext.class, ExpressionCompiler::methodInvokeOrVar)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
-      .put(EffesParser.VarExprContext.class, ExpressionCompiler::varExpr)
       .build(ExpressionCompiler::error);
 
   private Expression error(EffesParser.ExprContext ctx) {
@@ -53,8 +52,20 @@ public final class ExpressionCompiler {
     return new Expression.UnrecognizedExpression(ctx.getStart());
   }
 
-  private Expression methodInvoke(EffesParser.MethodInvokeExprContext ctx) {
+  private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {
+    EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
+    // If this method is a VAR_NAME with no args, it could be a var. That takes precedence.
+    if (couldBeVar(methodInvoke)) {
+      EfVar var = vars.get(methodInvoke.methodName().VAR_NAME().getText());
+      if (var != null) {
+        return varExpr(var, methodInvoke.methodName().VAR_NAME());
+      }
+    }
     return methodInvoke(ctx.methodInvoke());
+  }
+
+  private static boolean couldBeVar(EffesParser.MethodInvokeContext methodInvoke) {
+    return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
   public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx) {
@@ -66,13 +77,15 @@ public final class ExpressionCompiler {
     } else {
       method = builtInMethods.getMethod(methodName);
       if (method == null) {
-        errs.add(ctx.methodName().getStart(), "no such method: " + methodName);
+        String msgFormat = couldBeVar(ctx)
+          ? "no such method or variable: '%s'"
+          : "no such method: '%s'";
+        errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
       }
       isBuiltIn = true; // if method is null, this won't matter
     }
 
-    List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream()
-      .map(this::apply).collect(Collectors.toList());
+    List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
     EfType resultType;
     if (method != null) {
       resultType = method.getResultType();
@@ -110,17 +123,8 @@ public final class ExpressionCompiler {
     return new Expression.CtorInvoke(ctx.getStart(), type, args);
   }
 
-  private Expression varExpr(EffesParser.VarExprContext ctx) {
-    TerminalNode name = ctx.VAR_NAME();
-    EfVar var = vars.get(name.getText());
-    if (var == null) {
-      errs.add(name.getSymbol(), "unrecognized variable '" + name.getText() + '\'');
-      var = EfVar.unknown(name.getText());
-      vars.add(var, name.getSymbol());
-      return new Expression.VarExpression(name.getSymbol(), var);
-    } else {
-      return new Expression.VarExpression(name.getSymbol(), var);
-    }
+  private Expression varExpr(EfVar var, TerminalNode name) {
+    return new Expression.VarExpression(name.getSymbol(), var);
   }
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprLineContext, Expression> exprLineDispatcher
