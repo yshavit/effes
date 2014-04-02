@@ -6,7 +6,6 @@ import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
 
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class ExecutableExpression implements ExecutableElement {
@@ -34,15 +33,15 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       matchAgainst.execute(stack);
+      EfValue peek = stack.peek();
       for (CaseMatcher matcher : caseMatchers) {
-        if (matcher.match.test(stack)) {
+        if (matcher.matchType.equals(peek.getType())) {
           EfValue popped = stack.pop();// the type we matched against
           // put its args on the stack, in reverse order
-          List<EfValue> poopedState = popped.getState();
-          for (int i = poopedState.size() - 1; i >= 0; --i) {
-            stack.push(poopedState.get(i));
-          }
+          List<EfValue> poppedState = popped.getState();
+          poppedState.forEach(stack::push);
           matcher.ifMatches.execute(stack);
+          poppedState.forEach(s -> stack.pop());
           return;
         }
       }
@@ -50,12 +49,17 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     public static class CaseMatcher {
-      private final PatternMatch match;
+      private final EfType.SimpleType matchType;
       private final ExecutableExpression ifMatches;
 
-      public CaseMatcher(PatternMatch match, ExecutableExpression ifMatches) {
-        this.match = match;
+      public CaseMatcher(EfType.SimpleType matchType, ExecutableExpression ifMatches) {
+        this.matchType = matchType;
         this.ifMatches = ifMatches;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("of %s", matchType);
       }
     }
   }
@@ -123,6 +127,4 @@ public abstract class ExecutableExpression implements ExecutableElement {
       }
     }
   }
-
-  public interface PatternMatch extends Predicate<CallStack> {}
 }
