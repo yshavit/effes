@@ -1,13 +1,13 @@
-def extractValue (wrapper: BoolWrapper | VoidWrapper) -> False | True | Void:
+def foo (bool: BoolWrapper | VoidWrapper) -> False | True | Void:
   ReturnStatement
     CaseExpression
       case:
         VarExpression
-          arg: wrapper
+          arg: bool
           pos: 0
       of BoolWrapper:
         VarExpression
-          var: tf
+          var: v
           pos: 0
       of VoidWrapper:
         VarExpression

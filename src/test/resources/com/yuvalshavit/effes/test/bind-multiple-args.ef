@@ -1,0 +1,18 @@
+data type TwoArgs(v: Void, shouldPrint: True | False)
+
+def sayHi (value: Void): (vocal: True | False) -> Void:
+  return case vocal of
+    True: print value
+    False: Void
+
+def foo (t: TwoArgs | Void) -> True | False | Void:
+  return case t of
+    Void: Void
+    TwoArgs(val, shouldPrint): sayHi val: shouldPrint
+
+def main -> Void:
+  t = TwoArgs(Void, True)
+  f = TwoArgs(Void, False)
+  foo t
+  foo f
+  return Void

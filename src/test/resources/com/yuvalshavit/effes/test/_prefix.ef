@@ -2,4 +2,7 @@
 data type Void
 data type True
 data type False
+
+data type BoolWrapper(val: True | False)
+data type VoidWrapper(val: Void)
 -- end prefix

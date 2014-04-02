@@ -37,9 +37,12 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
-        EfType type = typeResolver.apply(typeContext);
-        String argName = Optional.ofNullable(argContext.VAR_NAME()).map(TerminalNode::getText).orElseGet(() -> null);
-        args.add(typeContext.getStart(), argName, type);
+        if (typeContext != null) {
+          // if it's null, there was a parse error that'll be handled
+          EfType type = typeResolver.apply(typeContext);
+          String argName = Optional.ofNullable(argContext.VAR_NAME()).map(TerminalNode::getText).orElseGet(() -> null);
+          args.add(typeContext.getStart(), argName, type);
+        }
       }
       EfType resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
