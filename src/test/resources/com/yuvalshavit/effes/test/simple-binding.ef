@@ -1,0 +1,16 @@
+data type VoidWrap(value: Void)
+data type BoolWrap(value: True | False)
+
+def extractValue (wrapper: BoolWrap | VoidWrap) -> True | False | Void:
+  return case wrapper of
+    BoolWrap(tf): tf
+    VoidWrap(v): v
+
+def main -> Void:
+  b1 = BoolWrap(True)
+  b2 = BoolWrap(False)
+  v1 = VoidWrap(Void)
+  print extractValue b1
+  print extractValue b2
+  print extractValue v1
+  return Void

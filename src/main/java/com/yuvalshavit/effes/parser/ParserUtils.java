@@ -195,7 +195,7 @@ public final class ParserUtils {
       throw new NullPointerException("null tree");
     }
     if (tree instanceof ErrorNode) {
-      out.append("!!!ERROR!!! ").append(tree);
+      out.append("!!!ERROR!!! ").append(tree).append('\n');
     }
     if (tree instanceof RuleNode) {
       RuleNode rule = (RuleNode) tree;
