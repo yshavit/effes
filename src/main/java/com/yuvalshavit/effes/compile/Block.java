@@ -54,7 +54,11 @@ public final class Block {
       lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
       lastToken = s.token();
     }
-    if (requiredReturnType != null) {
+    if (EfType.VOID.equals(requiredReturnType)) {
+      if (lastBranchReturned != null) {
+        errs.add(lastToken, String.format("expected no result type, but found %s", lastBranchReturned));
+      }
+    } else if (requiredReturnType != null) {
       if (lastBranchReturned == null) {
         errs.add(lastToken, "block may not return, but needs to return " + requiredReturnType);
       } else if (!requiredReturnType.contains(lastBranchReturned)) {

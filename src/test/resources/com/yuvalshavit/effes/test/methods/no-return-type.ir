@@ -1,0 +1,15 @@
+def foo () -> no result type:
+  MethodInvoke
+    method:
+      MethodInvoke
+        method: print [built-in]
+        arg0:
+          CtorInvoke
+            type: True
+  MethodInvoke
+    method:
+      MethodInvoke
+        method: print [built-in]
+        arg0:
+          CtorInvoke
+            type: False

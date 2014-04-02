@@ -44,7 +44,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
           args.add(typeContext.getStart(), argName, type);
         }
       }
-      EfType resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
+      EfType resultType = ctx.methodReturnDeclr().type() != null
+        ? typeResolver.apply(ctx.methodReturnDeclr().type())
+        : EfType.VOID;
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
       try {

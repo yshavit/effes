@@ -37,7 +37,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   }
 
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
-    return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke()));
+    return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false));
   }
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {

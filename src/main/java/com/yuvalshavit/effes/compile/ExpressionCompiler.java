@@ -61,14 +61,14 @@ public final class ExpressionCompiler {
         return varExpr(var, methodInvoke.methodName().VAR_NAME());
       }
     }
-    return methodInvoke(ctx.methodInvoke());
+    return methodInvoke(ctx.methodInvoke(), true);
   }
 
   private static boolean couldBeVar(EffesParser.MethodInvokeContext methodInvoke) {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx) {
+  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression) {
     String methodName = ctx.methodName().getText();
     EfMethod<?> method = methodsRegistry.getMethod(methodName);
     boolean isBuiltIn;
@@ -103,7 +103,7 @@ public final class ExpressionCompiler {
     } else {
       resultType = EfType.UNKNOWN;
     }
-    return new Expression.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn);
+    return new Expression.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {

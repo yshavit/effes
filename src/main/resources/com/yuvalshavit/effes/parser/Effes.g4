@@ -54,6 +54,7 @@ methodArg: type
 
 methodReturnDeclr: ARROW type
                  | ARROW OPEN_PAREN type CLOSE_PAREN
+                 | // nothing
                  ;
 
 // data type declr

@@ -1,0 +1,5 @@
+def sayTrue: print True
+
+def foo -> True:
+  t = sayTrue
+  return t

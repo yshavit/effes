@@ -47,7 +47,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     return new ExecutableExpression.CtorExpression(expr, args);
   }
 
-  public ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
+  public ExecutableExpression.MethodInvokeExpression methodInvoke(Expression.MethodInvoke expr) {
     List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
     Supplier<ExecutableMethod> body = () -> expr.isBuiltIn()
       ? builtInMethods.apply(expr.getMethodName())

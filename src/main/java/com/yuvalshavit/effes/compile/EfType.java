@@ -16,7 +16,8 @@ import java.util.TreeSet;
 
 public abstract class EfType {
 
-  public static final EfType UNKNOWN = new UnknownType();
+  public static final EfType UNKNOWN = new UnknownType("<unknown type>");
+  public static final EfType VOID = new UnknownType("no result type");
   public static final Comparator<EfType> comparator = new EfTypeComparator();
 
   @Override
@@ -38,6 +39,12 @@ public abstract class EfType {
   public abstract String toString();
 
   private static final class UnknownType extends EfType {
+    private final String name;
+
+    private UnknownType(String name) {
+      this.name = name;
+    }
+
     @Override
     public boolean contains(EfType other) {
       return false;
@@ -45,7 +52,7 @@ public abstract class EfType {
 
     @Override
     public String toString() {
-      return "<unknown type>";
+      return name;
     }
 
     @Override

@@ -84,6 +84,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;
     private final Supplier<ExecutableMethod> body;
+    private final boolean hasRv;
 
     public MethodInvokeExpression(Expression.MethodInvoke source,
                                   List<ExecutableExpression> args,
@@ -91,15 +92,20 @@ public abstract class ExecutableExpression implements ExecutableElement {
       super(source);
       this.args = args;
       this.body = body;
+      this.hasRv = !EfType.VOID.equals(source.resultType());
     }
 
     @Override
     public void execute(CallStack stack) {
-      invoke(body.get(), args, stack);
+      invoke(body.get(), args, stack, hasRv);
     }
 
-    public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack) {
-      stack.openFrame(args);
+    public boolean hasRv() {
+      return hasRv;
+    }
+
+    public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack, boolean hasRv) {
+      stack.openFrame(args, hasRv);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {
         stack.push((EfValue)null);
       }

@@ -1,0 +1,6 @@
+def foo:
+  print True
+  print False
+
+def main:
+  foo
