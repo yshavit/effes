@@ -55,7 +55,7 @@ public abstract class EfType {
 
     @Override
     public int hashCode() {
-      return 37;
+      return System.identityHashCode(this);
     }
   }
 
