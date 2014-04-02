@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
 
@@ -35,7 +36,12 @@ public abstract class ExecutableExpression implements ExecutableElement {
       matchAgainst.execute(stack);
       for (CaseMatcher matcher : caseMatchers) {
         if (matcher.match.test(stack)) {
-          stack.pop(); // the type we matched against
+          EfValue popped = stack.pop();// the type we matched against
+          // put its args on the stack, in reverse order
+          List<EfValue> poopedState = popped.getState();
+          for (int i = poopedState.size() - 1; i >= 0; --i) {
+            stack.push(poopedState.get(i));
+          }
           matcher.ifMatches.execute(stack);
           return;
         }
@@ -56,14 +62,17 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
   public static class CtorExpression extends ExecutableExpression {
     private final EfType.SimpleType ctorType;
+    private final List<ExecutableExpression> args;
 
-    public CtorExpression(Expression.CtorInvoke source) {
+    public CtorExpression(Expression.CtorInvoke source, List<ExecutableExpression> args) {
       super(source);
       ctorType = source.simpleType();
+      this.args = ImmutableList.copyOf(Lists.reverse(args)); // CallStack expects them in reverse order!
     }
 
     @Override
     public void execute(CallStack stack) {
+      args.forEach(a -> a.execute(stack));
       stack.push(ctorType);
     }
   }
@@ -88,7 +97,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack) {
       stack.openFrame(args);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {
-        stack.push(null); // var placeholder
+        stack.push((EfValue)null);
       }
       body.execute(stack);
       stack.closeFrame();

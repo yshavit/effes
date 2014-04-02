@@ -36,7 +36,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   private ExecutableExpression caseExpr(Expression.CaseExpression expr) {
     ExecutableExpression matchAgainst = apply(expr.getMatchAgainst());
     List<ExecutableExpression.CaseExpression.CaseMatcher> matchers = expr.getPatterns().stream().map(p -> {
-      ExecutableExpression.PatternMatch match = s -> p.getType().equals(s.peek());
+      ExecutableExpression.PatternMatch match = s -> p.getType().equals(s.peek().getType());
       ExecutableExpression ifMatch = apply(p.getIfMatchedExpression());
       return new ExecutableExpression.CaseExpression.CaseMatcher(match, ifMatch);
     }).collect(Collectors.toList());
@@ -44,7 +44,8 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   }
 
   private ExecutableExpression ctorInvoke(Expression.CtorInvoke expr) {
-    return new ExecutableExpression.CtorExpression(expr);
+    List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
+    return new ExecutableExpression.CtorExpression(expr, args);
   }
 
   public ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {

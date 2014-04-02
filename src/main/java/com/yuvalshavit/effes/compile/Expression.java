@@ -145,10 +145,16 @@ public abstract class Expression extends Node {
 
     @Nullable
     private final EfType.SimpleType simpleType;
+    private final List<Expression> args;
 
-    public CtorInvoke(Token token, @Nullable EfType.SimpleType type) {
+    public CtorInvoke(Token token, @Nullable EfType.SimpleType type, List<Expression> args) {
       super(token, type);
       simpleType = type;
+      this.args = ImmutableList.copyOf(args);
+    }
+
+    public List<Expression> getArgs() {
+      return args;
     }
 
     @Override
