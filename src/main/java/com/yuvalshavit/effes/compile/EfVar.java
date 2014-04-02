@@ -47,6 +47,28 @@ public final class EfVar {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    EfVar efVar = (EfVar) o;
+
+    return argPosition == efVar.argPosition
+      && isArg == efVar.isArg
+      && name.equals(efVar.name)
+      && type.equals(efVar.type);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = type.hashCode();
+    result = 31 * result + name.hashCode();
+    result = 31 * result + argPosition;
+    result = 31 * result + (isArg ? 1 : 0);
+    return result;
+  }
+
+  @Override
   public String toString() {
     return String.format("%s (pos=%d)", name, argPosition);
   }

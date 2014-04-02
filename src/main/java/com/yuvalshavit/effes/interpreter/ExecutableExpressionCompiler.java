@@ -1,6 +1,5 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.yuvalshavit.effes.compile.CaseMatcher;
 import com.yuvalshavit.effes.compile.Expression;
 import com.yuvalshavit.util.Dispatcher;
 
@@ -37,15 +36,15 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   private ExecutableExpression caseExpr(Expression.CaseExpression expr) {
     ExecutableExpression matchAgainst = apply(expr.getMatchAgainst());
     List<ExecutableExpression.CaseExpression.CaseMatcher> matchers = expr.getPatterns().stream().map(p -> {
-      ExecutableExpression.PatternMatch match = caseMatcherDispatch.apply(this, p.getMatcher());
       ExecutableExpression ifMatch = apply(p.getIfMatchedExpression());
-      return new ExecutableExpression.CaseExpression.CaseMatcher(match, ifMatch);
+      return new ExecutableExpression.CaseExpression.CaseMatcher(p.getType(), ifMatch);
     }).collect(Collectors.toList());
     return new ExecutableExpression.CaseExpression(expr, matchAgainst, matchers);
   }
 
   private ExecutableExpression ctorInvoke(Expression.CtorInvoke expr) {
-    return new ExecutableExpression.CtorExpression(expr);
+    List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
+    return new ExecutableExpression.CtorExpression(expr, args);
   }
 
   public ExecutableExpression methodInvoke(Expression.MethodInvoke expr) {
@@ -62,16 +61,5 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private ExecutableExpression varExpr(Expression.VarExpression var) {
     return new ExecutableExpression.VarReadExpression(var);
-  }
-
-  private static final Dispatcher<ExecutableExpressionCompiler, CaseMatcher, ExecutableExpression.PatternMatch>
-    caseMatcherDispatch =
-    Dispatcher.builder(ExecutableExpressionCompiler.class, CaseMatcher.class, ExecutableExpression.PatternMatch.class)
-      .put(CaseMatcher.SimpleCtorMatch.class, ExecutableExpressionCompiler::simpleCtorMatch)
-      .put(CaseMatcher.ErrorMatch.class, (me, c) -> { throw new AssertionError(c); })
-      .build((me, c) -> { throw new AssertionError(c); });
-
-  private ExecutableExpression.PatternMatch simpleCtorMatch(CaseMatcher.SimpleCtorMatch matcher) {
-    return s -> matcher.getType().equals(s.peek());
   }
 }

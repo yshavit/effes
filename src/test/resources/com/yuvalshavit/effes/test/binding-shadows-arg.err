@@ -1,0 +1,2 @@
+duplicate variable name 'b' (at line 3, column 17: b)
+expected result type False | True but found BoolWrapper | False | Void (at line 2, column 10: case)

@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
-  @BuiltInMethod(name = "print", resultType = "Void", args = "True | False")
+  @BuiltInMethod(name = "print", resultType = "Void", args = "True | False | Void")
   public T print();
 
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry) {

@@ -1,0 +1,25 @@
+def foo (b: BoolWrapper | Void) -> Void:
+  AssignStatement
+    var: t (pos=0)
+    val:
+      CtorInvoke
+        type: True
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: b
+          pos: 0
+      of BoolWrapper:
+        MethodInvoke
+          method: print [built-in]
+          arg0:
+            VarExpression
+              var: t
+              pos: 0
+      of Void:
+        MethodInvoke
+          method: print [built-in]
+          arg0:
+            CtorInvoke
+              type: False
