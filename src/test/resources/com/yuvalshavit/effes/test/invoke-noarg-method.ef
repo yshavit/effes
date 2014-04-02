@@ -1,0 +1,3 @@
+def foo -> True: return True
+
+def main -> True: return foo
