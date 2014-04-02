@@ -76,7 +76,7 @@ public final class Scopes<T,D> {
       throw new IllegalStateException("no active scope");
     }
     String name = namer.apply(var);
-    if (scope.containsKey(name)) {
+    if (get(name) != null) {
       onDuplicate.accept(name, duplicateId);
     } else {
       scope.put(name, var);

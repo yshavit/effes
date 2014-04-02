@@ -1,11 +1,15 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class ExpressionCompiler {
@@ -96,10 +100,14 @@ public final class ExpressionCompiler {
   private Expression ctorInvoke(EffesParser.CtorInvokeContext ctx) {
     String typeName = ctx.TYPE_NAME().getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
+    List<Expression> args;
     if (type == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
+      args = ImmutableList.of();
+    }else {
+      args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
     }
-    return new Expression.CtorInvoke(ctx.getStart(), type);
+    return new Expression.CtorInvoke(ctx.getStart(), type, args);
   }
 
   private Expression varExpr(EffesParser.VarExprContext ctx) {
@@ -127,8 +135,8 @@ public final class ExpressionCompiler {
 
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
-    List<Expression.CaseExpression.CasePattern> patterns =
-      ctx.caseExprs().caseExprPattern().stream().map(this::casePattern).collect(Collectors.toList());
+    List<Expression.CaseExpression.CaseAlternative> patterns =
+      ctx.caseExprs().caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
     return new Expression.CaseExpression(ctx.getStart(), matchAgainst, patterns);
   }
 
@@ -136,32 +144,33 @@ public final class ExpressionCompiler {
     return new Expression.UnrecognizedExpression(ctx.getStart());
   }
 
-  private Expression.CaseExpression.CasePattern casePattern(EffesParser.CaseExprPatternContext ctx) {
-    CaseMatcher caseMatcher = caseMatchDispatcher.apply(this, ctx.caseMatcher());
+  @Nullable
+  private Expression.CaseExpression.CaseAlternative caseAlternative(EffesParser.CaseAlternativeContext ctx) {
+    TerminalNode tok = ctx.casePattern().TYPE_NAME();
+    EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
+    if (matchType == null) {
+      errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
+      return null;
+    }
+    // TODO intellij doesn't like the binding, how about javac?
+    List<TerminalNode> bindingTokens = ctx.casePattern().VAR_NAME();
+    List<EfVar> matchtypeArgs = matchType.getArgs();
+    vars.pushScope();
+    List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
+    for (int i = 0; i < bindingTokens.size(); ++i) {
+      TerminalNode bindingToken = bindingTokens.get(i);
+      String bindingName = bindingToken.getText();
+      EfType bindingType = i < matchtypeArgs.size()
+        ? matchtypeArgs.get(i).getType()
+        : EfType.UNKNOWN;
+      EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
+      vars.add(binding, bindingToken.getSymbol());
+      bindingArgs.add(binding);
+    }
     Expression ifMatches = ctx.exprBlock() != null
       ? apply(ctx.exprBlock().expr())
       : new Expression.UnrecognizedExpression(ctx.getStart());
-    return new Expression.CaseExpression.CasePattern(caseMatcher, ifMatches);
-  }
-
-  private static final Dispatcher<ExpressionCompiler, EffesParser.CaseMatcherContext, CaseMatcher> caseMatchDispatcher =
-    Dispatcher.builder(ExpressionCompiler.class, EffesParser.CaseMatcherContext.class, CaseMatcher.class)
-      .put(EffesParser.SimpleCtorMatchContext.class, ExpressionCompiler::simpleCtorMatcher)
-      .build(ExpressionCompiler::unknownMatcher);
-
-  private CaseMatcher simpleCtorMatcher(EffesParser.SimpleCtorMatchContext ctx) {
-    EfType.SimpleType type = typeRegistry.getSimpleType(ctx.TYPE_NAME().getText());
-    if (type == null) {
-      TerminalNode tok = ctx.TYPE_NAME();
-      errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
-      return CaseMatcher.ErrorMatch.instance;
-    }
-    return new CaseMatcher.SimpleCtorMatch(type);
-  }
-
-  private CaseMatcher unknownMatcher(EffesParser.CaseMatcherContext ctx) {
-    // I can't figure out how to actually get here!
-    errs.add(ctx.getStart(), "unrecognized case pattern");
-    return CaseMatcher.ErrorMatch.instance;
+    vars.popScope();
+    return new Expression.CaseExpression.CaseAlternative(matchType, bindingArgs, ifMatches);
   }
 }

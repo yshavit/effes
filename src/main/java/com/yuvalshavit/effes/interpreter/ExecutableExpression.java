@@ -1,11 +1,11 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.Expression;
 
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class ExecutableExpression implements ExecutableElement {
@@ -33,10 +33,15 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       matchAgainst.execute(stack);
+      EfValue peek = stack.peek();
       for (CaseMatcher matcher : caseMatchers) {
-        if (matcher.match.test(stack)) {
-          stack.pop(); // the type we matched against
+        if (matcher.matchType.equals(peek.getType())) {
+          EfValue popped = stack.pop();// the type we matched against
+          // put its args on the stack, in reverse order
+          List<EfValue> poppedState = popped.getState();
+          poppedState.forEach(stack::push);
           matcher.ifMatches.execute(stack);
+          poppedState.forEach(s -> stack.pop());
           return;
         }
       }
@@ -44,26 +49,34 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
 
     public static class CaseMatcher {
-      private final PatternMatch match;
+      private final EfType.SimpleType matchType;
       private final ExecutableExpression ifMatches;
 
-      public CaseMatcher(PatternMatch match, ExecutableExpression ifMatches) {
-        this.match = match;
+      public CaseMatcher(EfType.SimpleType matchType, ExecutableExpression ifMatches) {
+        this.matchType = matchType;
         this.ifMatches = ifMatches;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("of %s", matchType);
       }
     }
   }
 
   public static class CtorExpression extends ExecutableExpression {
     private final EfType.SimpleType ctorType;
+    private final List<ExecutableExpression> args;
 
-    public CtorExpression(Expression.CtorInvoke source) {
+    public CtorExpression(Expression.CtorInvoke source, List<ExecutableExpression> args) {
       super(source);
       ctorType = source.simpleType();
+      this.args = ImmutableList.copyOf(Lists.reverse(args)); // CallStack expects them in reverse order!
     }
 
     @Override
     public void execute(CallStack stack) {
+      args.forEach(a -> a.execute(stack));
       stack.push(ctorType);
     }
   }
@@ -88,7 +101,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack) {
       stack.openFrame(args);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {
-        stack.push(null); // var placeholder
+        stack.push((EfValue)null);
       }
       body.execute(stack);
       stack.closeFrame();
@@ -114,6 +127,4 @@ public abstract class ExecutableExpression implements ExecutableElement {
       }
     }
   }
-
-  public interface PatternMatch extends Predicate<CallStack> {}
 }

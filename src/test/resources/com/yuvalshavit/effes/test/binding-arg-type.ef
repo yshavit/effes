@@ -1,0 +1,5 @@
+-- fail to compile, so that we can prove the type checker works
+def foo (b: BoolWrapper | VoidWrapper) -> Void:
+  return case b of
+    BoolWrapper(v): v
+    VoidWrapper(v): v

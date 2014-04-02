@@ -1,0 +1,4 @@
+def foo (b: BoolWrapper | Void) -> True | False:
+  return case b of
+    BoolWrapper(b): b
+    Void: False

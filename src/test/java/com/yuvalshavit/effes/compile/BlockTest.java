@@ -39,7 +39,7 @@ public final class BlockTest {
   }
 
   private Expression.CtorInvoke ctorExpr(String typeName) {
-    return new Expression.CtorInvoke(null, type(typeName));
+    return new Expression.CtorInvoke(null, type(typeName), ImmutableList.of());
   }
 
   private EfType.SimpleType type(String typeName) {

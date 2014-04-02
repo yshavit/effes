@@ -1,0 +1,38 @@
+def foo (t: TwoArgs | Void) -> False | True | Void:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: t
+          pos: 0
+      of Void:
+        CtorInvoke
+          type: Void
+      of TwoArgs:
+        MethodInvoke
+          method: sayHi
+          arg0:
+            VarExpression
+              var: val
+              pos: 0
+          arg1:
+            VarExpression
+              var: shouldPrint
+              pos: 1
+def sayHi (value: Void) (vocal: False | True) -> Void:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: vocal
+          pos: 1
+      of True:
+        MethodInvoke
+          method: print [built-in]
+          arg0:
+            VarExpression
+              arg: value
+              pos: 0
+      of False:
+        CtorInvoke
+          type: Void

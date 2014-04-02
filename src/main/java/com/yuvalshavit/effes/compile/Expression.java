@@ -49,9 +49,9 @@ public abstract class Expression extends Node {
   public static class CaseExpression extends Expression {
 
     private final Expression matchAgainst;
-    private final List<CasePattern> patterns;
+    private final List<CaseAlternative> patterns;
 
-    public CaseExpression(Token token, Expression matchAgainst, List<CasePattern> patterns) {
+    public CaseExpression(Token token, Expression matchAgainst, List<CaseAlternative> patterns) {
       super(token, computeType(patterns));
       this.matchAgainst = matchAgainst;
       this.patterns = ImmutableList.copyOf(patterns);
@@ -61,16 +61,17 @@ public abstract class Expression extends Node {
       return matchAgainst;
     }
 
-    public List<CasePattern> getPatterns() {
+    public List<CaseAlternative> getPatterns() {
       return patterns;
     }
 
     @Override
     public void validate(CompileErrors errs) {
-      // validate three things:
+      // Validate that:
       // 1) each matcher *can* match the given expression
       // 2) at least one matcher *will* match the given expression
       // 3) each matcher is reachable (ie, the ones before it may not match)
+      // 4) each matcher matches the right number of args
       matchAgainst.validate(errs);
 
       EfType matchType = matchAgainst.resultType();
@@ -79,8 +80,7 @@ public abstract class Expression extends Node {
         Set<EfType> matchAgainstTypes = dis.getAlternatives();
         Set<EfType> patternTypes = patterns
           .stream()
-          .map(CasePattern::getMatcher)
-          .map(CaseMatcher::getType)
+          .map(CaseAlternative::getType)
           .collect(Collectors.toSet());
         // extra types
         Sets.difference(patternTypes, matchAgainstTypes).forEach(t -> errs.add(
@@ -90,6 +90,14 @@ public abstract class Expression extends Node {
         Sets.difference(matchAgainstTypes, patternTypes).forEach(t -> errs.add(
           matchAgainst.token(),
           "expression alternative is never matched: " + t));
+        patterns.forEach(alt -> {
+          int expected = alt.getType().getArgs().size();
+          int actual = alt.getBindings().size();
+          if (expected != actual) {
+            String plural = expected == 1 ? "" : "s";
+            errs.add(token(), String.format("expected %d binding%s but found %d", expected, plural, actual));
+          }
+        });
       } else {
         errs.add(token(), "case requires a disjunctive type (found " + matchType + ")");
       }
@@ -98,7 +106,7 @@ public abstract class Expression extends Node {
     @Override
     public void state(NodeStateListener out) {
       out.child("case", matchAgainst);
-      patterns.forEach(p -> out.child("of " + p.getMatcher(), p.getIfMatchedExpression()));
+      patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatchedExpression()));
     }
 
     @Override
@@ -106,9 +114,9 @@ public abstract class Expression extends Node {
       return String.format("case (%s) of...", matchAgainst);
     }
 
-    private static EfType computeType(List<CasePattern> patterns) {
+    private static EfType computeType(List<CaseAlternative> patterns) {
       EfType result = null;
-      for (CasePattern p : patterns) {
+      for (CaseAlternative p : patterns) {
         EfType patternResult = p.getIfMatchedExpression().resultType();
         result = result != null
           ? EfType.disjunction(result, patternResult)
@@ -117,21 +125,27 @@ public abstract class Expression extends Node {
       return result;
     }
 
-    public static class CasePattern {
-      private final CaseMatcher matcher;
+    public static class CaseAlternative {
+      private final EfType.SimpleType type;
       private final Expression ifMatched;
+      private final List<EfVar> bindings;
 
-      public CasePattern(CaseMatcher matcher, Expression ifMatched) {
-        this.matcher = matcher;
+      public CaseAlternative(EfType.SimpleType type, List<EfVar> bindings, Expression ifMatched) {
+        this.type = type;
         this.ifMatched = ifMatched;
+        this.bindings = ImmutableList.copyOf(bindings);
       }
 
       public Expression getIfMatchedExpression() {
         return ifMatched;
       }
 
-      public CaseMatcher getMatcher() {
-        return matcher;
+      public EfType.SimpleType getType() {
+        return type;
+      }
+
+      public List<EfVar> getBindings() {
+        return bindings;
       }
     }
   }
@@ -140,15 +154,31 @@ public abstract class Expression extends Node {
 
     @Nullable
     private final EfType.SimpleType simpleType;
+    private final List<Expression> args;
 
-    public CtorInvoke(Token token, @Nullable EfType.SimpleType type) {
+    public CtorInvoke(Token token, @Nullable EfType.SimpleType type, List<Expression> args) {
       super(token, type);
       simpleType = type;
+      this.args = ImmutableList.copyOf(args);
+    }
+
+    public List<Expression> getArgs() {
+      return args;
     }
 
     @Override
     public void validate(CompileErrors errs) {
-      // noting to do
+      if (simpleType != null) {
+        // if it's null, the call site that created this object should lodge the error; it has the missing type's name
+        int expected = simpleType.getArgs().size();
+        int actual = getArgs().size();
+        if (expected != actual) {
+          String plural = expected == 1 ? "" : "s";
+          errs.add(token(), String.format("expected %d argument%s to %s, but found %d",
+            expected, plural, simpleType, actual));
+        }
+        getArgs().forEach(a -> a.validate(errs));
+      }
     }
 
     @Override

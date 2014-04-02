@@ -1,0 +1,15 @@
+def extractValue (wrapper: BoolWrapper | VoidWrapper) -> False | True | Void:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: wrapper
+          pos: 0
+      of BoolWrapper:
+        VarExpression
+          var: tf
+          pos: 0
+      of VoidWrapper:
+        VarExpression
+          var: v
+          pos: 0
