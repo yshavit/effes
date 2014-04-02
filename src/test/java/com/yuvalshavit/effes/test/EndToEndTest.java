@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.test;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.compile.Block;
 import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
@@ -26,6 +27,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
 
@@ -42,12 +44,26 @@ public final class EndToEndTest {
     String regexPattern = System.getProperty("test.regex", "");
     String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err)$";
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
+      .flatMap(EndToEndTest::readFileOrDir)
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
       .distinct()
       .map(s -> new Object[]{s})
       .collect(Collectors.toList())
       .toArray(new Object[0][]);
+  }
+
+  private static Stream<String> readFileOrDir(String file) {
+    // This is hacky as hell, but Guava's ClassPath...getResource() is failing for me, and I don't feel like writing
+    // my own version of it. So, just take the incoming file "foo" and see if we can read "foo/.". This will only work
+    // for directories, and it'll throw NPE (not IOException) for files. So, yes, yucky... but gets the job done.
+    try {
+      return Resources.readLines(urls.get(file + "/."), Charsets.UTF_8).stream().map(f -> file + "/" + f);
+    } catch (NullPointerException e) {
+      return ImmutableList.of(file).stream();
+    } catch (IOException e) {
+      throw new AssertionError(e);
+    }
   }
 
   @Test(dataProvider = "files")
