@@ -1,0 +1,4 @@
+def foo (w: BoolWrapper | Void) -> Void:
+  return case w of
+    BoolWrapper(b): Void
+    Void(v): Void
