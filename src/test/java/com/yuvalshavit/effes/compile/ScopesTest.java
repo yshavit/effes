@@ -83,8 +83,8 @@ public final class ScopesTest {
     scopes.pushScope();
     assertEquals(scopes.depth(), 2);
     Elem bOne = elem("one", "b");
-    scopes.add(bOne, id(3)); // shadows aOne
-    assertEquals(scopes.get("one"), bOne);
+    assertException(DuplicateElemException.class, () -> scopes.add(bOne, id(3))); // shadows aOne
+    assertEquals(scopes.get("one"), aOne);
     assertEquals(scopes.get("two"), aTwo);
 
     scopes.popScope();

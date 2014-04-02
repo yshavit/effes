@@ -67,10 +67,11 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      // validate three things:
+      // Validate that:
       // 1) each matcher *can* match the given expression
       // 2) at least one matcher *will* match the given expression
       // 3) each matcher is reachable (ie, the ones before it may not match)
+      // 4) each matcher matches the right number of args
       matchAgainst.validate(errs);
 
       EfType matchType = matchAgainst.resultType();
@@ -89,6 +90,14 @@ public abstract class Expression extends Node {
         Sets.difference(matchAgainstTypes, patternTypes).forEach(t -> errs.add(
           matchAgainst.token(),
           "expression alternative is never matched: " + t));
+        patterns.forEach(alt -> {
+          int expected = alt.getType().getArgs().size();
+          int actual = alt.getBindings().size();
+          if (expected != actual) {
+            String plural = expected == 1 ? "" : "s";
+            errs.add(token(), String.format("expected %d binding%s but found %d", expected, plural, actual));
+          }
+        });
       } else {
         errs.add(token(), "case requires a disjunctive type (found " + matchType + ")");
       }
@@ -159,7 +168,17 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      // noting to do
+      if (simpleType != null) {
+        // if it's null, the call site that created this object should lodge the error; it has the missing type's name
+        int expected = simpleType.getArgs().size();
+        int actual = getArgs().size();
+        if (expected != actual) {
+          String plural = expected == 1 ? "" : "s";
+          errs.add(token(), String.format("expected %d argument%s to %s, but found %d",
+            expected, plural, simpleType, actual));
+        }
+        getArgs().forEach(a -> a.validate(errs));
+      }
     }
 
     @Override
