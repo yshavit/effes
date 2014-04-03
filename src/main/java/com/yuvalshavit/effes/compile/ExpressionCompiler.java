@@ -139,9 +139,9 @@ public final class ExpressionCompiler {
 
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
-    List<Expression.CaseConstruct.CaseAlternative> patterns =
+    List<CaseConstruct.Alternative> patterns =
       ctx.caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
-    Expression.CaseConstruct construct = new Expression.CaseConstruct(matchAgainst, patterns);
+    CaseConstruct construct = new CaseConstruct(matchAgainst, patterns);
     return new Expression.CaseExpression(ctx.getStart(), construct);
   }
 
@@ -150,7 +150,7 @@ public final class ExpressionCompiler {
   }
 
   @Nullable
-  private Expression.CaseConstruct.CaseAlternative caseAlternative(EffesParser.CaseAlternativeContext ctx) {
+  private CaseConstruct.Alternative caseAlternative(EffesParser.CaseAlternativeContext ctx) {
     TerminalNode tok = ctx.casePattern().TYPE_NAME();
     EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
     if (matchType == null) {
@@ -176,6 +176,6 @@ public final class ExpressionCompiler {
       ? apply(ctx.exprBlock().expr())
       : new Expression.UnrecognizedExpression(ctx.getStart());
     vars.popScope();
-    return new Expression.CaseConstruct.CaseAlternative(matchType, bindingArgs, ifMatches);
+    return new CaseConstruct.Alternative(matchType, bindingArgs, ifMatches);
   }
 }
