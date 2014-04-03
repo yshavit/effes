@@ -26,6 +26,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       .put(EffesParser.AssignStatContext.class, StatementCompiler::assignStatement)
       .put(EffesParser.MethodInvokeStatContext.class, StatementCompiler::methodInvoke)
       .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
+      .put(EffesParser.CaseStatContext.class, StatementCompiler::caseStatement)
       .build(StatementCompiler::error);
 
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
@@ -34,6 +35,10 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, value.resultType());
     vars.add(var, ctx.VAR_NAME().getSymbol());
     return new Statement.AssignStatement(ctx.getStart(), var, value);
+  }
+
+  private Statement caseStatement(EffesParser.CaseStatContext ctx) {
+    throw new UnsupportedOperationException(); // TODO
   }
 
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
