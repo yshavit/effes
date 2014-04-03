@@ -140,7 +140,7 @@ public final class ExpressionCompiler {
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
     List<Expression.CaseExpression.CaseAlternative> patterns =
-      ctx.caseExprs().caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
+      ctx.caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
     return new Expression.CaseExpression(ctx.getStart(), matchAgainst, patterns);
   }
 
