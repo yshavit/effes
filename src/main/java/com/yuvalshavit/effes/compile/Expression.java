@@ -47,14 +47,43 @@ public abstract class Expression extends Node {
   }
 
   public static class CaseExpression extends Expression {
+    private final CaseConstruct delegate;
+
+    public CaseExpression(Token token, CaseConstruct delegate) {
+      super(token, delegate.resultType());
+      this.delegate = delegate;
+    }
+
+    @Override
+    public String toString() {
+      return delegate.toString();
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(token(), errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      delegate.state(out);
+    }
+
+    public CaseConstruct construct() {
+      return delegate;
+    }
+  }
+
+  public static class CaseConstruct {
 
     private final Expression matchAgainst;
     private final List<CaseAlternative> patterns;
+    private final EfType resultType;
 
-    public CaseExpression(Token token, Expression matchAgainst, List<CaseAlternative> patterns) {
-      super(token, computeType(patterns));
+    public CaseConstruct(Expression matchAgainst, List<CaseAlternative> patterns) {
       this.matchAgainst = matchAgainst;
       this.patterns = ImmutableList.copyOf(patterns);
+      this.resultType = computeType(patterns);
     }
 
     public Expression getMatchAgainst() {
@@ -65,8 +94,11 @@ public abstract class Expression extends Node {
       return patterns;
     }
 
-    @Override
-    public void validate(CompileErrors errs) {
+    public EfType resultType() {
+      return resultType;
+    }
+
+    public void validate(Token token, CompileErrors errs) {
       // Validate that:
       // 1) each matcher *can* match the given expression
       // 2) at least one matcher *will* match the given expression
@@ -95,15 +127,14 @@ public abstract class Expression extends Node {
           int actual = alt.getBindings().size();
           if (expected != actual) {
             String plural = expected == 1 ? "" : "s";
-            errs.add(token(), String.format("expected %d binding%s but found %d", expected, plural, actual));
+            errs.add(token, String.format("expected %d binding%s but found %d", expected, plural, actual));
           }
         });
       } else {
-        errs.add(token(), "case requires a disjunctive type (found " + matchType + ")");
+        errs.add(token, "case requires a disjunctive type (found " + matchType + ")");
       }
     }
 
-    @Override
     public void state(NodeStateListener out) {
       out.child("case", matchAgainst);
       patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatchedExpression()));
