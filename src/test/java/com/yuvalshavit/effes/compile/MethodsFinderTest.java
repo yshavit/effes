@@ -6,7 +6,6 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.testng.annotations.Test;
 
-import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
 
 public final class MethodsFinderTest {
