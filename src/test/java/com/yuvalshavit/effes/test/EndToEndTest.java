@@ -26,6 +26,7 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ public final class EndToEndTest {
     String regexPattern = System.getProperty("test.regex", "");
     String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err|out)$";
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
-      .flatMap(EndToEndTest::readFileOrDir)
+      .flatMap((Function<String, Stream<String>>)EndToEndTest::readFileOrDir) // IDEA-123366
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
       .distinct()
