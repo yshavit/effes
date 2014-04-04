@@ -5,7 +5,6 @@ import com.yuvalshavit.effes.parser.EffesParser;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class BlockCompiler implements BiFunction<EffesParser.InlinableBlockContext, EfType, Block> {
@@ -18,9 +17,9 @@ public final class BlockCompiler implements BiFunction<EffesParser.InlinableBloc
   @Override
   public Block apply(EffesParser.InlinableBlockContext inlinableBlockContext, EfType requiredType) {
     if (inlinableBlockContext == null) {
-      return new Block(requiredType, ImmutableList.of());
+      return new Block(null, ImmutableList.of());
     }
     List<Statement> stats = inlinableBlockContext.stat().stream().map(compiler).collect(Collectors.toList());
-    return new Block(requiredType, stats);
+    return new Block(inlinableBlockContext.getStart(), stats);
   }
 }

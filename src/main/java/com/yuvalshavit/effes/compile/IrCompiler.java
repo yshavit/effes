@@ -78,6 +78,7 @@ public final class IrCompiler<E> {
     });
     for (EfMethod<? extends Block> method : compiled.getTopLevelMethods()) {
       method.getBody().validate(errs);
+      method.getBody().validateResultType(method.getResultType(), errs);
     }
     return compiled;
   }
