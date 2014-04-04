@@ -8,17 +8,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class Expression extends Node {
-  private final EfType type;
-
   private Expression(Token token, EfType type) {
-    super(token);
-    this.type = type != null
-      ? type
-      : EfType.UNKNOWN;
-  }
-
-  public EfType resultType() {
-    return type;
+    super(token, type != null ? type : EfType.UNKNOWN);
   }
 
   public static class UnrecognizedExpression extends Expression {
