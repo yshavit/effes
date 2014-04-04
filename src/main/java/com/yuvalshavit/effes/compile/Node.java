@@ -5,13 +5,19 @@ import org.antlr.v4.runtime.Token;
 public abstract class Node {
 
   private final Token token;
+  private final EfType resultType;
 
-  protected Node(Token token) {
+  protected Node(Token token, EfType resultType) {
     this.token = token;
+    this.resultType = resultType;
   }
 
   public Token token() {
     return token;
+  }
+
+  public EfType resultType() {
+    return resultType;
   }
 
   @Override

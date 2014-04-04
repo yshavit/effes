@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CaseConstruct {
+public class CaseConstruct<N extends Node> {
 
   private final Expression matchAgainst;
-  private final List<Alternative> patterns;
+  private final List<Alternative<N>> patterns;
   private final EfType resultType;
 
-  public CaseConstruct(Expression matchAgainst, List<Alternative> patterns) {
+  public CaseConstruct(Expression matchAgainst, List<Alternative<N>> patterns) {
     this.matchAgainst = matchAgainst;
     this.patterns = ImmutableList.copyOf(patterns);
     this.resultType = computeType(patterns);
@@ -24,7 +24,7 @@ public class CaseConstruct {
     return matchAgainst;
   }
 
-  public List<Alternative> getPatterns() {
+  public List<Alternative<N>> getPatterns() {
     return patterns;
   }
 
@@ -79,9 +79,9 @@ public class CaseConstruct {
     return String.format("case (%s) of...", matchAgainst);
   }
 
-  private static EfType computeType(List<Alternative> patterns) {
+  private static EfType computeType(List<? extends Alternative<?>> patterns) {
     EfType result = null;
-    for (Alternative p : patterns) {
+    for (Alternative<?> p : patterns) {
       EfType patternResult = p.getIfMatched().resultType();
       result = result != null
         ? EfType.disjunction(result, patternResult)
@@ -90,18 +90,18 @@ public class CaseConstruct {
     return result;
   }
 
-  public static class Alternative {
+  public static class Alternative<N extends Node> {
     private final EfType.SimpleType type;
-    private final Expression ifMatched;
+    private final N ifMatched;
     private final List<EfVar> bindings;
 
-    public Alternative(EfType.SimpleType type, List<EfVar> bindings, Expression ifMatched) {
+    public Alternative(EfType.SimpleType type, List<EfVar> bindings, N ifMatched) {
       this.type = type;
       this.ifMatched = ifMatched;
       this.bindings = ImmutableList.copyOf(bindings);
     }
 
-    public Expression getIfMatched() {
+    public N getIfMatched() {
       return ifMatched;
     }
 
