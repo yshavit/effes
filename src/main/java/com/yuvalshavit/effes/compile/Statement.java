@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 
 public abstract class Statement extends Node {
 
-  private Statement(Token token) {
-    super(token);
+  private Statement(Token token, @Nonnull EfType resultType) {
+    super(token, resultType);
   }
 
   @Nullable
@@ -21,7 +21,7 @@ public abstract class Statement extends Node {
     private final Expression value;
 
     public AssignStatement(Token token, EfVar var, Expression value) {
-      super(token);
+      super(token, EfType.VOID);
       this.var = var;
       this.value = value;
     }
@@ -56,7 +56,7 @@ public abstract class Statement extends Node {
     private final Expression expression;
 
     public ReturnStatement(Token token, Expression expression) {
-      super(token);
+      super(token, expression.resultType());
       this.expression = expression;
     }
 
@@ -84,7 +84,7 @@ public abstract class Statement extends Node {
     private final Expression.MethodInvoke methodExpr;
 
     public MethodInvoke(Expression.MethodInvoke methodExpr) {
-      super(methodExpr.token());
+      super(methodExpr.token(), EfType.VOID);
       this.methodExpr = methodExpr;
     }
 
@@ -111,7 +111,7 @@ public abstract class Statement extends Node {
   public static class UnrecognizedStatement extends Statement {
 
     public UnrecognizedStatement(Token token) {
-      super(token);
+      super(token, EfType.VOID);
     }
 
     @Override

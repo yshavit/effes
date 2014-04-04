@@ -141,7 +141,7 @@ public final class ExpressionCompiler {
     Expression matchAgainst = apply(ctx.expr());
     List<CaseConstruct.Alternative<Expression>> patterns =
       ctx.caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
-    CaseConstruct construct = new CaseConstruct<>(matchAgainst, patterns);
+    CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
     return new Expression.CaseExpression(ctx.getStart(), construct);
   }
 

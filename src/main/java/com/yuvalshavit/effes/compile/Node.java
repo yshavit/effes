@@ -2,12 +2,14 @@ package com.yuvalshavit.effes.compile;
 
 import org.antlr.v4.runtime.Token;
 
+import javax.annotation.Nonnull;
+
 public abstract class Node {
 
   private final Token token;
   private final EfType resultType;
 
-  protected Node(Token token, EfType resultType) {
+  protected Node(Token token, @Nonnull EfType resultType) {
     this.token = token;
     this.resultType = resultType;
   }
@@ -16,6 +18,7 @@ public abstract class Node {
     return token;
   }
 
+  @Nonnull
   public EfType resultType() {
     return resultType;
   }
