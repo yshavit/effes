@@ -82,7 +82,7 @@ inlinableBlock: stat
 stat: RETURN exprLine                                                           # ReturnStat
     | methodInvoke NL                                                           # MethodInvokeStat
     | VAR_NAME EQ exprLine                                                      # AssignStat
-    | CASE expr OF INDENT caseStatAlternative DEDENT                            # CaseStat
+    | CASE expr OF INDENT caseStatAlternative+ DEDENT                           # CaseStat
     ;
 
 exprLine: expr NL                                                               # SingleLineExpression
