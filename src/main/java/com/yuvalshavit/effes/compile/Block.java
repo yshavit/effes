@@ -10,7 +10,11 @@ public final class Block extends Node {
   private final List<Statement> statements;
 
   public Block(Token token, List<Statement> statements) {
-    super(token, computeType(statements));
+    this(new BlockInfo(token, statements), statements);
+  }
+
+  private Block(BlockInfo info, List<Statement> statements) {
+    super(info.token, info.type);
     this.statements = ImmutableList.copyOf(statements);
   }
 
@@ -53,16 +57,6 @@ public final class Block extends Node {
     return statements.hashCode();
   }
 
-  private static EfType computeType(List<Statement> statements) {
-    for (Statement s : statements) {
-      EfType resultType = s.resultType();
-      if (!EfType.VOID.equals(resultType)) {
-        return resultType;
-      }
-    }
-    return EfType.VOID;
-  }
-
   @Override
   public void validate(CompileErrors errs) {
     EfType lastStatementReturned = EfType.VOID;
@@ -89,6 +83,29 @@ public final class Block extends Node {
         String msg = String.format("expected result type %s but found %s", requiredReturnType, actualReturnType);
         errs.add(token(), msg);
       }
+    }
+  }
+
+  private static class BlockInfo {
+    private final Token token;
+    private final EfType type;
+
+    public BlockInfo(Token token, List<Statement> statements) {
+      // We'll use the incoming token as a backup, but really the identifying token for this block is the statement
+      // that first establishes (guarantees) the block's return. That's the token that we'll want to see in error
+      // messages. For instance, if the block should return Foo but actually returns Bar, we'll want the reported token
+      // to be the one for the return statement, not for the start of the block.
+      EfType type = EfType.VOID;
+      for (Statement s : statements) {
+        EfType statementType = s.resultType();
+        if (!EfType.VOID.equals(statementType)) {
+          type = statementType;
+          token = s.token();
+          break;
+        }
+      }
+      this.token = token;
+      this.type = type;
     }
   }
 }

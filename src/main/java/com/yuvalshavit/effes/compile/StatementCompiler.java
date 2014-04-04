@@ -35,7 +35,13 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
     Expression value = expressionCompiler.apply(ctx.exprLine());
     int pos = vars.countElems();
-    EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, value.resultType());
+    EfType varType = value.resultType();
+    if (EfType.VOID.equals(varType)) {
+      // We have something like "foo = bar" where bar is a method with no return value. This doesn't make sense!
+      // But rather than saying that foo has a void type, we'll just say we don't know what its type is.
+      varType = EfType.UNKNOWN;
+    }
+    EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, varType);
     vars.add(var, ctx.VAR_NAME().getSymbol());
     return new Statement.AssignStatement(ctx.getStart(), var, value);
   }
