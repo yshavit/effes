@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class ExpressionCompiler {
@@ -151,14 +152,28 @@ public final class ExpressionCompiler {
 
   @Nullable
   private CaseConstruct.Alternative<Expression> caseAlternative(EffesParser.CaseAlternativeContext ctx) {
-    TerminalNode tok = ctx.casePattern().TYPE_NAME();
+    return caseAlternative(
+      ctx,
+      EffesParser.CaseAlternativeContext::casePattern,
+      c -> c.exprBlock() != null
+        ? apply(c.exprBlock().expr())
+        : new Expression.UnrecognizedExpression(c.getStart()));
+  }
+
+  @Nullable
+  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
+    C ctx,
+    Function<C, EffesParser.CasePatternContext> patternExtractor,
+    Function<C, N> ifMatchesExtractor)
+  {
+    EffesParser.CasePatternContext casePattern = patternExtractor.apply(ctx);
+    TerminalNode tok = casePattern.TYPE_NAME();
     EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
     if (matchType == null) {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
-    // TODO intellij doesn't like the binding, how about javac?
-    List<TerminalNode> bindingTokens = ctx.casePattern().VAR_NAME();
+    List<TerminalNode> bindingTokens = casePattern.VAR_NAME();
     List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
@@ -172,10 +187,11 @@ public final class ExpressionCompiler {
       vars.add(binding, bindingToken.getSymbol());
       bindingArgs.add(binding);
     }
-    Expression ifMatches = ctx.exprBlock() != null
-      ? apply(ctx.exprBlock().expr())
-      : new Expression.UnrecognizedExpression(ctx.getStart());
+    N ifMatches = ifMatchesExtractor.apply(ctx);
     vars.popScope();
+    if (ifMatches == null) {
+      errs.add(casePattern.getStart(), "unrecognized alternative for pattern " + matchType);
+    }
     return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
   }
 }
