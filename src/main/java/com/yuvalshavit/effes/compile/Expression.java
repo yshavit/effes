@@ -35,9 +35,9 @@ public abstract class Expression extends Node {
   }
 
   public static class CaseExpression extends Expression {
-    private final CaseConstruct delegate;
+    private final CaseConstruct<Expression> delegate;
 
-    public CaseExpression(Token token, CaseConstruct delegate) {
+    public CaseExpression(Token token, CaseConstruct<Expression> delegate) {
       super(token, delegate.resultType());
       this.delegate = delegate;
     }
@@ -57,7 +57,7 @@ public abstract class Expression extends Node {
       delegate.state(out);
     }
 
-    public CaseConstruct construct() {
+    public CaseConstruct<Expression> construct() {
       return delegate;
     }
   }
