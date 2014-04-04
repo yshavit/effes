@@ -5,6 +5,7 @@ import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,8 +43,10 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement caseStatement(EffesParser.CaseStatContext ctx) {
     Expression matchAgainst = expressionCompiler.apply(ctx.expr());
     List<CaseConstruct.Alternative<Block>> alternatives =
-      ctx.caseStatAlternative().stream().map(this::caseAlternative).collect(Collectors.toList());
-    throw new UnsupportedOperationException(); // TODO
+      ctx.caseStatAlternative().stream()
+        .map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
+    CaseConstruct<Block> construct = new CaseConstruct<>(matchAgainst, alternatives);
+    return new Statement.CaseStatement(ctx.getStart(), construct);
   }
 
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
@@ -60,6 +63,16 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   }
 
   private CaseConstruct.Alternative<Block> caseAlternative(EffesParser.CaseStatAlternativeContext ctx) {
+    return expressionCompiler.caseAlternative(
+      ctx,
+      EffesParser.CaseStatAlternativeContext::casePattern,
+      c -> c.inlinableBlock() != null
+        ? block(c.inlinableBlock())
+        : null
+    );
+  }
+
+  private Block block(EffesParser.InlinableBlockContext ctx) {
     throw new UnsupportedOperationException(); // TODO
   }
 }

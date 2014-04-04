@@ -52,6 +52,30 @@ public abstract class Statement extends Node {
     }
   }
 
+  public static class CaseStatement extends Statement {
+    private final CaseConstruct<Block> delegate;
+
+    public CaseStatement(Token token, CaseConstruct<Block> delegate) {
+      super(token, delegate.resultType());
+      this.delegate = delegate;
+    }
+
+    @Override
+    public String toString() {
+      return delegate.toString();
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(token(), errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      delegate.state(out);
+    }
+  }
+
   public static class ReturnStatement extends Statement {
     private final Expression expression;
 
