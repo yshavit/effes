@@ -4,7 +4,9 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class StatementCompiler implements Function<EffesParser.StatContext, Statement> {
 
@@ -38,6 +40,9 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   }
 
   private Statement caseStatement(EffesParser.CaseStatContext ctx) {
+    Expression matchAgainst = expressionCompiler.apply(ctx.expr());
+    List<CaseConstruct.Alternative<Block>> alternatives =
+      ctx.caseStatAlternative().stream().map(this::caseAlternative).collect(Collectors.toList());
     throw new UnsupportedOperationException(); // TODO
   }
 
@@ -52,5 +57,9 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   private Statement error(EffesParser.StatContext ctx) {
     return new Statement.UnrecognizedStatement(ctx.getStart());
+  }
+
+  private CaseConstruct.Alternative<Block> caseAlternative(EffesParser.CaseStatAlternativeContext ctx) {
+    throw new UnsupportedOperationException(); // TODO
   }
 }

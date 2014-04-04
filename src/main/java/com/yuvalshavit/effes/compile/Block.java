@@ -6,14 +6,13 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
-public final class Block {
+public final class Block extends Node {
 
   private final List<Statement> statements;
-  private final EfType requiredReturnType;
 
   public Block(EfType requiredReturnType, List<Statement> statements) {
+    super(null, requiredReturnType);
     this.statements = ImmutableList.copyOf(statements);
-    this.requiredReturnType = requiredReturnType;
   }
 
   public List<Statement> statements() {
@@ -32,6 +31,17 @@ public final class Block {
   }
 
   @Override
+  public String toString() {
+    int nStats = statements.size();
+    return String.format("<block with %d statement%s>", nStats, nStats != 1 ? "s" : "");
+  }
+
+  @Override
+  public void state(NodeStateListener out) {
+    statements.forEach(s -> s.state(out));
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
@@ -44,6 +54,7 @@ public final class Block {
     return statements.hashCode();
   }
 
+  @Override
   public void validate(CompileErrors errs) {
     ValidationDispatch validator = new ValidationDispatch();
     EfType lastBranchReturned = null;
@@ -56,11 +67,12 @@ public final class Block {
       lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
       lastToken = s.token();
     }
+    EfType requiredReturnType = resultType();
     if (EfType.VOID.equals(requiredReturnType)) {
       if (lastBranchReturned != null) {
         errs.add(lastToken, String.format("expected no result type, but found %s", lastBranchReturned));
       }
-    } else if (requiredReturnType != null) {
+    } else {
       if (lastBranchReturned == null) {
         errs.add(lastToken, "block may not return, but needs to return " + requiredReturnType);
       } else if (!requiredReturnType.contains(lastBranchReturned)) {
