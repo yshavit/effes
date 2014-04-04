@@ -67,12 +67,9 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       ctx,
       EffesParser.CaseStatAlternativeContext::casePattern,
       c -> c.inlinableBlock() != null
-        ? block(c.inlinableBlock())
+        ? new Block(c.getStart(), c.inlinableBlock().stat().stream().map(this::apply).collect(Collectors.toList()))
         : null
     );
   }
 
-  private Block block(EffesParser.InlinableBlockContext ctx) {
-    throw new UnsupportedOperationException(); // TODO
-  }
 }

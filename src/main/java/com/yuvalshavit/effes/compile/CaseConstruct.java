@@ -83,6 +83,13 @@ public class CaseConstruct<N extends Node> {
     EfType result = null;
     for (Alternative<?> p : patterns) {
       EfType patternResult = p.getIfMatched().resultType();
+      // VOID short-circuits the result type. This is for case statements (expressions can't have type VOID). For a
+      // Statement, the result type is the type that is guaranteed to be returned. If you have a case statement where
+      // one alternative returns Foo and another returns void (that is, doesn't return), then the case statement as a
+      // whole is not guaranteed to return, and thus has a type of void.
+      if (EfType.VOID.equals(patternResult)) {
+        return EfType.VOID; // VOID short-circuits
+      }
       result = result != null
         ? EfType.disjunction(result, patternResult)
         : patternResult;
