@@ -71,7 +71,7 @@ public class CaseConstruct {
 
   public void state(NodeStateListener out) {
     out.child("case", matchAgainst);
-    patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatchedExpression()));
+    patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatched()));
   }
 
   @Override
@@ -82,7 +82,7 @@ public class CaseConstruct {
   private static EfType computeType(List<Alternative> patterns) {
     EfType result = null;
     for (Alternative p : patterns) {
-      EfType patternResult = p.getIfMatchedExpression().resultType();
+      EfType patternResult = p.getIfMatched().resultType();
       result = result != null
         ? EfType.disjunction(result, patternResult)
         : patternResult;
@@ -101,7 +101,7 @@ public class CaseConstruct {
       this.bindings = ImmutableList.copyOf(bindings);
     }
 
-    public Expression getIfMatchedExpression() {
+    public Expression getIfMatched() {
       return ifMatched;
     }
 
