@@ -9,29 +9,37 @@ public final class BlockTest {
 
   @Test
   public void singleReturn() {
-    Block block = new Block(ImmutableList.of(returnStat(ctorExpr("True"))));
+    Block block = new Block(type("True"), ImmutableList.of(returnStat(ctorExpr("True"))));
     CompileErrors errs = new CompileErrors();
-    block.validate(null, errs);
-    block.validate(type("True"), errs);
-    TUtils.expectErrors(errs, () -> block.validate(type("False"), errs));
+    block.validate(errs);
+    block.validate(errs);
+  }
+
+  @Test
+  public void singleReturnWrongType() {
+    Block block = new Block(type("False"), ImmutableList.of(returnStat(ctorExpr("True"))));
+    CompileErrors errs = new CompileErrors();
+    TUtils.expectErrors(errs, () -> block.validate(errs));
   }
 
   @Test
   public void noReturns() {
-    Block block = new Block(ImmutableList.of());
-    TUtils.expectNoErrors(errs -> block.validate(null, errs));
-    TUtils.expectErrors(errs -> block.validate(type("True"), errs));
-    TUtils.expectErrors(errs -> block.validate(type("False"), errs));
+    Block block = new Block(EfType.VOID, ImmutableList.of());
+    TUtils.expectNoErrors(block::validate);
+  }
+
+  @Test
+  public void noReturnsButNeedOne() {
+    Block block = new Block(type("True"), ImmutableList.of());
+    TUtils.expectErrors(block::validate);
   }
 
   @Test
   public void twoReturns() {
-    Block block = new Block(ImmutableList.of(
+    Block block = new Block(type("True"), ImmutableList.of(
       returnStat(ctorExpr("True")),
       returnStat(ctorExpr("True"))));
-    TUtils.expectErrors(errs -> block.validate(null, errs));
-    TUtils.expectErrors(errs -> block.validate(type("True"), errs));
-    TUtils.expectErrors(errs -> block.validate(type("False"), errs));
+    TUtils.expectErrors(block::validate);
   }
 
   private Statement.ReturnStatement returnStat(Expression expr) {

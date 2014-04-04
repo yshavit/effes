@@ -9,15 +9,17 @@ import java.util.List;
 public final class Block {
 
   private final List<Statement> statements;
+  private final EfType requiredReturnType;
 
-  public Block(List<Statement> statements) {
+  public Block(EfType requiredReturnType, List<Statement> statements) {
     this.statements = ImmutableList.copyOf(statements);
+    this.requiredReturnType = requiredReturnType;
   }
 
   public List<Statement> statements() {
     return statements;
   }
-  
+
   public int nVars() {
     return statements
       .stream()
@@ -42,7 +44,7 @@ public final class Block {
     return statements.hashCode();
   }
 
-  public void validate(EfType requiredReturnType, CompileErrors errs) {
+  public void validate(CompileErrors errs) {
     ValidationDispatch validator = new ValidationDispatch();
     EfType lastBranchReturned = null;
     Token lastToken = null;
