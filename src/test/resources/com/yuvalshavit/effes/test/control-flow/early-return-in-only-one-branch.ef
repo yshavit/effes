@@ -1,0 +1,11 @@
+def boolId (bool: True | False) -> True | False:
+  case bool of
+    True:
+      print True
+      return True
+    False:
+      print False
+  print Void
+  return False
+
+def main: print boolId True

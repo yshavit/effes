@@ -1,0 +1,26 @@
+def boolId (bool: False | True) -> False | True:
+  CaseStatement
+    case:
+      VarExpression
+        arg: bool
+        pos: 0
+    of True:
+      Block
+        method:
+          MethodInvoke
+            method: print [built-in]
+            arg0:
+              CtorInvoke
+                type: True
+        CtorInvoke
+          type: True
+    of False:
+      Block
+        method:
+          MethodInvoke
+            method: print [built-in]
+            arg0:
+              CtorInvoke
+                type: False
+        CtorInvoke
+          type: False
