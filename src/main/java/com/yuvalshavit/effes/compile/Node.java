@@ -18,6 +18,10 @@ public abstract class Node {
     return token;
   }
 
+  public boolean elideFromState() {
+    return false;
+  }
+
   @Nonnull
   public EfType resultType() {
     return resultType;

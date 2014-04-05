@@ -18,6 +18,11 @@ public final class Block extends Node {
     this.statements = ImmutableList.copyOf(statements);
   }
 
+  @Override
+  public boolean elideFromState() {
+    return true;
+  }
+
   public List<Statement> statements() {
     return statements;
   }
@@ -41,7 +46,7 @@ public final class Block extends Node {
 
   @Override
   public void state(NodeStateListener out) {
-    statements.forEach(s -> s.state(out));
+    statements.forEach(out::child);
   }
 
   @Override

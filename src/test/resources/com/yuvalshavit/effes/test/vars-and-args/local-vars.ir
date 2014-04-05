@@ -11,13 +11,11 @@ def foo (True) -> True:
         var: t1
         pos: 0
   MethodInvoke
-    method:
-      MethodInvoke
-        method: print [built-in]
-        arg0:
-          VarExpression
-            var: t2
-            pos: 1
+    method: print [built-in]
+    arg0:
+      VarExpression
+        var: t2
+        pos: 1
   ReturnStatement
     VarExpression
       var: t2

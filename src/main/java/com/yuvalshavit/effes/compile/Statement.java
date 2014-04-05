@@ -127,7 +127,12 @@ public abstract class Statement extends Node {
 
     @Override
     public void state(NodeStateListener out) {
-      out.child("method", methodExpr);
+      out.child(methodExpr);
+    }
+
+    @Override
+    public boolean elideFromState() {
+      return true; // we only its child, the expression invoke
     }
 
     @Override
