@@ -157,6 +157,10 @@ public final class EndToEndTest {
 
     @Override
     public void child(Node child) {
+      if (child.elideFromState()) {
+        child.state(this);
+        return;
+      }
       indent();
       out.append(child.getClass().getSimpleName()).append('\n');
       ++depth;

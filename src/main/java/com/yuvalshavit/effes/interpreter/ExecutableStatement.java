@@ -3,6 +3,8 @@ package com.yuvalshavit.effes.interpreter;
 import com.yuvalshavit.effes.compile.Expression;
 import com.yuvalshavit.effes.compile.Statement;
 
+import java.util.List;
+
 public abstract class ExecutableStatement implements ExecutableElement {
   private final Statement source;
 
@@ -29,6 +31,20 @@ public abstract class ExecutableStatement implements ExecutableElement {
     public void execute(CallStack stack) {
       value.execute(stack);
       stack.popToLocal(pos);
+    }
+  }
+
+  public static class CaseStatement extends ExecutableStatement {
+    private final ExecutableCase delegate;
+
+    public CaseStatement(Statement source, ExecutableExpression matchAgainst, List<ExecutableCase.CaseMatcher> caseMatchers) {
+      super(source);
+      this.delegate = new ExecutableCase(matchAgainst, caseMatchers);
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      delegate.execute(stack);
     }
   }
 

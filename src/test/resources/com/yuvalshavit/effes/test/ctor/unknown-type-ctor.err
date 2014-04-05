@@ -1,2 +1,2 @@
 unknown type: Foo (at line 1, column 25: Foo)
-expected result type Void but found <unknown type> (at line 1, column 25: Foo)
+expected result type Void but found unknown type (at line 1, column 25: Foo)

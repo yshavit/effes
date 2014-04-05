@@ -1,23 +1,32 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 
-public final class Block {
+public final class Block extends Node {
 
   private final List<Statement> statements;
 
-  public Block(List<Statement> statements) {
+  public Block(Token token, List<Statement> statements) {
+    this(new BlockInfo(token, statements), statements);
+  }
+
+  private Block(BlockInfo info, List<Statement> statements) {
+    super(info.token, info.type);
     this.statements = ImmutableList.copyOf(statements);
+  }
+
+  @Override
+  public boolean elideFromState() {
+    return true;
   }
 
   public List<Statement> statements() {
     return statements;
   }
-  
+
   public int nVars() {
     return statements
       .stream()
@@ -27,6 +36,17 @@ public final class Block {
       .max()
       .orElse(-1)
       + 1;
+  }
+
+  @Override
+  public String toString() {
+    int nStats = statements.size();
+    return String.format("<block with %d statement%s>", nStats, nStats != 1 ? "s" : "");
+  }
+
+  @Override
+  public void state(NodeStateListener out) {
+    statements.forEach(out::child);
   }
 
   @Override
@@ -42,48 +62,55 @@ public final class Block {
     return statements.hashCode();
   }
 
-  public void validate(EfType requiredReturnType, CompileErrors errs) {
-    ValidationDispatch validator = new ValidationDispatch();
-    EfType lastBranchReturned = null;
-    Token lastToken = null;
+  @Override
+  public void validate(CompileErrors errs) {
+    EfType lastStatementReturned = EfType.VOID;
     for (Statement s : statements) {
       s.validate(errs);
-      if (lastBranchReturned != null) {
+      if (!EfType.VOID.equals(lastStatementReturned)) {
         errs.add(s.token(), "unreachable statement: " + s);
       }
-      lastBranchReturned = ValidationDispatch.dispatcher.apply(validator, s);
-      lastToken = s.token();
+      lastStatementReturned = s.resultType();
     }
+  }
+
+  public void validateResultType(EfType requiredReturnType, CompileErrors errs) {
+    EfType actualReturnType = resultType();
     if (EfType.VOID.equals(requiredReturnType)) {
-      if (lastBranchReturned != null) {
-        errs.add(lastToken, String.format("expected no result type, but found %s", lastBranchReturned));
+      if (!EfType.VOID.equals(actualReturnType)) {
+        errs.add(token(), String.format("expected no result type, but found %s", actualReturnType));
       }
-    } else if (requiredReturnType != null) {
-      if (lastBranchReturned == null) {
-        errs.add(lastToken, "block may not return, but needs to return " + requiredReturnType);
-      } else if (!requiredReturnType.contains(lastBranchReturned)) {
+    } else {
+      if (EfType.VOID.equals(actualReturnType)) {
+        errs.add(token(), "block may not return, but needs to return " + requiredReturnType);
+      } else if (!requiredReturnType.contains(actualReturnType)) {
         // e.g. return type (True | False), lastBranchReturned True
-        String msg = String.format("expected result type %s but found %s", requiredReturnType, lastBranchReturned);
-        errs.add(lastToken, msg);
+        String msg = String.format("expected result type %s but found %s", requiredReturnType, actualReturnType);
+        errs.add(token(), msg);
       }
     }
   }
 
-  static class ValidationDispatch {
-    static final Dispatcher<ValidationDispatch, Statement, EfType> dispatcher =
-      Dispatcher.builder(ValidationDispatch.class, Statement.class, EfType.class)
-        .put(Statement.AssignStatement.class, ValidationDispatch::noReturn)
-        .put(Statement.MethodInvoke.class, ValidationDispatch::noReturn)
-        .put(Statement.ReturnStatement.class, ValidationDispatch::returnStat)
-        .put(Statement.UnrecognizedStatement.class, ValidationDispatch::noReturn)
-        .build(ValidationDispatch::noReturn);
+  private static class BlockInfo {
+    private final Token token;
+    private final EfType type;
 
-    public EfType returnStat(Statement.ReturnStatement stat) {
-      return stat.getExpression().resultType();
-    }
-
-    public EfType noReturn(@SuppressWarnings("unused") Statement stat) {
-      return null;
+    public BlockInfo(Token token, List<Statement> statements) {
+      // We'll use the incoming token as a backup, but really the identifying token for this block is the statement
+      // that first establishes (guarantees) the block's return. That's the token that we'll want to see in error
+      // messages. For instance, if the block should return Foo but actually returns Bar, we'll want the reported token
+      // to be the one for the return statement, not for the start of the block.
+      EfType type = EfType.VOID;
+      for (Statement s : statements) {
+        EfType statementType = s.resultType();
+        if (!EfType.VOID.equals(statementType)) {
+          type = statementType;
+          token = s.token();
+          break;
+        }
+      }
+      this.token = token;
+      this.type = type;
     }
   }
 }

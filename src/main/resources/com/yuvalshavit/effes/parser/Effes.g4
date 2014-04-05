@@ -82,11 +82,14 @@ inlinableBlock: stat
 stat: RETURN exprLine                                                           # ReturnStat
     | methodInvoke NL                                                           # MethodInvokeStat
     | VAR_NAME EQ exprLine                                                      # AssignStat
+    | CASE expr OF INDENT caseStatAlternative+ DEDENT                           # CaseStat
     ;
 
 exprLine: expr NL                                                               # SingleLineExpression
-        | CASE expr OF caseExprs                                                # CaseExpression
+        | CASE expr OF INDENT caseAlternative+ DEDENT                           # CaseExpression
         ;
+
+caseStatAlternative: casePattern COLON inlinableBlock;
 
 // expressions
 
@@ -98,8 +101,6 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
 methodInvoke: methodName methodInvokeArgs;
 
 methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
-
-caseExprs: INDENT caseAlternative+ DEDENT;
 
 caseAlternative: casePattern COLON exprBlock;
 

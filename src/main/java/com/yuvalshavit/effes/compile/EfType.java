@@ -10,20 +10,25 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 public abstract class EfType {
 
-  public static final EfType UNKNOWN = new UnknownType("<unknown type>");
-  public static final EfType VOID = new UnknownType("no result type");
+  public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
+  public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
   public static final Comparator<EfType> comparator = new EfTypeComparator();
 
   @Override
   public abstract boolean equals(Object obj);
   @Override
   public abstract int hashCode();
+
+  public boolean isFakeType() {
+    return getClass().equals(UnknownType.class);
+  }
 
   private EfType() {}
 
@@ -39,10 +44,20 @@ public abstract class EfType {
   public abstract String toString();
 
   private static final class UnknownType extends EfType {
-    private final String name;
+    private enum Variant {
+      UNKNOWN("unknown type"),
+      VOID("no result type");
 
-    private UnknownType(String name) {
-      this.name = name;
+      private final String description;
+
+      Variant(String description) {
+        this.description = description;
+      }
+    }
+    private final Variant variant;
+
+    private UnknownType(Variant variant) {
+      this.variant = variant;
     }
 
     @Override
@@ -52,7 +67,7 @@ public abstract class EfType {
 
     @Override
     public String toString() {
-      return name;
+      return variant.description;
     }
 
     @Override
@@ -143,6 +158,10 @@ public abstract class EfType {
   public static EfType disjunction(Collection<? extends EfType> options) {
     if (options.isEmpty()) {
       throw new IllegalArgumentException("can't disjoin an empty set");
+    }
+    Optional<? extends EfType> maybeShortCircuit = options.stream().filter(EfType::isFakeType).findFirst();
+    if (maybeShortCircuit.isPresent()) {
+      return maybeShortCircuit.get();
     }
     DisjunctiveType d = new DisjunctiveType(options);
     return d.options.size() == 1
@@ -272,8 +291,11 @@ public abstract class EfType {
       }
       switch (o1Ordinal) {
       case NULL:
+        return 0; // null == null
       case UNKNOWN:
-        return 0; // null == null, UNKNOWN == UNKNOWN
+        UnknownType u1 = (UnknownType) o1;
+        UnknownType u2 = (UnknownType) o2;
+        return u1.variant.compareTo(u2.variant);
       case SIMPLE:
         SimpleType s1 = (SimpleType) o1;
         SimpleType s2 = (SimpleType) o2;
