@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -24,6 +25,10 @@ public abstract class EfType {
   public abstract boolean equals(Object obj);
   @Override
   public abstract int hashCode();
+
+  public boolean isFakeType() {
+    return getClass().equals(UnknownType.class);
+  }
 
   private EfType() {}
 
@@ -144,11 +149,9 @@ public abstract class EfType {
     if (options.isEmpty()) {
       throw new IllegalArgumentException("can't disjoin an empty set");
     }
-    if (options.contains(UNKNOWN)) {
-      return UNKNOWN;
-    }
-    if (options.contains(VOID)) {
-      return VOID;
+    Optional<? extends EfType> maybeShortCircuit = options.stream().filter(EfType::isFakeType).findFirst();
+    if (maybeShortCircuit.isPresent()) {
+      return maybeShortCircuit.get();
     }
     DisjunctiveType d = new DisjunctiveType(options);
     return d.options.size() == 1
