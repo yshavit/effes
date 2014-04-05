@@ -16,7 +16,7 @@ import java.util.TreeSet;
 
 public abstract class EfType {
 
-  public static final EfType UNKNOWN = new UnknownType("<unknown type>");
+  public static final EfType UNKNOWN = new UnknownType("unknown type");
   public static final EfType VOID = new UnknownType("no result type");
   public static final Comparator<EfType> comparator = new EfTypeComparator();
 
