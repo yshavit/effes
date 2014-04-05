@@ -4,7 +4,10 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class StatementCompiler implements Function<EffesParser.StatContext, Statement> {
 
@@ -26,14 +29,30 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       .put(EffesParser.AssignStatContext.class, StatementCompiler::assignStatement)
       .put(EffesParser.MethodInvokeStatContext.class, StatementCompiler::methodInvoke)
       .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
+      .put(EffesParser.CaseStatContext.class, StatementCompiler::caseStatement)
       .build(StatementCompiler::error);
 
   private Statement assignStatement(EffesParser.AssignStatContext ctx) {
     Expression value = expressionCompiler.apply(ctx.exprLine());
     int pos = vars.countElems();
-    EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, value.resultType());
+    EfType varType = value.resultType();
+    if (EfType.VOID.equals(varType)) {
+      // We have something like "foo = bar" where bar is a method with no return value. This doesn't make sense!
+      // But rather than saying that foo has a void type, we'll just say we don't know what its type is.
+      varType = EfType.UNKNOWN;
+    }
+    EfVar var = EfVar.var(ctx.VAR_NAME().getText(), pos, varType);
     vars.add(var, ctx.VAR_NAME().getSymbol());
     return new Statement.AssignStatement(ctx.getStart(), var, value);
+  }
+
+  private Statement caseStatement(EffesParser.CaseStatContext ctx) {
+    Expression matchAgainst = expressionCompiler.apply(ctx.expr());
+    List<CaseConstruct.Alternative<Block>> alternatives =
+      ctx.caseStatAlternative().stream()
+        .map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
+    CaseConstruct<Block> construct = new CaseConstruct<>(matchAgainst, alternatives);
+    return new Statement.CaseStatement(ctx.getStart(), construct);
   }
 
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
@@ -48,4 +67,15 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement error(EffesParser.StatContext ctx) {
     return new Statement.UnrecognizedStatement(ctx.getStart());
   }
+
+  private CaseConstruct.Alternative<Block> caseAlternative(EffesParser.CaseStatAlternativeContext ctx) {
+    return expressionCompiler.caseAlternative(
+      ctx,
+      EffesParser.CaseStatAlternativeContext::casePattern,
+      c -> c.inlinableBlock() != null
+        ? new Block(c.getStart(), c.inlinableBlock().stat().stream().map(this::apply).collect(Collectors.toList()))
+        : null
+    );
+  }
+
 }

@@ -73,11 +73,12 @@ public final class IrCompiler<E> {
           EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
           vars.add(argVar, null);
         }
-        return blockCompiler.apply(parsedMethod.getBody());
+        return blockCompiler.apply(parsedMethod.getBody(), parsedMethod.getResultType());
       }
     });
     for (EfMethod<? extends Block> method : compiled.getTopLevelMethods()) {
-      method.getBody().validate(method.getResultType(), errs);
+      method.getBody().validate(errs);
+      method.getBody().validateResultType(method.getResultType(), errs);
     }
     return compiled;
   }

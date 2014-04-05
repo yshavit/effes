@@ -6,7 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.yuvalshavit.effes.compile.EfType.VOID;
 import static com.yuvalshavit.effes.compile.EfType.UNKNOWN;
+import static com.yuvalshavit.effes.compile.EfType.disjunction;
 import static org.testng.Assert.assertEquals;
 
 public final class EfTypeTest {
@@ -14,6 +16,7 @@ public final class EfTypeTest {
   final EfType simpleA = new EfType.SimpleType("Alpha");
   final EfType simpleB = new EfType.SimpleType("Bravo");
   final EfType simpleC = new EfType.SimpleType("Charlie");
+  final EfType simpleD = new EfType.SimpleType("Delta");
 
   @Test
   public void simpleOrdering() {
@@ -41,8 +44,8 @@ public final class EfTypeTest {
     EfType d1 = EfType.disjunction(simpleA, simpleB, UNKNOWN);
     EfType d2 = EfType.disjunction(simpleA, simpleC);
     // if we only compared lengths, d2 would be first. But we compare by elements (in order) first, so d1 is first
-    assertEquals(cmp(d1, d2), -1);
-    assertEquals(cmp(d2, d1), 1);
+    assertEquals(cmp(d1, d2), -2);
+    assertEquals(cmp(d2, d1), 2);
     assertEquals(cmp(d1, d1), 0);
     assertEquals(cmp(d2, d2), 0);
   }
@@ -57,13 +60,23 @@ public final class EfTypeTest {
     EfType innerB = EfType.disjunction(simpleA, simpleC);
 
     // innerA < innerB, so d1 < d2
-    EfType d1 = EfType.disjunction(UNKNOWN, innerA);
-    EfType d2 = EfType.disjunction(UNKNOWN, innerB);
+    EfType d1 = EfType.disjunction(simpleD, innerA);
+    EfType d2 = EfType.disjunction(simpleD, innerB);
 
     assertEquals(cmp(d1, d2), -1);
     assertEquals(cmp(d2, d1), 1);
     assertEquals(cmp(d1, d1), 0);
     assertEquals(cmp(d2, d2), 0);
+  }
+
+  @Test
+  public void unknownDisjunctionIsUnknown() {
+    assertEquals(disjunction(simpleA, simpleB, UNKNOWN), UNKNOWN);
+  }
+
+  @Test
+  public void voidDisjunctionIsVoid() {
+    assertEquals(disjunction(simpleA, simpleB, VOID), EfType.VOID);
   }
 
   private static int cmp(EfType t1, EfType t2) {

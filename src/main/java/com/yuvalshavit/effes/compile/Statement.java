@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 
 public abstract class Statement extends Node {
 
-  private Statement(Token token) {
-    super(token);
+  private Statement(Token token, @Nonnull EfType resultType) {
+    super(token, resultType);
   }
 
   @Nullable
@@ -21,7 +21,7 @@ public abstract class Statement extends Node {
     private final Expression value;
 
     public AssignStatement(Token token, EfVar var, Expression value) {
-      super(token);
+      super(token, EfType.VOID);
       this.var = var;
       this.value = value;
     }
@@ -52,11 +52,39 @@ public abstract class Statement extends Node {
     }
   }
 
+  public static class CaseStatement extends Statement {
+    private final CaseConstruct<Block> delegate;
+
+    public CaseStatement(Token token, CaseConstruct<Block> delegate) {
+      super(token, delegate.resultType());
+      this.delegate = delegate;
+    }
+
+    public CaseConstruct<Block> construct() {
+      return delegate;
+    }
+
+    @Override
+    public String toString() {
+      return delegate.toString();
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(token(), errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      delegate.state(out);
+    }
+  }
+
   public static class ReturnStatement extends Statement {
     private final Expression expression;
 
     public ReturnStatement(Token token, Expression expression) {
-      super(token);
+      super(token, expression.resultType());
       this.expression = expression;
     }
 
@@ -84,7 +112,7 @@ public abstract class Statement extends Node {
     private final Expression.MethodInvoke methodExpr;
 
     public MethodInvoke(Expression.MethodInvoke methodExpr) {
-      super(methodExpr.token());
+      super(methodExpr.token(), EfType.VOID);
       this.methodExpr = methodExpr;
     }
 
@@ -99,7 +127,12 @@ public abstract class Statement extends Node {
 
     @Override
     public void state(NodeStateListener out) {
-      out.child("method", methodExpr);
+      out.child(methodExpr);
+    }
+
+    @Override
+    public boolean elideFromState() {
+      return true; // we only its child, the expression invoke
     }
 
     @Override
@@ -111,7 +144,7 @@ public abstract class Statement extends Node {
   public static class UnrecognizedStatement extends Statement {
 
     public UnrecognizedStatement(Token token) {
-      super(token);
+      super(token, EfType.VOID);
     }
 
     @Override

@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public final class BlockCompiler implements Function<EffesParser.InlinableBlockContext, Block> {
+public final class BlockCompiler implements BiFunction<EffesParser.InlinableBlockContext, EfType, Block> {
   private final StatementCompiler compiler;
 
   public BlockCompiler(StatementCompiler compiler) {
@@ -15,11 +15,11 @@ public final class BlockCompiler implements Function<EffesParser.InlinableBlockC
   }
 
   @Override
-  public Block apply(EffesParser.InlinableBlockContext inlinableBlockContext) {
+  public Block apply(EffesParser.InlinableBlockContext inlinableBlockContext, EfType requiredType) {
     if (inlinableBlockContext == null) {
-      return new Block(ImmutableList.of());
+      return new Block(null, ImmutableList.of());
     }
     List<Statement> stats = inlinableBlockContext.stat().stream().map(compiler).collect(Collectors.toList());
-    return new Block(stats);
+    return new Block(inlinableBlockContext.getStart(), stats);
   }
 }
