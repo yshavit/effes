@@ -1,2 +1,2 @@
 method 'sayTrue' has no return value (at line 4, column 7: sayTrue)
-expected result type True but found no result type (at line 5, column 10: t)
+expected result type True but found unknown type (at line 5, column 10: t)
