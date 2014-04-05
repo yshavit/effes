@@ -60,6 +60,10 @@ public abstract class Statement extends Node {
       this.delegate = delegate;
     }
 
+    public CaseConstruct<Block> construct() {
+      return delegate;
+    }
+
     @Override
     public String toString() {
       return delegate.toString();

@@ -21,46 +21,16 @@ public abstract class ExecutableExpression implements ExecutableElement {
   }
 
   public static class CaseExpression extends ExecutableExpression {
-    private final ExecutableExpression matchAgainst;
-    private final List<CaseMatcher> caseMatchers;
+    private final ExecutableCase delegate;
 
-    public CaseExpression(Expression source, ExecutableExpression matchAgainst, List<CaseMatcher> caseMatchers) {
+    public CaseExpression(Expression source, ExecutableExpression matchAgainst, List<ExecutableCase.CaseMatcher> caseMatchers) {
       super(source);
-      this.matchAgainst = matchAgainst;
-      this.caseMatchers = ImmutableList.copyOf(caseMatchers);
+      this.delegate = new ExecutableCase(matchAgainst, caseMatchers);
     }
 
     @Override
     public void execute(CallStack stack) {
-      matchAgainst.execute(stack);
-      EfValue peek = stack.peek();
-      for (CaseMatcher matcher : caseMatchers) {
-        if (matcher.matchType.equals(peek.getType())) {
-          EfValue popped = stack.pop();// the type we matched against
-          // put its args on the stack, in reverse order
-          List<EfValue> poppedState = popped.getState();
-          poppedState.forEach(stack::push);
-          matcher.ifMatches.execute(stack);
-          poppedState.forEach(s -> stack.pop());
-          return;
-        }
-      }
-      throw new AssertionError(String.format("no patterns matched (%s): %s", stack.pop(), toString()));
-    }
-
-    public static class CaseMatcher {
-      private final EfType.SimpleType matchType;
-      private final ExecutableExpression ifMatches;
-
-      public CaseMatcher(EfType.SimpleType matchType, ExecutableExpression ifMatches) {
-        this.matchType = matchType;
-        this.ifMatches = ifMatches;
-      }
-
-      @Override
-      public String toString() {
-        return String.format("of %s", matchType);
-      }
+      delegate.execute(stack);
     }
   }
 
