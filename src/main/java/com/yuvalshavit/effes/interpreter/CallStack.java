@@ -139,11 +139,19 @@ public final class CallStack {
   }
 
   public void popToRv() {
+    states.set(rvIndex(frameInfo()), pop());
+  }
+
+  public boolean rvIsSet() {
     FrameInfo frameInfo = frameInfo();
+    return frameInfo.hasRv && !RV_PLACEHOLDER.equals(states.get(rvIndex(frameInfo)));
+  }
+
+  private int rvIndex(FrameInfo frameInfo) {
     if (!frameInfo.hasRv) {
       throw new IllegalStateException("no rv slot allocated");
     }
-    states.set(fip - frameInfo.nArgs - 1, pop());
+    return fip - frameInfo.nArgs - 1;
   }
 
   private FrameInfo frameInfo() {

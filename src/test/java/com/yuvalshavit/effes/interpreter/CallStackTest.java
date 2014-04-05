@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 
 import static com.yuvalshavit.util.AssertException.assertException;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public final class CallStackTest {
 
@@ -403,6 +405,46 @@ public final class CallStackTest {
     assertException(IllegalStateException.class, stack::popToRv);
     stack.closeFrame();
     assertEquals(stack.snapshot(), snapshot);
+  }
+
+  @Test
+  public void hasRvIsSet() {
+    // methods A, B, and C, nested (A is outermost). B doesn't have an RV.
+    CallStack stack = new CallStack();
+
+    // call A
+    stack.openFrame(ImmutableList.of(), true);
+    assertFalse(stack.rvIsSet());
+
+    // call B
+    stack.openFrame(ImmutableList.of(), false);
+    assertFalse(stack.rvIsSet());
+
+    // call C
+    stack.openFrame(ImmutableList.of(), true);
+    assertFalse(stack.rvIsSet());
+
+    // return from C
+    push(stack, "C rv");
+    stack.popToRv();
+    assertTrue(stack.rvIsSet());
+    stack.closeFrame();
+
+    // we're now back in B
+    stack.pop(); // C's rv
+    assertFalse(stack.rvIsSet());
+
+    // return from B
+    stack.closeFrame();
+
+    // we're now back in A
+    assertFalse(stack.rvIsSet());
+
+    // return from A
+    push(stack, "A rv");
+    stack.popToRv();
+    assertTrue(stack.rvIsSet());
+    stack.closeFrame();
   }
 
   private static void open(CallStack stack, ExecutableElement... args) {
