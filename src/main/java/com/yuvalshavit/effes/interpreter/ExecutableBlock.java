@@ -15,6 +15,9 @@ public final class ExecutableBlock implements ExecutableMethod {
   public void execute(CallStack stack) {
     for (ExecutableStatement s : statements) {
       s.execute(stack);
+      if (stack.rvIsSet()) {
+        return;
+      }
     }
   }
 
