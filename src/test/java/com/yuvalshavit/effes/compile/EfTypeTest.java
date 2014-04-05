@@ -6,7 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.yuvalshavit.effes.compile.EfType.VOID;
 import static com.yuvalshavit.effes.compile.EfType.UNKNOWN;
+import static com.yuvalshavit.effes.compile.EfType.disjunction;
 import static org.testng.Assert.assertEquals;
 
 public final class EfTypeTest {
@@ -65,6 +67,16 @@ public final class EfTypeTest {
     assertEquals(cmp(d2, d1), 1);
     assertEquals(cmp(d1, d1), 0);
     assertEquals(cmp(d2, d2), 0);
+  }
+
+  @Test
+  public void unknownDisjunctionIsUnknown() {
+    assertEquals(disjunction(simpleA, simpleB, UNKNOWN), UNKNOWN);
+  }
+
+  @Test
+  public void voidDisjunctionIsVoid() {
+    assertEquals(disjunction(simpleA, simpleB, VOID), EfType.VOID);
   }
 
   private static int cmp(EfType t1, EfType t2) {
