@@ -126,7 +126,7 @@ public final class EndToEndTest {
     methods.forEach((name, method) -> {
       if(!"main".equals(name)) {
         sb.append("def ").append(name).append(' ').append(method).append(":\n");
-        method.getBody().statements().forEach(listener::child);
+        listener.child(method.getBody());
       }
     });
     return sb.toString();
