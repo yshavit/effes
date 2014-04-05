@@ -144,6 +144,12 @@ public abstract class EfType {
     if (options.isEmpty()) {
       throw new IllegalArgumentException("can't disjoin an empty set");
     }
+    if (options.contains(UNKNOWN)) {
+      return UNKNOWN;
+    }
+    if (options.contains(VOID)) {
+      return VOID;
+    }
     DisjunctiveType d = new DisjunctiveType(options);
     return d.options.size() == 1
       ? d.options.first()
