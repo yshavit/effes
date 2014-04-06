@@ -70,18 +70,18 @@ public final class ExpressionCompiler {
   }
 
   public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression) {
-    String methodName = ctx.methodName().getText();
-    EfMethod<?> method = methodsRegistry.getMethod(methodName);
+    MethodId methodId = MethodId.topLevel(ctx.methodName().getText());
+    EfMethod<?> method = methodsRegistry.getMethod(methodId);
     boolean isBuiltIn;
     if (method != null) {
       isBuiltIn = false;
     } else {
-      method = builtInMethods.getMethod(methodName);
+      method = builtInMethods.getMethod(methodId);
       if (method == null) {
         String msgFormat = couldBeVar(ctx)
           ? "no such method or variable: '%s'"
           : "no such method: '%s'";
-        errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
+        errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodId));
       }
       isBuiltIn = true; // if method is null, this won't matter
     }
@@ -98,13 +98,13 @@ public final class ExpressionCompiler {
         if (!expectedArg.contains(invokeArg)) {
           errs.add(
             invokeArgs.get(i).token(),
-            String.format("mismatched types for '%s': expected %s but found %s", methodName, expectedArg, invokeArg));
+            String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
         }
       }
     } else {
       resultType = EfType.UNKNOWN;
     }
-    return new Expression.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+    return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {

@@ -6,6 +6,7 @@ import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.IrCompiler;
+import com.yuvalshavit.effes.compile.MethodId;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;
@@ -34,12 +35,12 @@ public final class Interpreter {
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     MethodsRegistry<ExecutableMethod> executableMethods = new MethodsRegistry<>();
-    Function<String, ExecutableMethod> methodLookup = m -> {
+    Function<MethodId, ExecutableMethod> methodLookup = m -> {
       EfMethod<? extends ExecutableMethod> method = executableMethods.getMethod(m);
       assert method != null : m;
       return method.getBody();
     };
-    Function<String, ExecutableMethod> builtInMethodsLookup = name -> {
+    Function<MethodId, ExecutableMethod> builtInMethodsLookup = name -> {
       EfMethod<? extends ExecutableMethod> method = compiler.getBuiltInMethods().getMethod(name);
       assert method != null;
       return method.getBody();
@@ -81,7 +82,7 @@ public final class Interpreter {
     if (hasErrors()) {
       throw new IllegalStateException("compilation had errors");
     }
-    EfMethod<? extends ExecutableMethod> main = methodsRegistry.getMethod("main");
+    EfMethod<? extends ExecutableMethod> main = methodsRegistry.getMethod(MethodId.topLevel("main"));
     if (main != null) {
       CallStack states = new CallStack();
       Object initial = states.snapshot();
