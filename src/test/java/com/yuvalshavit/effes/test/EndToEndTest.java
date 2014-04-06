@@ -120,7 +120,7 @@ public final class EndToEndTest {
   }
 
   private String printIr(MethodsRegistry<Block> compiledMethods) {
-    Map<? extends MethodId, ? extends EfMethod<? extends Block>> methods = compiledMethods.getTopLevelMethodsByName();
+    Map<? extends MethodId, ? extends EfMethod<? extends Block>> methods = compiledMethods.getMethodsByName();
     methods = new TreeMap<>(methods); // sort by name
     StringBuilder sb = new StringBuilder();
     NodeStateListener listener = new NodeStateToString(sb);

@@ -50,7 +50,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
       try {
-        methodsRegistry.registerTopLevelMethod(MethodId.topLevel(name), method);
+        methodsRegistry.registerMethod(MethodId.topLevel(name), method);
       } catch (DuplicateMethodNameException e) {
         errs.add(ctx.methodName().getStart(), e.getMessage());
       }

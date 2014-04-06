@@ -17,7 +17,7 @@ public final class MethodsFinderTest {
       "def ego True -> True: return True");
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectNoErrors(errs -> findMethods(types, methodsRegistry, parser, errs));
-    assertEquals(methodsRegistry.getAllTopLevelMethodNames(), Sets.newHashSet("id", "ego"));
+    assertEquals(methodsRegistry.getMethodIds(), Sets.newHashSet(MethodId.topLevel("id"), MethodId.topLevel("ego")));
   }
 
   @Test
