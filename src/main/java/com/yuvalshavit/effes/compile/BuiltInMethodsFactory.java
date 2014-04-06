@@ -45,7 +45,7 @@ public interface BuiltInMethodsFactory<T> {
           args.add(parse.a, null, parse.b);
         });
         EfType resultType = typeParser.apply(meta.resultType()).b;
-        outRegistry.registerTopLevelMethod(meta.name(), new EfMethod<>(args.build(), resultType, casted));
+        outRegistry.registerTopLevelMethod(MethodId.topLevel(meta.name()), new EfMethod<>(args.build(), resultType, casted));
       }
     }
   }

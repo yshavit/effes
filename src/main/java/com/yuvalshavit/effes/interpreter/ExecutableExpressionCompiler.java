@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.yuvalshavit.effes.compile.Expression;
+import com.yuvalshavit.effes.compile.MethodId;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;
@@ -10,11 +11,11 @@ import java.util.stream.Collectors;
 
 public final class ExecutableExpressionCompiler implements Function<Expression, ExecutableExpression> {
 
-  private final Function<String, ExecutableMethod> methods;
-  private final Function<String, ExecutableMethod> builtInMethods;
+  private final Function<MethodId, ExecutableMethod> methods;
+  private final Function<MethodId, ExecutableMethod> builtInMethods;
 
-  public ExecutableExpressionCompiler(Function<String, ExecutableMethod> methods,
-                                      Function<String, ExecutableMethod> builtInMethods) {
+  public ExecutableExpressionCompiler(Function<MethodId, ExecutableMethod> methods,
+                                      Function<MethodId, ExecutableMethod> builtInMethods) {
     this.methods = methods;
     this.builtInMethods = builtInMethods;
   }
@@ -50,8 +51,8 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   public ExecutableExpression.MethodInvokeExpression methodInvoke(Expression.MethodInvoke expr) {
     List<ExecutableExpression> args = expr.getArgs().stream().map(this::apply).collect(Collectors.toList());
     Supplier<ExecutableMethod> body = () -> expr.isBuiltIn()
-      ? builtInMethods.apply(expr.getMethodName())
-      : methods.apply(expr.getMethodName());
+      ? builtInMethods.apply(expr.getMethodId())
+      : methods.apply(expr.getMethodId());
     return new ExecutableExpression.MethodInvokeExpression(expr, args, body);
   }
 

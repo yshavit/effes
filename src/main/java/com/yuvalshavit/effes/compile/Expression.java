@@ -110,15 +110,15 @@ public abstract class Expression extends Node {
   }
 
   public static class MethodInvoke extends Expression {
-    private final String methodName;
+    private final MethodId methodId;
     private final List<Expression> args;
     private final boolean isBuiltIn;
     private final boolean usedAsExpression;
 
-    public MethodInvoke(Token token, String methodName, List<Expression> args, EfType resultType, boolean isBuiltin,
+    public MethodInvoke(Token token, MethodId methodId, List<Expression> args, EfType resultType, boolean isBuiltin,
                         boolean usedAsExpression) {
       super(token, resultType);
-      this.methodName = methodName;
+      this.methodId = methodId;
       this.args = args;
       this.isBuiltIn = isBuiltin;
       this.usedAsExpression = usedAsExpression;
@@ -128,8 +128,8 @@ public abstract class Expression extends Node {
       return isBuiltIn;
     }
 
-    public String getMethodName() {
-      return methodName;
+    public MethodId getMethodId() {
+      return methodId;
     }
 
     public List<Expression> getArgs() {
@@ -140,13 +140,13 @@ public abstract class Expression extends Node {
     public void validate(CompileErrors errs) {
       args.forEach(arg -> arg.validate(errs));
       if (usedAsExpression && EfType.VOID.equals(resultType())) {
-        errs.add(token(), String.format("method '%s' has no return value", methodName));
+        errs.add(token(), String.format("method '%s' has no return value", methodId));
       }
     }
 
     @Override
     public void state(NodeStateListener out) {
-      String name = methodName;
+      String name = methodId.toString();
       if (isBuiltIn()) {
         name += " [built-in]";
       }
@@ -158,7 +158,7 @@ public abstract class Expression extends Node {
 
     @Override
     public String toString() {
-      return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
+      return String.format("%s(%s)", methodId, Joiner.on(", ").join(args));
     }
   }
 

@@ -22,8 +22,7 @@ public final class MethodsRegistry<B> {
     this.topLevelMethods = topLevelMethods;
   }
 
-  public void registerTopLevelMethod(String name, EfMethod<? extends B> method) {
-    MethodId methodId = MethodId.topLevel(name);
+  public void registerTopLevelMethod(MethodId methodId, EfMethod<? extends B> method) {
     if (topLevelMethods.containsKey(methodId)) {
       throw new DuplicateMethodNameException(methodId);
     }
@@ -39,8 +38,8 @@ public final class MethodsRegistry<B> {
   }
 
   @Nullable
-  public EfMethod<? extends B> getMethod(String name) {
-    return topLevelMethods.get(MethodId.topLevel(name));
+  public EfMethod<? extends B> getMethod(MethodId methodId) {
+    return topLevelMethods.get(methodId);
   }
 
   public <B2> void addAll(MethodsRegistry<B2> other, Function<? super EfMethod<? extends B2>, ? extends B> transform) {
@@ -49,7 +48,7 @@ public final class MethodsRegistry<B> {
       if (topLevelMethods.containsKey(otherName)) {
         throw new DuplicateMethodNameException(otherName);
       }
-      registerTopLevelMethod(otherName.getName(), otherEntry.getValue().tranform(transform));
+      registerTopLevelMethod(otherName, otherEntry.getValue().tranform(transform));
     }
   }
 
