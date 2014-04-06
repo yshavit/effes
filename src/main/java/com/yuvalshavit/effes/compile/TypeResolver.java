@@ -4,6 +4,7 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,6 +23,11 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     return typeContext != null
       ? typesDispatcher.apply(this, typeContext)
       : EfType.UNKNOWN;
+  }
+
+  @Nullable
+  public EfType.SimpleType getSimpleType(String name) {
+    return typeRegistry.getSimpleType(name);
   }
 
   private static final Dispatcher<TypeResolver, EffesParser.TypeContext, EfType> typesDispatcher
