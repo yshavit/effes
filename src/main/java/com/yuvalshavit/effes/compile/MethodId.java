@@ -18,6 +18,10 @@ public final class MethodId implements Comparable<MethodId> {
     return new MethodId(definedOn, name);
   }
 
+  public static MethodId of(@Nullable EfType.SimpleType definedOn, @Nonnull String name) {
+    return new MethodId(definedOn, name);
+  }
+
   private MethodId(@Nullable EfType.SimpleType definedOn, @Nonnull String name) {
     this.definedOn = definedOn;
     this.name = name;

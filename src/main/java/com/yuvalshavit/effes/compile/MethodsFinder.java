@@ -30,6 +30,29 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   }
 
   private class Listener extends EffesBaseListener {
+
+    private EfType.SimpleType declaringType = null;
+
+    @Override
+    public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      if (declaringType != null) {
+        throw new IllegalStateException("already have declaring type context: " + declaringType);
+      }
+      declaringType = typeResolver.getSimpleType(ctx.TYPE_NAME().getText());
+      if (declaringType == null) {
+        // This shouldn't happen, since the typeResolver should have already picked up all declared types, and this
+        // method only gets called when the listener sees a type declaration!
+        errs.add(ctx.TYPE_NAME().getSymbol(), String.format("unrecognized type '%s' (this is likely a compiler bug)",
+          ctx.TYPE_NAME().getText()));
+      }
+    }
+
+    @Override
+    public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      assert declaringType != null;
+      declaringType = null;
+    }
+
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
@@ -50,7 +73,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
       try {
-        methodsRegistry.registerMethod(MethodId.topLevel(name), method);
+        methodsRegistry.registerMethod(MethodId.of(declaringType, name), method);
       } catch (DuplicateMethodNameException e) {
         errs.add(ctx.methodName().getStart(), e.getMessage());
       }
