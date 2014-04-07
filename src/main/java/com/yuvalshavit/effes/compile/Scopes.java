@@ -18,7 +18,7 @@ import java.util.function.Function;
 public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
-  private final ScopeCloser closer = new ScopeCloser();
+  private final ScopeCloser closer = new ScopeCloser(this);
   private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
   private int elemsCountOffset = 0;
 
@@ -83,13 +83,16 @@ public final class Scopes<T,D> {
     }
   }
 
-  public class ScopeCloser implements AutoCloseable {
+  public static class ScopeCloser implements AutoCloseable {
+    private final Scopes<?,?> parent;
 
-    private ScopeCloser() {}
+    private ScopeCloser(Scopes<?,?> parent) {
+      this.parent = parent;
+    }
 
     @Override
     public void close() {
-      popScope();
+      parent.popScope();
     }
   }
 }
