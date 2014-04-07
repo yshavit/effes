@@ -40,7 +40,7 @@ public final class MethodId implements Comparable<MethodId> {
   @Override
   public String toString() {
     return definedOn != null
-      ? String.format("%s %s", definedOn, name)
+      ? String.format("%s::%s", definedOn, name)
       : name;
   }
 

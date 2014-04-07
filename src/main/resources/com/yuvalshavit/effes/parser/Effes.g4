@@ -60,7 +60,7 @@ methodReturnDeclr: ARROW type
 // data type declr
 
 dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr?
-               (NL | INDENT typeMember+ DEDENT );
+               (NL | COLON INDENT typeMember+ DEDENT );
 
 dataTypeArgsDeclr: OPEN_PAREN
                    dataTypeArgDeclr (COMMA dataTypeArgDeclr)*
@@ -68,7 +68,7 @@ dataTypeArgsDeclr: OPEN_PAREN
 
 dataTypeArgDeclr: VAR_NAME COLON type;
 
-typeMember: methodDeclr                                                         # MethodMember
+typeMember: DEF methodDeclr                                                     # MethodMember
           ;
 
 // generics and types
