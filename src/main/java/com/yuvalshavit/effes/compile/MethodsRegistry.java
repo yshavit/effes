@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class MethodsRegistry<B> {
@@ -52,8 +53,14 @@ public final class MethodsRegistry<B> {
     }
   }
 
-  public <B2> MethodsRegistry<B2> transform(Function<? super EfMethod<? extends B>, ? extends B2> func) {
-    Map<MethodId, EfMethod<? extends B2>> transformedMethods = Maps.transformValues(methods, m -> m.tranform(func));
+  public <B2> MethodsRegistry<B2> transform(BiFunction<MethodId, ? super EfMethod<? extends B>, ? extends B2> func) {
+    Map<MethodId, EfMethod<? extends B2>> transformedMethods = Maps.transformEntries(
+      methods,
+      (Maps.EntryTransformer<MethodId, EfMethod<? extends B>, EfMethod<? extends B2>>) (id, efMethod) -> {
+        Function<EfMethod<? extends B>, B2> t2 = ignored -> func.apply(id, efMethod);
+        return efMethod.tranform(t2);
+      }
+    );
 
     transformedMethods = new HashMap<>(transformedMethods); // force and make mutable
     return new MethodsRegistry<>(transformedMethods);
