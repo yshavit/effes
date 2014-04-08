@@ -64,8 +64,9 @@ public final class IrCompiler<E> {
     StatementCompiler statementCompiler = new StatementCompiler(expressionCompiler, vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 
-    MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {
-      try (Scopes.ScopeCloser ignored = vars.pushScope()){
+    MethodsRegistry<Block> compiled = unparsedMethods.transform( (methodId, parsedMethod) -> {
+      try (Scopes.ScopeCloser ignored = vars.pushScope()) {
+        expressionCompiler.setDeclaringType(methodId.getDefinedOn());
         List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
         vars.setElemsCountOffset(asList.size());
         for (int pos = 0, len = asList.size(); pos < len; ++pos) {

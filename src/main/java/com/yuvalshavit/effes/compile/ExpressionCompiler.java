@@ -19,6 +19,7 @@ public final class ExpressionCompiler {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final Scopes<EfVar, Token> vars;
+  private EfType.SimpleType declaringType;
 
   public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
                             MethodsRegistry<?> builtInMethods,
@@ -31,6 +32,10 @@ public final class ExpressionCompiler {
     this.typeRegistry = typeRegistry;
     this.errs = errs;
     this.vars = vars;
+  }
+
+  public void setDeclaringType(EfType.SimpleType type) {
+    this.declaringType = type;
   }
 
   public Expression apply(EffesParser.ExprContext exprContext) {
