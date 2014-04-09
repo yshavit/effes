@@ -28,11 +28,14 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   private static final Dispatcher<ExecutableExpressionCompiler, Expression, ExecutableExpression> dispatcher =
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
       .put(Expression.CaseExpression.class, ExecutableExpressionCompiler::caseExpr)
+      .put(Expression.InstanceArg.class, ExecutableExpressionCompiler::instanceArg)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
       .put(Expression.VarExpression.class, ExecutableExpressionCompiler::varExpr)
       .put(Expression.UnrecognizedExpression.class, ExecutableExpressionCompiler::unrecognizedExpr)
-      .build((me, e) -> {throw new AssertionError(e); });
+      .build((me, e) -> {
+        throw new AssertionError(e);
+      });
 
   private ExecutableExpression caseExpr(Expression.CaseExpression expr) {
     ExecutableExpression matchAgainst = apply(expr.construct().getMatchAgainst());
@@ -41,6 +44,11 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
       return new ExecutableCase.CaseMatcher(p.getType(), ifMatch);
     }).collect(Collectors.toList());
     return new ExecutableExpression.CaseExpression(expr, matchAgainst, matchers);
+  }
+
+  private ExecutableExpression instanceArg(Expression.InstanceArg expr) {
+    ExecutableExpression target = apply(expr.getTarget());
+    return new ExecutableExpression.InstanceArg(expr, target, expr.getArg());
   }
 
   private ExecutableExpression ctorInvoke(Expression.CtorInvoke expr) {

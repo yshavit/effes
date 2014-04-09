@@ -109,6 +109,41 @@ public abstract class Expression extends Node {
     }
   }
 
+  public static class InstanceArg extends Expression {
+    private final Expression target;
+    private final EfVar arg;
+
+    public InstanceArg(Token token, Expression target, EfVar arg) {
+      super(token, arg.getType());
+      this.target = target;
+      this.arg = arg;
+    }
+
+    public Expression getTarget() {
+      return target;
+    }
+
+    public EfVar getArg() {
+      return arg;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s) %s", target, arg);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // nothing to do
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child("target", target);
+      out.scalar("arg", arg);
+    }
+  }
+
   public static class MethodInvoke extends Expression {
     private final MethodId methodId;
     private final List<Expression> args;
