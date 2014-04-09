@@ -1,0 +1,9 @@
+def Dog::bark () -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      CtorInvoke
+        type: True
+def Dog::woof () -> no result type:
+  MethodInvoke
+    method: Dog::bark

@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.EfType;
+import com.yuvalshavit.effes.compile.EfVar;
 import com.yuvalshavit.effes.compile.Expression;
 
 import java.util.List;
@@ -48,6 +49,25 @@ public abstract class ExecutableExpression implements ExecutableElement {
     public void execute(CallStack stack) {
       args.forEach(a -> a.execute(stack));
       stack.push(ctorType);
+    }
+  }
+
+  public static class InstanceArg extends ExecutableExpression {
+    private final ExecutableExpression target;
+    private final EfVar arg;
+
+    public InstanceArg(Expression source, ExecutableExpression target, EfVar arg) {
+      super(source);
+      this.target = target;
+      this.arg = arg;
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      target.execute(stack);
+      EfValue targetValue = stack.pop();
+      EfValue argValue = targetValue.getState().get(arg.getArgPosition());
+      stack.push(argValue);
     }
   }
 

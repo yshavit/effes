@@ -1,0 +1,8 @@
+def unwrap (wrapped: BoolWrap) -> False | True:
+  ReturnStatement
+    InstanceArg
+      target:
+        VarExpression
+          arg: wrapped
+          pos: 0
+      arg: value (pos=0)

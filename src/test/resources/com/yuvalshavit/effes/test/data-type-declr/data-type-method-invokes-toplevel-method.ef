@@ -1,0 +1,4 @@
+def sayHi: print True
+
+data type HiSayer:
+  def salute: sayHi

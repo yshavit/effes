@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -101,6 +102,16 @@ public abstract class EfType {
         : ImmutableList.of();
     }
 
+    @Nullable
+    public EfVar getArgByName(String name) {
+      for (EfVar arg : getArgs()) {
+        if (arg.getName().equals(name)) {
+          return arg;
+        }
+      }
+      return null;
+    }
+
     public void setArgs(List<EfVar> args) {
       if (args == null) {
         throw new IllegalStateException("args already set" + this.args);
@@ -148,7 +159,6 @@ public abstract class EfType {
     public int hashCode() {
       return name.hashCode();
     }
-
   }
 
   public static EfType disjunction(EfType t1, EfType... rest) {

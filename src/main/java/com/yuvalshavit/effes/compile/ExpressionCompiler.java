@@ -48,6 +48,7 @@ public final class ExpressionCompiler {
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprContext, Expression> dispatcher =
     Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprContext.class, Expression.class)
+      .put(EffesParser.InstanceMethodInvokeOrVarExprContext.class, ExpressionCompiler::instanceMethodInvokeOrvar)
       .put(EffesParser.MethodInvokeOrVarExprContext.class, ExpressionCompiler::methodInvokeOrVar)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
@@ -68,6 +69,31 @@ public final class ExpressionCompiler {
       }
     }
     return methodInvoke(ctx.methodInvoke(), true);
+  }
+
+  private Expression instanceMethodInvokeOrvar(EffesParser.InstanceMethodInvokeOrVarExprContext ctx) {
+    Expression target = apply(ctx.expr());
+    EfType genericTargetType = target.resultType();
+    // For now, targetType must be a SimpleType. In the future, we could unroll this to a case. For instance,
+    // if p is (Dog | Cat), then (p breed) would translate to:
+    //    case p of
+    //      Dog: p breed
+    //      Cat: p breed
+    if (!(genericTargetType instanceof EfType.SimpleType)) {
+      errs.add(ctx.expr().getStart(),
+               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
+      return new Expression.UnrecognizedExpression(ctx.getStart());
+    }
+    EfType.SimpleType targetType = (EfType.SimpleType) genericTargetType;
+    EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
+    if (couldBeVar(methodInvoke)) {
+      String argName = methodInvoke.methodName().getText();
+      EfVar arg = targetType.getArgByName(argName);
+      if (arg != null) {
+        return new Expression.InstanceArg(ctx.getStart(), target, arg);
+      }
+    }
+    throw new UnsupportedOperationException("instance method invoke"); // TODO
   }
 
   private static boolean couldBeVar(EffesParser.MethodInvokeContext methodInvoke) {
