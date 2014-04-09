@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.ImmutableList;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -35,6 +37,12 @@ public final class MethodId implements Comparable<MethodId> {
   @Nonnull
   public String getName() {
     return name;
+  }
+
+  Iterable<MethodId> getScopes() {
+    return definedOn != null
+      ? ImmutableList.of(this, topLevel(name))
+      : ImmutableList.of(this);
   }
 
   @Override
