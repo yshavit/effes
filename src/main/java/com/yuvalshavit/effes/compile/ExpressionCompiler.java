@@ -75,27 +75,21 @@ public final class ExpressionCompiler {
   }
 
   public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression) {
-    MethodId methodId = MethodId.topLevel(ctx.methodName().getText());
-    EfMethod<?> method = methodsRegistry.getMethod(methodId);
-    boolean isBuiltIn;
-    if (method != null) {
-      isBuiltIn = false;
-    } else {
-      method = builtInMethods.getMethod(methodId);
-      if (method == null) {
-        String msgFormat = couldBeVar(ctx)
-          ? "no such method or variable: '%s'"
-          : "no such method: '%s'";
-        errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodId));
-      }
-      isBuiltIn = true; // if method is null, this won't matter
+    MethodId methodId = MethodId.of(declaringType, ctx.methodName().getText());
+    MethodLookup methodLookup = lookUp(methodId);
+    if (methodLookup == null) {
+      String msgFormat = couldBeVar(ctx)
+        ? "no such method or variable: '%s'"
+        : "no such method: '%s'";
+      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodId));
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
     EfType resultType;
-    if (method != null) {
-      resultType = method.getResultType();
-      List<EfType> expectedArgs = method.getArgs().viewTypes();
+    boolean isBuiltIn;
+    if (methodLookup != null) {
+      resultType = methodLookup.method.getResultType();
+      List<EfType> expectedArgs = methodLookup.method.getArgs().viewTypes();
       for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
         EfType invokeArg = invokeArgs.get(i).resultType();
         EfType expectedArg = expectedArgs.get(i);
@@ -106,10 +100,27 @@ public final class ExpressionCompiler {
             String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
         }
       }
+      isBuiltIn = methodLookup.isBuiltIn;
+      methodId = methodLookup.id; // in case it ended up being a different scope
     } else {
       resultType = EfType.UNKNOWN;
+      isBuiltIn = false; // won't actually matter; it's only used for the executable, but this is a compile error
     }
     return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+  }
+
+  private MethodLookup lookUp(MethodId methodId) {
+    for (MethodId scope : methodId.getScopes()) {
+      EfMethod<?> m = methodsRegistry.getMethod(scope);
+      if (m != null) {
+        return new MethodLookup(scope, m, false);
+      }
+      m = builtInMethods.getMethod(scope);
+      if (m != null) {
+        return new MethodLookup(scope, m, true);
+      }
+    }
+    return null;
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {
@@ -198,5 +209,17 @@ public final class ExpressionCompiler {
       errs.add(casePattern.getStart(), "unrecognized alternative for pattern " + matchType);
     }
     return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
+  }
+
+  private static class MethodLookup {
+    private final MethodId id;
+    private final EfMethod<?> method;
+    private final boolean isBuiltIn;
+
+    private MethodLookup(MethodId id, EfMethod<?> method, boolean isBuiltIn) {
+      this.id = id;
+      this.method = method;
+      this.isBuiltIn = isBuiltIn;
+    }
   }
 }
