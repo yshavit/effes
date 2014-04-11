@@ -60,13 +60,26 @@ public final class ExpressionCompiler {
     return new Expression.UnrecognizedExpression(ctx.getStart());
   }
 
+  private Expression declaringObject(Token token) {
+    assert declaringType != null;
+    return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType));
+  }
+
   private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {
     EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
-    // If this method is a VAR_NAME with no args, it could be a var. That takes precedence.
+    // If this method is a VAR_NAME with no args, it could be an instance arg or a var. That takes precedence.
     if (couldBeVar(methodInvoke)) {
-      EfVar var = vars.get(methodInvoke.methodName().VAR_NAME().getText());
+      TerminalNode varNode = methodInvoke.methodName().VAR_NAME();
+      String varName = varNode.getText();
+      if (declaringType != null) {
+        EfVar arg = declaringType.getArgByName(varName);
+        if (arg != null) {
+          return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
+        }
+      }
+      EfVar var = vars.get(varName);
       if (var != null) {
-        return varExpr(var, methodInvoke.methodName().VAR_NAME());
+        return varExpr(var, varNode);
       }
     }
     return methodInvoke(ctx.methodInvoke(), true, null);

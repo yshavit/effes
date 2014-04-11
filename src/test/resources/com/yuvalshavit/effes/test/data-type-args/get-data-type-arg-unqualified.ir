@@ -1,0 +1,8 @@
+def BoolWrap::unwrap () -> False | True:
+  ReturnStatement
+    InstanceArg
+      target:
+        VarExpression
+          arg: $this$
+          pos: 0
+      arg: value (pos=0)
