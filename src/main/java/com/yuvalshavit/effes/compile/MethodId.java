@@ -39,12 +39,6 @@ public final class MethodId implements Comparable<MethodId> {
     return name;
   }
 
-  Iterable<MethodId> getScopes() {
-    return definedOn != null
-      ? ImmutableList.of(this, topLevel(name))
-      : ImmutableList.of(this);
-  }
-
   @Override
   public String toString() {
     return definedOn != null

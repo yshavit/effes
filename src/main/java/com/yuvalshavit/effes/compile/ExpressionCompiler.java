@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class ExpressionCompiler {
   private final MethodsRegistry<?> methodsRegistry;
@@ -68,7 +69,7 @@ public final class ExpressionCompiler {
         return varExpr(var, methodInvoke.methodName().VAR_NAME());
       }
     }
-    return methodInvoke(ctx.methodInvoke(), true);
+    return methodInvoke(ctx.methodInvoke(), true, null);
   }
 
   private Expression instanceMethodInvokeOrvar(EffesParser.InstanceMethodInvokeOrVarExprContext ctx) {
@@ -93,27 +94,38 @@ public final class ExpressionCompiler {
         return new Expression.InstanceArg(ctx.getStart(), target, arg);
       }
     }
-    throw new UnsupportedOperationException("instance method invoke"); // TODO
+    return methodInvoke(methodInvoke, true, target);
   }
 
   private static boolean couldBeVar(EffesParser.MethodInvokeContext methodInvoke) {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression) {
-    MethodId methodId = MethodId.of(declaringType, ctx.methodName().getText());
-    MethodLookup methodLookup = lookUp(methodId);
+  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression,
+                                              Expression target) {
+    String methodName = ctx.methodName().getText();
+    EfType.SimpleType lookOn;
+    if (target == null) {
+      lookOn = null;
+    } else {
+      EfType targetType = target.resultType();
+      lookOn = (EfType.SimpleType) targetType;
+    }
+    MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
       String msgFormat = couldBeVar(ctx)
         ? "no such method or variable: '%s'"
         : "no such method: '%s'";
-      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodId));
+      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
     EfType resultType;
     boolean isBuiltIn;
+    MethodId methodId;
     if (methodLookup != null) {
+      isBuiltIn = methodLookup.isBuiltIn;
+      methodId = methodLookup.id; // in case it ended up being a different scope
       resultType = methodLookup.method.getResultType();
       List<EfType> expectedArgs = methodLookup.method.getArgs().viewTypes();
       for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
@@ -126,17 +138,29 @@ public final class ExpressionCompiler {
             String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
         }
       }
-      isBuiltIn = methodLookup.isBuiltIn;
-      methodId = methodLookup.id; // in case it ended up being a different scope
     } else {
       resultType = EfType.UNKNOWN;
-      isBuiltIn = false; // won't actually matter; it's only used for the executable, but this is a compile error
+      // The following won't actually matter; it's only used for the executable, but this is a compile error
+      isBuiltIn = false;
+      methodId = MethodId.topLevel(methodName);
     }
+    if (target != null) throw new UnsupportedOperationException("instance methods not yet supported");
     return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
-  private MethodLookup lookUp(MethodId methodId) {
-    for (MethodId scope : methodId.getScopes()) {
+  private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {
+    Stream<EfType.SimpleType> scopes;
+    if (lookOn != null) {
+      scopes = lookOn.equals(declaringType)
+        ? Stream.of(declaringType, null)
+        : Stream.of(lookOn, declaringType, null);
+    } else if (declaringType != null) {
+      scopes = Stream.of(declaringType, null);
+    } else {
+      scopes = Stream.of(new EfType.SimpleType[] { null });
+    }
+
+    for (MethodId scope : scopes.map(s -> MethodId.of(s, methodName)).collect(Collectors.toList())) {
       EfMethod<?> m = methodsRegistry.getMethod(scope);
       if (m != null) {
         return new MethodLookup(scope, m, false);
