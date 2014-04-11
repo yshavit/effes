@@ -144,8 +144,8 @@ public final class ExpressionCompiler {
       isBuiltIn = false;
       methodId = MethodId.topLevel(methodName);
     }
-    if (target != null) throw new UnsupportedOperationException("instance methods not yet supported");
-    return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+    return new Expression.MethodInvoke(ctx.getStart(),
+                                       methodId, target, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
   private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {

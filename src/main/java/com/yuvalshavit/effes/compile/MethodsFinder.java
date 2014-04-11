@@ -58,6 +58,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       String name = ctx.methodName().getText();
       EfArgs.Builder args = new EfArgs.Builder(errs);
 
+      if (declaringType != null) {
+        args.add(ctx.getStart(), EfVar.THIS_VAR_NAME, declaringType);
+      }
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
         if (typeContext != null) {
