@@ -1,0 +1,8 @@
+def isDogCute (d: Dog) -> False | True:
+  ReturnStatement
+    MethodInvoke
+      method: Dog::isCute
+def Dog::isCute () -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

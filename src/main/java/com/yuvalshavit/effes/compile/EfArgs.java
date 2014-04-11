@@ -32,9 +32,13 @@ public final class EfArgs {
 
   @Override
   public String toString() {
-    return args.isEmpty()
+    List<Arg> argsSansThis = args;
+    if (!argsSansThis.isEmpty() && EfVar.THIS_VAR_NAME.equals(argsSansThis.get(0).name())) {
+      argsSansThis = argsSansThis.subList(1, argsSansThis.size());
+    }
+    return argsSansThis.isEmpty()
       ? "()"
-      : Joiner.on(' ').join(args.stream().map(a -> "(" + a + ")").iterator());
+      : Joiner.on(' ').join(argsSansThis.stream().map(a -> "(" + a + ")").iterator());
   }
 
   public static class Arg {

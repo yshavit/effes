@@ -90,7 +90,7 @@ public final class Interpreter {
         throw new BadMainException("main method may not take any arguments");
       }
       boolean hasRv = !EfType.VOID.equals(main.getResultType());
-      ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states, hasRv);
+      ExecutableExpression.MethodInvokeExpression.invoke(null, main.getBody(), ImmutableList.of(), states, hasRv);
       Object rv;
       if (hasRv) {
         rv = states.pop();

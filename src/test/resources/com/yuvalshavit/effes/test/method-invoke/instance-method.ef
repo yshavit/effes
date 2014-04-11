@@ -5,4 +5,4 @@ def isDogCute (d: Dog) -> True | False:
   return d: isCute
 
 def main:
-  isDogCute Dog
+  print (isDogCute Dog)
