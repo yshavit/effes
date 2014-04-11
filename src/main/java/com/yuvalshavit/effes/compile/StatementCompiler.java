@@ -27,6 +27,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   static final Dispatcher<StatementCompiler, EffesParser.StatContext, Statement> dispatcher =
     Dispatcher.builder(StatementCompiler.class, EffesParser.StatContext.class, Statement.class)
       .put(EffesParser.AssignStatContext.class, StatementCompiler::assignStatement)
+      .put(EffesParser.InstanceMethodInvokeStatContext.class, StatementCompiler::instanceMethodInvoke)
       .put(EffesParser.MethodInvokeStatContext.class, StatementCompiler::methodInvoke)
       .put(EffesParser.ReturnStatContext.class, StatementCompiler::returnStat)
       .put(EffesParser.CaseStatContext.class, StatementCompiler::caseStatement)
@@ -55,8 +56,13 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     return new Statement.CaseStatement(ctx.getStart(), construct);
   }
 
+  private Statement instanceMethodInvoke(EffesParser.InstanceMethodInvokeStatContext ctx) {
+    Expression target = expressionCompiler.apply(ctx.expr());
+    return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false, target));
+  }
+
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
-    return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false));
+    return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false, null));
   }
 
   private Statement returnStat(EffesParser.ReturnStatContext ctx) {
