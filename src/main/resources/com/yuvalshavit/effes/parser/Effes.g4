@@ -106,7 +106,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
 
 methodInvoke: methodName methodInvokeArgs;
 
-methodInvokeArgs: (expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
+methodInvokeArgs: (expr (OPEN_BRACKET expr (COMMA expr)* CLOSE_BRACKET)?)?;
 
 caseAlternative: casePattern COLON exprBlock;
 

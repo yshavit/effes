@@ -4,6 +4,7 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class IrCompiler<E> {
@@ -13,12 +14,12 @@ public final class IrCompiler<E> {
   private final MethodsRegistry<E> builtInMethods;
 
   public IrCompiler(EffesParser.CompilationUnitContext source,
-                    Function<TypeRegistry, MethodsRegistry<E>> builtinsRegistryF,
+                    BiFunction<TypeRegistry, CompileErrors, MethodsRegistry<E>> builtinsRegistryF,
                     CompileErrors errs)
   {
     this.errs = errs;
     TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), errs);
-    builtInMethods = builtinsRegistryF.apply(typeRegistry);
+    builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
     compiledMethods = compileToIntermediate(source, typeRegistry, builtInMethods, errs);
   }
 

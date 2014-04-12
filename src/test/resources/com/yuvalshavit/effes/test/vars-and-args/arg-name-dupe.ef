@@ -1,1 +1,1 @@
-def foo (a: True): (a:True) -> Void: return Void
+def foo (a: True), (a:True) -> Void: return Void

@@ -8,7 +8,7 @@ def sayHi (value: Void), (vocal: True | False) -> Void:
 def foo (t: TwoArgs | Void) -> True | False | Void:
   return case t of
     Void: Void
-    TwoArgs(val, shouldPrint): sayHi (val: shouldPrint)
+    TwoArgs(val, shouldPrint): sayHi val [shouldPrint]
 
 def main -> Void:
   t = TwoArgs(Void, True)

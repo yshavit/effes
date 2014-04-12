@@ -72,10 +72,10 @@ public final class EndToEndTest {
   public void compile(String fileBaseName) throws IOException {
     IrCompiler<?> compiler = new IrCompiler<>(
       getParser(fileBaseName),
-      t -> {
+      (t, e) -> {
         BuiltInMethodsFactory<?> factory = new ExecutableBuiltInMethods(t, null);
         MethodsRegistry<Object> reg = new MethodsRegistry<>();
-        factory.addTo(t, reg);
+        factory.addTo(t, reg, e);
         return reg;
       },
       new CompileErrors());
