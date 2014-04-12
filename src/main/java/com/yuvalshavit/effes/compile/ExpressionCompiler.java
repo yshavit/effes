@@ -120,9 +120,12 @@ public final class ExpressionCompiler {
     EfType.SimpleType lookOn;
     if (target == null) {
       lookOn = null;
-    } else {
+    } else if (target.resultType() instanceof EfType.SimpleType) {
       EfType targetType = target.resultType();
       lookOn = (EfType.SimpleType) targetType;
+    } else {
+      errs.add(target.token(), "unrecognized type for target of method invocation");
+      lookOn = null;
     }
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {

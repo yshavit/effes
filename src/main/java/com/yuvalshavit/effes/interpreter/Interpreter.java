@@ -25,7 +25,7 @@ public final class Interpreter {
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     CompileErrors errs = new CompileErrors();
 
-    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, t -> getBuiltins(out, t), errs);
+    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, (t, e) -> getBuiltins(out, t, e), errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
@@ -57,10 +57,11 @@ public final class Interpreter {
     this.methodsRegistry = executableMethods;
   }
 
-  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry) {
+  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry,
+                                                               CompileErrors errs) {
     MethodsRegistry<ExecutableMethod> builtInMethods = new MethodsRegistry<>();
     ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
-    builtIns.addTo(typeRegistry, builtInMethods);
+    builtIns.addTo(typeRegistry, builtInMethods, errs);
     return builtInMethods;
   }
 
