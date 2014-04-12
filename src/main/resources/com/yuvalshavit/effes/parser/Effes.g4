@@ -46,7 +46,7 @@ methodName: VAR_NAME
           | ADD_OPS
           ;
 
-methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
+methodArgs: ( methodArg (COMMA methodArg)* )?;
 
 methodArg: type
          | OPEN_PAREN VAR_NAME COLON type CLOSE_PAREN
@@ -106,7 +106,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
 
 methodInvoke: methodName methodInvokeArgs;
 
-methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
+methodInvokeArgs: (expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
 
 caseAlternative: casePattern COLON exprBlock;
 
