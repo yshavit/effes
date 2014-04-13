@@ -1,0 +1,11 @@
+data type Foo(bool: True | False):
+  def push (v:Void), (ob: True | False) -> True | False:
+    return bool
+
+def pushFooTrue:
+  foo = Foo(True)
+  r = foo: push Void [False]
+  print r
+
+def main:
+  pushFooTrue

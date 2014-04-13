@@ -146,17 +146,14 @@ public abstract class Expression extends Node {
 
   public static class MethodInvoke extends Expression {
     private final MethodId methodId;
-    private final Expression target;
     private final List<Expression> args;
     private final boolean isBuiltIn;
     private final boolean usedAsExpression;
 
-    public MethodInvoke(Token token, MethodId methodId,
-                        Expression target, List<Expression> args, EfType resultType,
+    public MethodInvoke(Token token, MethodId methodId, List<Expression> args, EfType resultType,
                         boolean isBuiltin, boolean usedAsExpression) {
       super(token, resultType);
       this.methodId = methodId;
-      this.target = target;
       this.args = args;
       this.isBuiltIn = isBuiltin;
       this.usedAsExpression = usedAsExpression;
@@ -168,11 +165,6 @@ public abstract class Expression extends Node {
 
     public MethodId getMethodId() {
       return methodId;
-    }
-
-    @Nullable
-    public Expression getTarget() {
-      return target;
     }
 
     public List<Expression> getArgs() {
