@@ -15,7 +15,7 @@ public interface BuiltInMethodsFactory<T> {
   @BuiltInMethod(name = "print", resultType = "Void", args = "True | False | Void")
   public T print();
 
-  default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry) {
+  default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry, CompileErrors errs) {
     for (Method m : BuiltInMethodsFactory.class.getDeclaredMethods()) {
       BuiltInMethod meta = m.getAnnotation(BuiltInMethod.class);
       if (meta != null) {
@@ -31,8 +31,8 @@ public interface BuiltInMethodsFactory<T> {
         }
         @SuppressWarnings("unchecked")
         T casted = (T) raw; // we know this works because of the above checks of getGenericReturnType
-        TypeResolver resolver = new TypeResolver(typeRegistry, CompileErrors.throwing);
-        EfArgs.Builder args = new EfArgs.Builder(CompileErrors.throwing);
+        TypeResolver resolver = new TypeResolver(typeRegistry, errs);
+        EfArgs.Builder args = new EfArgs.Builder(errs);
         Function<String, Pair<Token, EfType>> typeParser = s -> {
           EffesParser parser = ParserUtils.createParser(String.format("(%s)", s));
           EffesParser.TypeContext parsedType = parser.type();
@@ -45,7 +45,7 @@ public interface BuiltInMethodsFactory<T> {
           args.add(parse.a, null, parse.b);
         });
         EfType resultType = typeParser.apply(meta.resultType()).b;
-        outRegistry.registerTopLevelMethod(meta.name(), new EfMethod<>(args.build(), resultType, casted));
+        outRegistry.registerMethod(MethodId.topLevel(meta.name()), new EfMethod<>(args.build(), resultType, casted));
       }
     }
   }

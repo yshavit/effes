@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class ExpressionCompiler {
   private final MethodsRegistry<?> methodsRegistry;
@@ -19,6 +20,7 @@ public final class ExpressionCompiler {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final Scopes<EfVar, Token> vars;
+  private EfType.SimpleType declaringType;
 
   public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
                             MethodsRegistry<?> builtInMethods,
@@ -33,6 +35,10 @@ public final class ExpressionCompiler {
     this.vars = vars;
   }
 
+  public void setDeclaringType(EfType.SimpleType type) {
+    this.declaringType = type;
+  }
+
   public Expression apply(EffesParser.ExprContext exprContext) {
     return dispatcher.apply(this, exprContext);
   }
@@ -43,6 +49,7 @@ public final class ExpressionCompiler {
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.ExprContext, Expression> dispatcher =
     Dispatcher.builder(ExpressionCompiler.class, EffesParser.ExprContext.class, Expression.class)
+      .put(EffesParser.InstanceMethodInvokeOrVarExprContext.class, ExpressionCompiler::instanceMethodInvokeOrvar)
       .put(EffesParser.MethodInvokeOrVarExprContext.class, ExpressionCompiler::methodInvokeOrVar)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
@@ -53,44 +60,90 @@ public final class ExpressionCompiler {
     return new Expression.UnrecognizedExpression(ctx.getStart());
   }
 
+  private Expression declaringObject(Token token) {
+    assert declaringType != null;
+    return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType));
+  }
+
   private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {
     EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
-    // If this method is a VAR_NAME with no args, it could be a var. That takes precedence.
+    // If this method is a VAR_NAME with no args, it could be an instance arg or a var. That takes precedence.
     if (couldBeVar(methodInvoke)) {
-      EfVar var = vars.get(methodInvoke.methodName().VAR_NAME().getText());
+      TerminalNode varNode = methodInvoke.methodName().VAR_NAME();
+      String varName = varNode.getText();
+      if (declaringType != null) {
+        EfVar arg = declaringType.getArgByName(varName);
+        if (arg != null) {
+          return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
+        }
+      }
+      EfVar var = vars.get(varName);
       if (var != null) {
-        return varExpr(var, methodInvoke.methodName().VAR_NAME());
+        return varExpr(var, varNode);
       }
     }
-    return methodInvoke(ctx.methodInvoke(), true);
+    return methodInvoke(ctx.methodInvoke(), true, null);
+  }
+
+  private Expression instanceMethodInvokeOrvar(EffesParser.InstanceMethodInvokeOrVarExprContext ctx) {
+    Expression target = apply(ctx.expr());
+    EfType genericTargetType = target.resultType();
+    // For now, targetType must be a SimpleType. In the future, we could unroll this to a case. For instance,
+    // if p is (Dog | Cat), then (p breed) would translate to:
+    //    case p of
+    //      Dog: p breed
+    //      Cat: p breed
+    if (!(genericTargetType instanceof EfType.SimpleType)) {
+      errs.add(ctx.expr().getStart(),
+               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
+      return new Expression.UnrecognizedExpression(ctx.getStart());
+    }
+    EfType.SimpleType targetType = (EfType.SimpleType) genericTargetType;
+    EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
+    if (couldBeVar(methodInvoke)) {
+      String argName = methodInvoke.methodName().getText();
+      EfVar arg = targetType.getArgByName(argName);
+      if (arg != null) {
+        return new Expression.InstanceArg(ctx.getStart(), target, arg);
+      }
+    }
+    return methodInvoke(methodInvoke, true, target);
   }
 
   private static boolean couldBeVar(EffesParser.MethodInvokeContext methodInvoke) {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression) {
+  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression,
+                                              Expression target) {
     String methodName = ctx.methodName().getText();
-    EfMethod<?> method = methodsRegistry.getMethod(methodName);
-    boolean isBuiltIn;
-    if (method != null) {
-      isBuiltIn = false;
+    EfType.SimpleType lookOn;
+    if (target == null) {
+      lookOn = null;
+    } else if (target.resultType() instanceof EfType.SimpleType) {
+      EfType targetType = target.resultType();
+      lookOn = (EfType.SimpleType) targetType;
     } else {
-      method = builtInMethods.getMethod(methodName);
-      if (method == null) {
-        String msgFormat = couldBeVar(ctx)
-          ? "no such method or variable: '%s'"
-          : "no such method: '%s'";
-        errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
-      }
-      isBuiltIn = true; // if method is null, this won't matter
+      errs.add(target.token(), "unrecognized type for target of method invocation");
+      lookOn = null;
+    }
+    MethodLookup methodLookup = lookUp(methodName, lookOn);
+    if (methodLookup == null) {
+      String msgFormat = couldBeVar(ctx)
+        ? "no such method or variable: '%s'"
+        : "no such method: '%s'";
+      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
     EfType resultType;
-    if (method != null) {
-      resultType = method.getResultType();
-      List<EfType> expectedArgs = method.getArgs().viewTypes();
+    boolean isBuiltIn;
+    MethodId methodId;
+    if (methodLookup != null) {
+      isBuiltIn = methodLookup.isBuiltIn;
+      methodId = methodLookup.id; // in case it ended up being a different scope
+      resultType = methodLookup.method.getResultType();
+      List<EfType> expectedArgs = methodLookup.method.getArgs().viewTypes();
       for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
         EfType invokeArg = invokeArgs.get(i).resultType();
         EfType expectedArg = expectedArgs.get(i);
@@ -98,13 +151,42 @@ public final class ExpressionCompiler {
         if (!expectedArg.contains(invokeArg)) {
           errs.add(
             invokeArgs.get(i).token(),
-            String.format("mismatched types for '%s': expected %s but found %s", methodName, expectedArg, invokeArg));
+            String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
         }
       }
     } else {
       resultType = EfType.UNKNOWN;
+      // The following won't actually matter; it's only used for the executable, but this is a compile error
+      isBuiltIn = false;
+      methodId = MethodId.topLevel(methodName);
     }
-    return new Expression.MethodInvoke(ctx.getStart(), methodName, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+    return new Expression.MethodInvoke(ctx.getStart(),
+                                       methodId, target, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+  }
+
+  private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {
+    Stream<EfType.SimpleType> scopes;
+    if (lookOn != null) {
+      scopes = lookOn.equals(declaringType)
+        ? Stream.of(declaringType, null)
+        : Stream.of(lookOn, declaringType, null);
+    } else if (declaringType != null) {
+      scopes = Stream.of(declaringType, null);
+    } else {
+      scopes = Stream.of(new EfType.SimpleType[] { null });
+    }
+
+    for (MethodId scope : scopes.map(s -> MethodId.of(s, methodName)).collect(Collectors.toList())) {
+      EfMethod<?> m = methodsRegistry.getMethod(scope);
+      if (m != null) {
+        return new MethodLookup(scope, m, false);
+      }
+      m = builtInMethods.getMethod(scope);
+      if (m != null) {
+        return new MethodLookup(scope, m, true);
+      }
+    }
+    return null;
   }
 
   private Expression paren(EffesParser.ParenExprContext ctx) {
@@ -193,5 +275,17 @@ public final class ExpressionCompiler {
       errs.add(casePattern.getStart(), "unrecognized alternative for pattern " + matchType);
     }
     return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
+  }
+
+  private static class MethodLookup {
+    private final MethodId id;
+    private final EfMethod<?> method;
+    private final boolean isBuiltIn;
+
+    private MethodLookup(MethodId id, EfMethod<?> method, boolean isBuiltIn) {
+      this.id = id;
+      this.method = method;
+      this.isBuiltIn = isBuiltIn;
+    }
   }
 }

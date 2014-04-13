@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 
 public final class EfVar {
   private static final int IS_UNKNOWN = -1;
+  public static final String THIS_VAR_NAME = "$this$";
   private final EfType type;
   private final String name;
   private final int argPosition;

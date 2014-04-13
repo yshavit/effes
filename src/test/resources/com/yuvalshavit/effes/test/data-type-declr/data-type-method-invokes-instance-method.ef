@@ -1,0 +1,6 @@
+data type Dog:
+  def bark: print True
+  def woof: bark
+
+def main:
+  Dog: woof

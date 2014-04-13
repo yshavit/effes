@@ -9,6 +9,7 @@ import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
+import com.yuvalshavit.effes.compile.MethodId;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
 import com.yuvalshavit.effes.compile.NodeStateListener;
@@ -71,10 +72,10 @@ public final class EndToEndTest {
   public void compile(String fileBaseName) throws IOException {
     IrCompiler<?> compiler = new IrCompiler<>(
       getParser(fileBaseName),
-      t -> {
+      (t, e) -> {
         BuiltInMethodsFactory<?> factory = new ExecutableBuiltInMethods(t, null);
         MethodsRegistry<Object> reg = new MethodsRegistry<>();
-        factory.addTo(t, reg);
+        factory.addTo(t, reg, e);
         return reg;
       },
       new CompileErrors());
@@ -119,12 +120,12 @@ public final class EndToEndTest {
   }
 
   private String printIr(MethodsRegistry<Block> compiledMethods) {
-    Map<? extends String, ? extends EfMethod<? extends Block>> methods = compiledMethods.getTopLevelMethodsByName();
+    Map<? extends MethodId, ? extends EfMethod<? extends Block>> methods = compiledMethods.getMethodsByName();
     methods = new TreeMap<>(methods); // sort by name
     StringBuilder sb = new StringBuilder();
     NodeStateListener listener = new NodeStateToString(sb);
     methods.forEach((name, method) -> {
-      if(!"main".equals(name)) {
+      if(!MethodId.topLevel("main").equals(name)) {
         sb.append("def ").append(name).append(' ').append(method).append(":\n");
         listener.child(method.getBody());
       }

@@ -6,6 +6,7 @@ import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.EfMethod;
 import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.IrCompiler;
+import com.yuvalshavit.effes.compile.MethodId;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;
@@ -24,7 +25,7 @@ public final class Interpreter {
   public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
     CompileErrors errs = new CompileErrors();
 
-    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, t -> getBuiltins(out, t), errs);
+    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, (t, e) -> getBuiltins(out, t, e), errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
@@ -34,12 +35,12 @@ public final class Interpreter {
     MethodsRegistry<Block> compiledMethods = compiler.getCompiledMethods();
 
     MethodsRegistry<ExecutableMethod> executableMethods = new MethodsRegistry<>();
-    Function<String, ExecutableMethod> methodLookup = m -> {
+    Function<MethodId, ExecutableMethod> methodLookup = m -> {
       EfMethod<? extends ExecutableMethod> method = executableMethods.getMethod(m);
       assert method != null : m;
       return method.getBody();
     };
-    Function<String, ExecutableMethod> builtInMethodsLookup = name -> {
+    Function<MethodId, ExecutableMethod> builtInMethodsLookup = name -> {
       EfMethod<? extends ExecutableMethod> method = compiler.getBuiltInMethods().getMethod(name);
       assert method != null;
       return method.getBody();
@@ -56,10 +57,11 @@ public final class Interpreter {
     this.methodsRegistry = executableMethods;
   }
 
-  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry) {
+  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry,
+                                                               CompileErrors errs) {
     MethodsRegistry<ExecutableMethod> builtInMethods = new MethodsRegistry<>();
     ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
-    builtIns.addTo(typeRegistry, builtInMethods);
+    builtIns.addTo(typeRegistry, builtInMethods, errs);
     return builtInMethods;
   }
 
@@ -81,7 +83,7 @@ public final class Interpreter {
     if (hasErrors()) {
       throw new IllegalStateException("compilation had errors");
     }
-    EfMethod<? extends ExecutableMethod> main = methodsRegistry.getMethod("main");
+    EfMethod<? extends ExecutableMethod> main = methodsRegistry.getMethod(MethodId.topLevel("main"));
     if (main != null) {
       CallStack states = new CallStack();
       Object initial = states.snapshot();
@@ -89,7 +91,7 @@ public final class Interpreter {
         throw new BadMainException("main method may not take any arguments");
       }
       boolean hasRv = !EfType.VOID.equals(main.getResultType());
-      ExecutableExpression.MethodInvokeExpression.invoke(main.getBody(), ImmutableList.of(), states, hasRv);
+      ExecutableExpression.MethodInvokeExpression.invoke(null, main.getBody(), ImmutableList.of(), states, hasRv);
       Object rv;
       if (hasRv) {
         rv = states.pop();

@@ -1,0 +1,12 @@
+data type BoolWrap(value: True | False)
+
+def unwrap (wrapped: BoolWrap) -> True | False:
+  return wrapped: value
+
+def main:
+  w1 = BoolWrap(True)
+  w2 = BoolWrap(False)
+  u1 = unwrap w1
+  u2 = unwrap w2
+  print u1
+  print u2
