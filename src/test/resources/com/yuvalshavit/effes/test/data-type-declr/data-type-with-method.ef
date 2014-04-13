@@ -1,2 +1,5 @@
 data type Dog:
   def isCute: print True
+
+def main:
+  Dog: isCute
