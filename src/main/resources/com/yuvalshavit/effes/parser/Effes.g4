@@ -6,12 +6,11 @@ tokens {INDENT, DEDENT }
   import com.yuvalshavit.antlr4.DenterOptions;
 }
 @lexer::members {
-  private final DenterHelper denter = new DenterHelper(NL, EffesParser.INDENT, EffesParser.DEDENT) {
-    @Override
-    public Token pullToken() {
-      return EffesLexer.super.nextToken();
-    }
-  };
+  private final DenterHelper denter = DenterHelper.builder()
+    .nl(NL)
+    .indent(EffesParser.INDENT)
+    .dedent(EffesParser.DEDENT)
+    .pullToken(EffesLexer.super::nextToken);
 
   @Override
   public Token nextToken() {
