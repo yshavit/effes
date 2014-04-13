@@ -1,0 +1,35 @@
+def pushFooTrue () -> no result type:
+  AssignStatement
+    var: foo (pos=0)
+    val:
+      CtorInvoke
+        type: Foo
+  AssignStatement
+    var: r (pos=1)
+    val:
+      MethodInvoke
+        method: Foo::push
+        arg0:
+          VarExpression
+            var: foo
+            pos: 0
+        arg1:
+          CtorInvoke
+            type: Void
+        arg2:
+          CtorInvoke
+            type: False
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      VarExpression
+        var: r
+        pos: 1
+def Foo::push (v: Void) (ob: False | True) -> False | True:
+  ReturnStatement
+    InstanceArg
+      target:
+        VarExpression
+          arg: $this$
+          pos: 0
+      arg: bool (pos=0)

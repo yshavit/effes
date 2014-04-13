@@ -2,6 +2,10 @@ def isDogCute (d: Dog) -> False | True:
   ReturnStatement
     MethodInvoke
       method: Dog::isCute
+      arg0:
+        VarExpression
+          arg: d
+          pos: 0
 def Dog::isCute () -> True:
   ReturnStatement
     CtorInvoke

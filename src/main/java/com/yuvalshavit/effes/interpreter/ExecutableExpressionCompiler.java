@@ -61,10 +61,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     Supplier<ExecutableMethod> body = () -> expr.isBuiltIn()
       ? builtInMethods.apply(expr.getMethodId())
       : methods.apply(expr.getMethodId());
-    ExecutableExpression target = expr.getTarget() != null
-      ? apply(expr.getTarget())
-      : null;
-    return new ExecutableExpression.MethodInvokeExpression(expr, target, args, body);
+    return new ExecutableExpression.MethodInvokeExpression(expr, args, body);
   }
 
   private ExecutableExpression unrecognizedExpr(Expression.UnrecognizedExpression expr) {

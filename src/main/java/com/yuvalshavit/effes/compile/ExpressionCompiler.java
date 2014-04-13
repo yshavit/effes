@@ -136,6 +136,12 @@ public final class ExpressionCompiler {
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
+    if (target != null) {
+      List<Expression> invokeArgsWithTarget = new ArrayList<>(invokeArgs.size() + 1);
+      invokeArgsWithTarget.add(target);
+      invokeArgsWithTarget.addAll(invokeArgs);
+      invokeArgs = invokeArgsWithTarget;
+    }
     EfType resultType;
     boolean isBuiltIn;
     MethodId methodId;
@@ -160,8 +166,7 @@ public final class ExpressionCompiler {
       isBuiltIn = false;
       methodId = MethodId.topLevel(methodName);
     }
-    return new Expression.MethodInvoke(ctx.getStart(),
-                                       methodId, target, invokeArgs, resultType, isBuiltIn, usedAsExpression);
+    return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
   private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {
