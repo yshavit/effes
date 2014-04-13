@@ -57,11 +57,17 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   }
 
   private Statement instanceMethodInvoke(EffesParser.InstanceMethodInvokeStatContext ctx) {
+    if (ctx.expr() == null || ctx.methodInvoke() == null) {
+      return new Statement.UnrecognizedStatement(ctx.getStart());
+    }
     Expression target = expressionCompiler.apply(ctx.expr());
     return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false, target));
   }
 
   private Statement methodInvoke(EffesParser.MethodInvokeStatContext ctx) {
+    if (ctx.methodInvoke() == null) {
+      return new Statement.UnrecognizedStatement(ctx.getStart());
+    }
     return new Statement.MethodInvoke(expressionCompiler.methodInvoke(ctx.methodInvoke(), false, null));
   }
 
