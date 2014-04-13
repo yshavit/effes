@@ -4,6 +4,7 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class IrCompiler<E> {
@@ -13,12 +14,12 @@ public final class IrCompiler<E> {
   private final MethodsRegistry<E> builtInMethods;
 
   public IrCompiler(EffesParser.CompilationUnitContext source,
-                    Function<TypeRegistry, MethodsRegistry<E>> builtinsRegistryF,
+                    BiFunction<TypeRegistry, CompileErrors, MethodsRegistry<E>> builtinsRegistryF,
                     CompileErrors errs)
   {
     this.errs = errs;
     TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), errs);
-    builtInMethods = builtinsRegistryF.apply(typeRegistry);
+    builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
     compiledMethods = compileToIntermediate(source, typeRegistry, builtInMethods, errs);
   }
 
@@ -64,8 +65,9 @@ public final class IrCompiler<E> {
     StatementCompiler statementCompiler = new StatementCompiler(expressionCompiler, vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 
-    MethodsRegistry<Block> compiled = unparsedMethods.transform(parsedMethod -> {
-      try (Scopes.ScopeCloser ignored = vars.pushScope()){
+    MethodsRegistry<Block> compiled = unparsedMethods.transform( (methodId, parsedMethod) -> {
+      try (Scopes.ScopeCloser ignored = vars.pushScope()) {
+        expressionCompiler.setDeclaringType(methodId.getDefinedOn());
         List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
         vars.setElemsCountOffset(asList.size());
         for (int pos = 0, len = asList.size(); pos < len; ++pos) {
@@ -76,7 +78,7 @@ public final class IrCompiler<E> {
         return blockCompiler.apply(parsedMethod.getBody(), parsedMethod.getResultType());
       }
     });
-    for (EfMethod<? extends Block> method : compiled.getTopLevelMethods()) {
+    for (EfMethod<? extends Block> method : compiled.getMethods()) {
       method.getBody().validate(errs);
       method.getBody().validateResultType(method.getResultType(), errs);
     }

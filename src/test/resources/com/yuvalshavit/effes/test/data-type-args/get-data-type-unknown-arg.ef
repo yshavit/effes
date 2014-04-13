@@ -1,0 +1,4 @@
+data type BoolWrap(value: True | False)
+
+def unwrap (wrapped: BoolWrap) -> True | False:
+  return wrapped: someUnknownArg

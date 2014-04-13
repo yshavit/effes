@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.interpreter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.EfType;
+import com.yuvalshavit.effes.compile.EfVar;
 import com.yuvalshavit.effes.compile.Expression;
 
 import java.util.List;
@@ -51,15 +52,37 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
+  public static class InstanceArg extends ExecutableExpression {
+    private final ExecutableExpression target;
+    private final EfVar arg;
+
+    public InstanceArg(Expression source, ExecutableExpression target, EfVar arg) {
+      super(source);
+      this.target = target;
+      this.arg = arg;
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      target.execute(stack);
+      EfValue targetValue = stack.pop();
+      EfValue argValue = targetValue.getState().get(arg.getArgPosition());
+      stack.push(argValue);
+    }
+  }
+
   public static class MethodInvokeExpression extends ExecutableExpression {
+    private final ExecutableExpression target;
     private final List<ExecutableExpression> args;
     private final Supplier<ExecutableMethod> body;
     private final boolean hasRv;
 
     public MethodInvokeExpression(Expression.MethodInvoke source,
+                                  ExecutableExpression target,
                                   List<ExecutableExpression> args,
                                   Supplier<ExecutableMethod> body) {
       super(source);
+      this.target = target;
       this.args = args;
       this.body = body;
       this.hasRv = !EfType.VOID.equals(source.resultType());
@@ -67,14 +90,18 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     @Override
     public void execute(CallStack stack) {
-      invoke(body.get(), args, stack, hasRv);
+      invoke(target, body.get(), args, stack, hasRv);
     }
 
     public boolean hasRv() {
       return hasRv;
     }
 
-    public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack, boolean hasRv) {
+    public static void invoke(ExecutableExpression target, ExecutableMethod body, List<ExecutableExpression> args,
+                              CallStack stack, boolean hasRv) {
+      if (target != null) {
+        args = ImmutableList.<ExecutableExpression>builder().add(target).addAll(args).build();
+      }
       stack.openFrame(args, hasRv);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {
         stack.push((EfValue)null);

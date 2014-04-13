@@ -109,16 +109,54 @@ public abstract class Expression extends Node {
     }
   }
 
+  public static class InstanceArg extends Expression {
+    private final Expression target;
+    private final EfVar arg;
+
+    public InstanceArg(Token token, Expression target, EfVar arg) {
+      super(token, arg.getType());
+      this.target = target;
+      this.arg = arg;
+    }
+
+    public Expression getTarget() {
+      return target;
+    }
+
+    public EfVar getArg() {
+      return arg;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s) %s", target, arg);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // nothing to do
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.child("target", target);
+      out.scalar("arg", arg);
+    }
+  }
+
   public static class MethodInvoke extends Expression {
-    private final String methodName;
+    private final MethodId methodId;
+    private final Expression target;
     private final List<Expression> args;
     private final boolean isBuiltIn;
     private final boolean usedAsExpression;
 
-    public MethodInvoke(Token token, String methodName, List<Expression> args, EfType resultType, boolean isBuiltin,
-                        boolean usedAsExpression) {
+    public MethodInvoke(Token token, MethodId methodId,
+                        Expression target, List<Expression> args, EfType resultType,
+                        boolean isBuiltin, boolean usedAsExpression) {
       super(token, resultType);
-      this.methodName = methodName;
+      this.methodId = methodId;
+      this.target = target;
       this.args = args;
       this.isBuiltIn = isBuiltin;
       this.usedAsExpression = usedAsExpression;
@@ -128,8 +166,13 @@ public abstract class Expression extends Node {
       return isBuiltIn;
     }
 
-    public String getMethodName() {
-      return methodName;
+    public MethodId getMethodId() {
+      return methodId;
+    }
+
+    @Nullable
+    public Expression getTarget() {
+      return target;
     }
 
     public List<Expression> getArgs() {
@@ -140,13 +183,13 @@ public abstract class Expression extends Node {
     public void validate(CompileErrors errs) {
       args.forEach(arg -> arg.validate(errs));
       if (usedAsExpression && EfType.VOID.equals(resultType())) {
-        errs.add(token(), String.format("method '%s' has no return value", methodName));
+        errs.add(token(), String.format("method '%s' has no return value", methodId));
       }
     }
 
     @Override
     public void state(NodeStateListener out) {
-      String name = methodName;
+      String name = methodId.toString();
       if (isBuiltIn()) {
         name += " [built-in]";
       }
@@ -158,7 +201,7 @@ public abstract class Expression extends Node {
 
     @Override
     public String toString() {
-      return String.format("%s(%s)", methodName, Joiner.on(", ").join(args));
+      return String.format("%s(%s)", methodId, Joiner.on(", ").join(args));
     }
   }
 

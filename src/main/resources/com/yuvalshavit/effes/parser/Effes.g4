@@ -46,7 +46,7 @@ methodName: VAR_NAME
           | ADD_OPS
           ;
 
-methodArgs: ( methodArg (COLON methodArg (COMMA methodArg)*)? )?;
+methodArgs: ( methodArg (COMMA methodArg)* )?;
 
 methodArg: type
          | OPEN_PAREN VAR_NAME COLON type CLOSE_PAREN
@@ -59,13 +59,17 @@ methodReturnDeclr: ARROW type
 
 // data type declr
 
-dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr? NL;
+dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr?
+               (NL | COLON INDENT typeMember+ DEDENT );
 
 dataTypeArgsDeclr: OPEN_PAREN
                    dataTypeArgDeclr (COMMA dataTypeArgDeclr)*
                    CLOSE_PAREN;
 
 dataTypeArgDeclr: VAR_NAME COLON type;
+
+typeMember: DEF methodDeclr                                                     # MethodMember
+          ;
 
 // generics and types
 
@@ -81,6 +85,7 @@ inlinableBlock: stat
 
 stat: RETURN exprLine                                                           # ReturnStat
     | methodInvoke NL                                                           # MethodInvokeStat
+    | expr COLON methodInvoke NL                                                # InstanceMethodInvokeStat
     | VAR_NAME EQ exprLine                                                      # AssignStat
     | CASE expr OF INDENT caseStatAlternative+ DEDENT                           # CaseStat
     ;
@@ -95,12 +100,13 @@ caseStatAlternative: casePattern COLON inlinableBlock;
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | methodInvoke                                                              # MethodInvokeOrVarExpr
+    | expr COLON methodInvoke                                                   # InstanceMethodInvokeOrVarExpr
     | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?                  # CtorInvoke
     ;
 
 methodInvoke: methodName methodInvokeArgs;
 
-methodInvokeArgs: (expr (COLON expr (COMMA expr)*)?)?;
+methodInvokeArgs: (expr (OPEN_BRACKET expr (COMMA expr)* CLOSE_BRACKET)?)?;
 
 caseAlternative: casePattern COLON exprBlock;
 

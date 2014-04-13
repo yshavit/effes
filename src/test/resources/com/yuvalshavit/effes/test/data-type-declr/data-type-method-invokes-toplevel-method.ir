@@ -1,0 +1,9 @@
+def sayHi () -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      CtorInvoke
+        type: True
+def HiSayer::salute () -> no result type:
+  MethodInvoke
+    method: sayHi
