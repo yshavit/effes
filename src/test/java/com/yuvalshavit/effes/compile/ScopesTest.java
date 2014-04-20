@@ -109,7 +109,7 @@ public final class ScopesTest {
     assertEquals(scopes.get("one"), aOne);
 
     scopes.pushScope();
-    scopes.shadow(bOne);
+    scopes.replace(bOne);
     assertEquals(scopes.get("one"), bOne);
 
     scopes.popScope();
@@ -128,7 +128,7 @@ public final class ScopesTest {
     assertEquals(scopes.get("one"), aOne);
 
     scopes.pushScope();
-    assertException(IllegalArgumentException.class, () -> scopes.shadow(bTwo));
+    assertException(IllegalArgumentException.class, () -> scopes.replace(bTwo));
   }
 
   @Test
@@ -142,7 +142,7 @@ public final class ScopesTest {
     scopes.add(aOne, id(1));
     assertEquals(scopes.get("one"), aOne);
 
-    assertException(IllegalArgumentException.class, () -> scopes.shadow(bOne));
+    assertException(IllegalArgumentException.class, () -> scopes.replace(bOne));
     assertEquals(scopes.get("one"), aOne);
   }
 

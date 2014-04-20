@@ -283,7 +283,7 @@ public final class ExpressionCompiler {
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
-      vars.shadow(matchAgainstDowncast);
+      vars.replace(matchAgainstDowncast);
     }
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
     for (int i = 0; i < bindingTokens.size(); ++i) {

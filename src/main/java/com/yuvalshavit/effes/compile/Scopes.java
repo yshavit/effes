@@ -83,16 +83,16 @@ public final class Scopes<T,D> {
     }
   }
 
-  public void shadow(@Nonnull T var) {
+  public void replace(@Nonnull T var) {
     Scope<T> scope = scopes.peek();
     if (scope == null) {
       throw new IllegalStateException("no active scope");
     }
     String name = namer.apply(var);
     if (get(name) == null) {
-      throw new IllegalArgumentException("no such variable to shadow: " + name);
+      throw new IllegalArgumentException("no such variable to replace: " + name);
     } else if (scope.byName.containsKey(name)) {
-      throw new IllegalArgumentException("can't shadow within same scope: " + name);
+      throw new IllegalArgumentException("can't replace within same scope: " + name);
     } else {
       scope.byName.put(name, var);
       ++scope.elemsCountOffset;
