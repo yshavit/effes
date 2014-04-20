@@ -1,0 +1,18 @@
+def add (n: One | Zero) -> One | Zero:
+  ReturnStatement
+    CtorInvoke
+      type: One
+def sub (n: One | Zero) -> One | Zero:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: n
+          pos: 0
+      of One:
+        VarExpression
+          var: p
+          pos: 0
+      of Zero:
+        CtorInvoke
+          type: Zero
