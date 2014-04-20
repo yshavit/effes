@@ -1,0 +1,13 @@
+def invert (b: False | True) -> False | True:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: b
+          pos: 0
+      of True:
+        CtorInvoke
+          type: False
+      of False:
+        CtorInvoke
+          type: True

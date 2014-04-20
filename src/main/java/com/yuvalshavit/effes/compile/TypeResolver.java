@@ -46,7 +46,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   }
 
   private EfType lookupSimpleType(TerminalNode typeName) {
-    EfType type = typeRegistry.getSimpleType(typeName.getText());
+    EfType type = typeRegistry.getType(typeName.getText());
     if (type == null) {
       errs.add(typeName.getSymbol(), "unknown type: " + typeName.getText());
       type = EfType.UNKNOWN;

@@ -1,23 +1,15 @@
 package com.yuvalshavit.effes;
 
 import com.yuvalshavit.effes.compile.CompileErrors;
-import com.yuvalshavit.effes.compile.EfType;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import java.util.function.Consumer;
 
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public final class TUtils {
   private TUtils() {}
-
-  public static EfType.SimpleType getExistingType(TypeRegistry registry, String name) {
-    EfType.SimpleType type = registry.getSimpleType(name);
-    assertNotNull(type, name);
-    return type;
-  }
 
   public static TypeRegistry typeRegistry(String... types) {
     TypeRegistry registry = new TypeRegistry(new CompileErrors());

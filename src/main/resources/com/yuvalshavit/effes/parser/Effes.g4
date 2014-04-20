@@ -30,6 +30,7 @@ compilationUnit: NL
 
 compilationBodyElement: dataTypeDeclr
                       | DEF methodDeclr
+                      | typeAliasDeclr
                       ;
 // methods
 
@@ -55,6 +56,10 @@ methodReturnDeclr: ARROW type
                  | ARROW OPEN_PAREN type CLOSE_PAREN
                  | // nothing
                  ;
+
+// data alias
+
+typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NAME)* NL;
 
 // data type declr
 
