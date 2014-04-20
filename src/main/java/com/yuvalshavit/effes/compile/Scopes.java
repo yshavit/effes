@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 
 /**
  * Scoping handler
@@ -20,7 +19,7 @@ public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
   private final ScopeCloser closer = new ScopeCloser(this);
-  private final Deque<Map<String, T>> scopes = new ArrayDeque<>();
+  private final Deque<Scope<T>> scopes = new ArrayDeque<>();
   private int elemsCountOffset = 0;
 
   /**
@@ -33,7 +32,7 @@ public final class Scopes<T,D> {
   }
 
   public ScopeCloser pushScope() {
-    scopes.push(new HashMap<>());
+    scopes.push(new Scope<>());
     return closer;
   }
 
@@ -46,7 +45,7 @@ public final class Scopes<T,D> {
   }
 
   public int countElems() {
-    return scopes.stream().mapToInt(Map::size).sum() - elemsCountOffset;
+    return scopes.stream().mapToInt(Scope::size).sum() - elemsCountOffset;
   }
 
   public void setElemsCountOffset(int offset) {
@@ -62,8 +61,8 @@ public final class Scopes<T,D> {
     if (scopes.isEmpty()) {
       throw new IllegalStateException("no active scope");
     }
-    for(Map<String, T> scope : scopes) {
-      T var = scope.get(name);
+    for(Scope<T> scope : scopes) {
+      T var = scope.byName.get(name);
       if (var != null) {
         return var;
       }
@@ -72,7 +71,7 @@ public final class Scopes<T,D> {
   }
 
   public void add(@Nonnull T var, D duplicateId) {
-    Map<String, T> scope = scopes.peek();
+    Scope<T> scope = scopes.peek();
     if (scope == null) {
       throw new IllegalStateException("no active scope");
     }
@@ -80,22 +79,23 @@ public final class Scopes<T,D> {
     if (get(name) != null) {
       onDuplicate.accept(name, duplicateId);
     } else {
-      scope.put(name, var);
+      scope.byName.put(name, var);
     }
   }
 
   public void shadow(@Nonnull T var) {
-    Map<String, T> scope = scopes.peek();
+    Scope<T> scope = scopes.peek();
     if (scope == null) {
       throw new IllegalStateException("no active scope");
     }
     String name = namer.apply(var);
     if (get(name) == null) {
       throw new IllegalArgumentException("no such variable to shadow: " + name);
-    } else if (scope.containsKey(name)) {
+    } else if (scope.byName.containsKey(name)) {
       throw new IllegalArgumentException("can't shadow within same scope: " + name);
     } else {
-      scope.put(name, var);
+      scope.byName.put(name, var);
+      ++scope.elemsCountOffset;
     }
   }
 
@@ -109,6 +109,15 @@ public final class Scopes<T,D> {
     @Override
     public void close() {
       parent.popScope();
+    }
+  }
+
+  private static class Scope<T> {
+    private final Map<String, T> byName = new HashMap<>();
+    private int elemsCountOffset = 0;
+
+    int size() {
+      return byName.size() - elemsCountOffset;
     }
   }
 }
