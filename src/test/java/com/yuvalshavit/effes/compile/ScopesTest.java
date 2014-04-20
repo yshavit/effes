@@ -97,6 +97,55 @@ public final class ScopesTest {
     assertException(IllegalStateException.class, scopes::popScope);
   }
 
+  @Test
+  public void shadowInDifferentScopes() {
+    Scopes<Elem, Id> scopes = create();
+
+    Elem aOne = elem("one", "a");
+    Elem bOne = elem("one", "b");
+
+    scopes.pushScope();
+    scopes.add(aOne, id(1));
+    assertEquals(scopes.get("one"), aOne);
+
+    scopes.pushScope();
+    scopes.replace(bOne);
+    assertEquals(scopes.get("one"), bOne);
+
+    scopes.popScope();
+    assertEquals(scopes.get("one"), aOne);
+  }
+
+  @Test
+  public void shadowUnknownVar() {
+    Scopes<Elem, Id> scopes = create();
+
+    Elem aOne = elem("one", "a");
+    Elem bTwo = elem("two", "b");
+
+    scopes.pushScope();
+    scopes.add(aOne, id(1));
+    assertEquals(scopes.get("one"), aOne);
+
+    scopes.pushScope();
+    assertException(IllegalArgumentException.class, () -> scopes.replace(bTwo));
+  }
+
+  @Test
+  public void shadowInSameScope() {
+    Scopes<Elem, Id> scopes = create();
+
+    Elem aOne = elem("one", "a");
+    Elem bOne = elem("one", "b");
+
+    scopes.pushScope();
+    scopes.add(aOne, id(1));
+    assertEquals(scopes.get("one"), aOne);
+
+    assertException(IllegalArgumentException.class, () -> scopes.replace(bOne));
+    assertEquals(scopes.get("one"), aOne);
+  }
+
   private static Scopes<Elem, Id> create() {
     return new Scopes<>(e -> e.key, (e, ignored) -> { throw new DuplicateElemException(e); });
   }

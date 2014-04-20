@@ -24,6 +24,11 @@ public final class EfVar {
     return new EfVar(name, IS_UNKNOWN, EfType.UNKNOWN, false);
   }
 
+  public static EfVar create(boolean isArg, String name, int argPosition, EfType type) {
+    Preconditions.checkArgument(argPosition >= 0, "invalid arg position: %s", argPosition);
+    return new EfVar(name, argPosition, type, isArg);
+  }
+
   private EfVar(String name, int argPosition, EfType type, boolean isArg) {
     this.type = type;
     this.name = name;
@@ -45,6 +50,10 @@ public final class EfVar {
 
   public boolean isArg() {
     return isArg;
+  }
+
+  public EfVar cast(EfType castType) {
+    return new EfVar(name, argPosition, castType, isArg);
   }
 
   @Override

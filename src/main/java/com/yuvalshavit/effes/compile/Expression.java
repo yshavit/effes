@@ -223,6 +223,10 @@ public abstract class Expression extends Node {
       out.scalar("pos", pos);
     }
 
+    public String name() {
+      return name;
+    }
+
     public int pos() {
       return pos;
     }

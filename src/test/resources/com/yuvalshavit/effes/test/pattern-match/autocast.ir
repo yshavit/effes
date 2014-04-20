@@ -1,0 +1,32 @@
+def goodbye (f: False) -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      CtorInvoke
+        type: False
+def hello (t: True) -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      CtorInvoke
+        type: True
+def helloGoodbye (b: False | True) -> no result type:
+  CaseStatement
+    case:
+      VarExpression
+        arg: b
+        pos: 0
+    of True:
+      MethodInvoke
+        method: hello
+        arg0:
+          VarExpression
+            arg: b
+            pos: 0
+    of False:
+      MethodInvoke
+        method: goodbye
+        arg0:
+          VarExpression
+            arg: b
+            pos: 0
