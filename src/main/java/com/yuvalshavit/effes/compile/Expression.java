@@ -62,6 +62,37 @@ public abstract class Expression extends Node {
     }
   }
 
+  public static class CastExpression extends Expression {
+    private final Expression target;
+
+    public CastExpression(Token token, EfType resultType, Expression target) {
+      super(token, resultType);
+      this.target = target;
+    }
+
+    public Expression getTarget() {
+      return target;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s) %s", target, resultType());
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      if (!target.resultType().contains(resultType())) {
+        errs.add(token(), String.format("cannot cast %s to %s (from '%s')", target.resultType(), resultType(), target));
+      }
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("toType", resultType());
+      out.child("target", target);
+    }
+  }
+
   public static class CtorInvoke extends Expression {
 
     @Nullable
@@ -221,6 +252,10 @@ public abstract class Expression extends Node {
         : "var";
       out.scalar(label, name);
       out.scalar("pos", pos);
+    }
+
+    public String name() {
+      return name;
     }
 
     public int pos() {

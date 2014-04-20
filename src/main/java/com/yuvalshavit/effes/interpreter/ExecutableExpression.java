@@ -35,6 +35,30 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
+  public static class CastExpression extends ExecutableExpression {
+    private final ExecutableExpression delegate;
+    private final EfType targetType;
+
+    public CastExpression(Expression source, ExecutableExpression delegate, EfType targetType) {
+      super(source);
+      this.delegate = delegate;
+      this.targetType = targetType;
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      delegate.execute(stack);
+      checkType(stack.peek());
+    }
+
+    private void checkType(EfValue value) {
+      EfType.SimpleType actualType = value.getType();
+      if (!targetType.contains(actualType)) {
+        throw new AssertionError(String.format("bad cast of %s (to %s)", value, targetType));
+      }
+    }
+  }
+
   public static class CtorExpression extends ExecutableExpression {
     private final EfType.SimpleType ctorType;
     private final List<ExecutableExpression> args;

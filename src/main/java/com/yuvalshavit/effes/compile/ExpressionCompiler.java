@@ -227,10 +227,25 @@ public final class ExpressionCompiler {
 
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
-    List<CaseConstruct.Alternative<Expression>> patterns =
-      ctx.caseAlternative().stream().map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
+    EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
+    List<CaseConstruct.Alternative<Expression>> patterns = ctx.caseAlternative().stream()
+      .map(c -> caseAlternative(c, matchAgainstVar))
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
     CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
     return new Expression.CaseExpression(ctx.getStart(), construct);
+  }
+
+  @Nullable
+  public EfVar tryGetEfVar(Expression expression) {
+    EfVar matchAgainstVar;
+    if (expression instanceof Expression.VarExpression) {
+      Expression.VarExpression varExpr = (Expression.VarExpression) expression;
+      matchAgainstVar = EfVar.create(varExpr.isArg(), varExpr.name(), varExpr.pos(), varExpr.resultType());
+    } else {
+      matchAgainstVar = null;
+    }
+    return matchAgainstVar;
   }
 
   private Expression exprLineErr(EffesParser.ExprLineContext ctx) {
@@ -238,9 +253,11 @@ public final class ExpressionCompiler {
   }
 
   @Nullable
-  private CaseConstruct.Alternative<Expression> caseAlternative(EffesParser.CaseAlternativeContext ctx) {
+  private CaseConstruct.Alternative<Expression> caseAlternative(EffesParser.CaseAlternativeContext ctx,
+                                                                @Nullable EfVar matchAgainst) {
     return caseAlternative(
       ctx,
+      matchAgainst,
       EffesParser.CaseAlternativeContext::casePattern,
       c -> c.exprBlock() != null
         ? apply(c.exprBlock().expr())
@@ -250,6 +267,7 @@ public final class ExpressionCompiler {
   @Nullable
   public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
     C ctx,
+    @Nullable EfVar matchAgainst,
     Function<C, EffesParser.CasePatternContext> patternExtractor,
     Function<C, N> ifMatchesExtractor)
   {
@@ -263,6 +281,10 @@ public final class ExpressionCompiler {
     List<TerminalNode> bindingTokens = casePattern.VAR_NAME();
     List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
+    if (matchAgainst != null) {
+      EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
+      vars.shadow(matchAgainstDowncast);
+    }
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
     for (int i = 0; i < bindingTokens.size(); ++i) {
       TerminalNode bindingToken = bindingTokens.get(i);
