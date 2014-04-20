@@ -1,0 +1,11 @@
+def hello (t: True): print True
+def goodbye (f: False): print False
+
+def helloGoodbye(b: True | False):
+  case b of
+    True: hello b
+    False: goodbye b
+
+def main:
+  helloGoodbye True
+  helloGoodbye False

@@ -68,10 +68,10 @@ public final class IrCompiler<E> {
     MethodsRegistry<Block> compiled = unparsedMethods.transform( (methodId, parsedMethod) -> {
       try (Scopes.ScopeCloser ignored = vars.pushScope()) {
         expressionCompiler.setDeclaringType(methodId.getDefinedOn());
-        List<EfArgs.Arg> asList = parsedMethod.getArgs().asList();
-        vars.setElemsCountOffset(asList.size());
-        for (int pos = 0, len = asList.size(); pos < len; ++pos) {
-          EfArgs.Arg arg = asList.get(pos);
+        List<EfArgs.Arg> argsList = parsedMethod.getArgs().asList();
+        vars.setElemsCountOffset(argsList.size());
+        for (int pos = 0, len = argsList.size(); pos < len; ++pos) {
+          EfArgs.Arg arg = argsList.get(pos);
           EfVar argVar = EfVar.arg(arg.name(), pos, arg.type());
           vars.add(argVar, null);
         }
