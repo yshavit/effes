@@ -4,6 +4,7 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -49,9 +50,10 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   private Statement caseStatement(EffesParser.CaseStatContext ctx) {
     Expression matchAgainst = expressionCompiler.apply(ctx.expr());
+    EfVar matchAgainstVar = expressionCompiler.tryGetEfVar(matchAgainst);
     List<CaseConstruct.Alternative<Block>> alternatives =
       ctx.caseStatAlternative().stream()
-        .map(this::caseAlternative).filter(Objects::nonNull).collect(Collectors.toList());
+        .map(c -> caseAlternative(c, matchAgainstVar)).filter(Objects::nonNull).collect(Collectors.toList());
     CaseConstruct<Block> construct = new CaseConstruct<>(matchAgainst, alternatives);
     return new Statement.CaseStatement(ctx.getStart(), construct);
   }
@@ -80,9 +82,11 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     return new Statement.UnrecognizedStatement(ctx.getStart());
   }
 
-  private CaseConstruct.Alternative<Block> caseAlternative(EffesParser.CaseStatAlternativeContext ctx) {
+  private CaseConstruct.Alternative<Block> caseAlternative(EffesParser.CaseStatAlternativeContext ctx,
+                                                           @Nullable EfVar matchAgainst) {
     return expressionCompiler.caseAlternative(
       ctx,
+      matchAgainst,
       EffesParser.CaseStatAlternativeContext::casePattern,
       c -> c.inlinableBlock() != null
         ? new Block(c.getStart(), c.inlinableBlock().stat().stream().map(this::apply).collect(Collectors.toList()))

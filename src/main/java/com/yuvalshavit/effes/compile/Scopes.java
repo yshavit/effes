@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * Scoping handler
@@ -78,6 +79,21 @@ public final class Scopes<T,D> {
     String name = namer.apply(var);
     if (get(name) != null) {
       onDuplicate.accept(name, duplicateId);
+    } else {
+      scope.put(name, var);
+    }
+  }
+
+  public void shadow(@Nonnull T var) {
+    Map<String, T> scope = scopes.peek();
+    if (scope == null) {
+      throw new IllegalStateException("no active scope");
+    }
+    String name = namer.apply(var);
+    if (get(name) == null) {
+      throw new IllegalArgumentException("no such variable to shadow: " + name);
+    } else if (scope.containsKey(name)) {
+      throw new IllegalArgumentException("can't shadow within same scope: " + name);
     } else {
       scope.put(name, var);
     }

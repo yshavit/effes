@@ -28,6 +28,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   private static final Dispatcher<ExecutableExpressionCompiler, Expression, ExecutableExpression> dispatcher =
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
       .put(Expression.CaseExpression.class, ExecutableExpressionCompiler::caseExpr)
+      .put(Expression.CastExpression.class, ExecutableExpressionCompiler::castExpr)
       .put(Expression.InstanceArg.class, ExecutableExpressionCompiler::instanceArg)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
@@ -44,6 +45,10 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
       return new ExecutableCase.CaseMatcher(p.getType(), ifMatch);
     }).collect(Collectors.toList());
     return new ExecutableExpression.CaseExpression(expr, matchAgainst, matchers);
+  }
+
+  private ExecutableExpression castExpr(Expression.CastExpression expr) {
+    return new ExecutableExpression.CastExpression(expr, apply(expr.getTarget()), expr.resultType());
   }
 
   private ExecutableExpression instanceArg(Expression.InstanceArg expr) {
