@@ -115,19 +115,26 @@ public final class ExpressionCompiler {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression,
+  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx,
+                                              boolean usedAsExpression,
                                               Expression target) {
-    String methodName = ctx.methodName().getText();
-    EfType.SimpleType lookOn;
-    if (target == null) {
-      lookOn = null;
-    } else if (target.resultType() instanceof EfType.SimpleType) {
-      EfType targetType = target.resultType();
-      lookOn = (EfType.SimpleType) targetType;
+    if (target == null || target.resultType() instanceof EfType.SimpleType) {
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, target);
+    } else if (target.resultType() instanceof EfType.DisjunctiveType) {
+      throw new UnsupportedOperationException(); // TODO
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
-      lookOn = null;
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null);
     }
+  }
+
+  private Expression.MethodInvoke getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
+                                                                boolean usedAsExpression,
+                                                                Expression target) {
+    EfType.SimpleType lookOn = target != null
+      ? (EfType.SimpleType) target.resultType()
+      : null;
+    String methodName = ctx.methodName().getText();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
       String msgFormat = couldBeVar(ctx)
