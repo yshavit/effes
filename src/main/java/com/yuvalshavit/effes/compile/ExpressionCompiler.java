@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
@@ -258,27 +259,39 @@ public final class ExpressionCompiler {
     return caseAlternative(
       ctx,
       matchAgainst,
-      EffesParser.CaseAlternativeContext::casePattern,
+      t-> casePattern(t.casePattern()),
       c -> c.exprBlock() != null
         ? apply(c.exprBlock().expr())
         : new Expression.UnrecognizedExpression(c.getStart()));
   }
 
-  @Nullable
-  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
-    C ctx,
-    @Nullable EfVar matchAgainst,
-    Function<C, EffesParser.CasePatternContext> patternExtractor,
-    Function<C, N> ifMatchesExtractor)
-  {
-    EffesParser.CasePatternContext casePattern = patternExtractor.apply(ctx);
+  public CasePattern casePattern(EffesParser.CasePatternContext casePattern) {
     TerminalNode tok = casePattern.TYPE_NAME();
     EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
     if (matchType == null) {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
-    List<TerminalNode> bindingTokens = casePattern.VAR_NAME();
+
+    List<Pair<Token, String>> bindings
+      = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
+
+    return new CasePattern(matchType, bindings, casePattern.getStart());
+  }
+
+  @Nullable
+  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
+    C ctx,
+    @Nullable EfVar matchAgainst,
+    Function<C, CasePattern> patternExtractor,
+    Function<C, N> ifMatchesExtractor)
+  {
+    CasePattern casePattern = patternExtractor.apply(ctx);
+    if (casePattern == null) {
+      return null;
+    }
+    EfType.SimpleType matchType = casePattern.matchType();
+    List<Pair<Token, String>> bindingTokens = casePattern.bindings();
     List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     if (matchAgainst != null) {
@@ -287,21 +300,45 @@ public final class ExpressionCompiler {
     }
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
     for (int i = 0; i < bindingTokens.size(); ++i) {
-      TerminalNode bindingToken = bindingTokens.get(i);
-      String bindingName = bindingToken.getText();
+      Pair<Token, String> bindingToken = bindingTokens.get(i);
+      String bindingName = bindingToken.b;
       EfType bindingType = i < matchtypeArgs.size()
         ? matchtypeArgs.get(i).getType()
         : EfType.UNKNOWN;
       EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
-      vars.add(binding, bindingToken.getSymbol());
+      vars.add(binding, bindingToken.a);
       bindingArgs.add(binding);
     }
     N ifMatches = ifMatchesExtractor.apply(ctx);
     vars.popScope();
     if (ifMatches == null) {
-      errs.add(casePattern.getStart(), "unrecognized alternative for pattern " + matchType);
+      errs.add(casePattern.token(), "unrecognized alternative for pattern " + matchType);
     }
     return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
+  }
+
+  public static class CasePattern {
+    private final EfType.SimpleType matchType;
+    private final List<Pair<Token, String>> bindings;
+    private final Token token;
+
+    public CasePattern(EfType.SimpleType matchType, List<Pair<Token, String>> bindings, Token token) {
+      this.matchType = matchType;
+      this.bindings = ImmutableList.copyOf(bindings);
+      this.token = token;
+    }
+
+    public EfType.SimpleType matchType() {
+      return matchType;
+    }
+
+    public List<Pair<Token, String>> bindings() {
+      return bindings;
+    }
+
+    public Token token() {
+      return token;
+    }
   }
 
   private static class MethodLookup {
