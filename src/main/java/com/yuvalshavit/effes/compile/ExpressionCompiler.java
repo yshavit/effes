@@ -95,19 +95,11 @@ public final class ExpressionCompiler {
     //      Dog: p breed
     //      Cat: p breed
     if (!(genericTargetType instanceof EfType.SimpleType)) {
-      errs.add(ctx.expr().getStart(),
-               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
-      return new Expression.UnrecognizedExpression(ctx.getStart());
+//      errs.add(ctx.expr().getStart(),
+//               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
+//      return new Expression.UnrecognizedExpression(ctx.getStart());
     }
-    EfType.SimpleType targetType = (EfType.SimpleType) genericTargetType;
     EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
-    if (couldBeVar(methodInvoke)) {
-      String argName = methodInvoke.methodName().getText();
-      EfVar arg = targetType.getArgByName(argName);
-      if (arg != null) {
-        return new Expression.InstanceArg(ctx.getStart(), target, arg);
-      }
-    }
     return methodInvoke(methodInvoke, true, target);
   }
 
@@ -115,25 +107,57 @@ public final class ExpressionCompiler {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx,
-                                              boolean usedAsExpression,
-                                              Expression target) {
+  public Expression methodInvoke(EffesParser.MethodInvokeContext ctx,
+                                 boolean usedAsExpression,
+                                 Expression target) {
     if (target == null || target.resultType() instanceof EfType.SimpleType) {
-      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, target);
+      EfType.SimpleType lookOn = target != null
+        ? (EfType.SimpleType) target.resultType()
+        : null;
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, target, lookOn);
     } else if (target.resultType() instanceof EfType.DisjunctiveType) {
-      throw new UnsupportedOperationException(); // TODO
+      try (Scopes.ScopeCloser ignored = vars.pushScope()) {
+        EfVar matchAgainstVar = tryGetEfVar(target);
+        if (matchAgainstVar == null) {
+          matchAgainstVar = EfVar.var(vars.uniqueName(), vars.countElems(), target.resultType());
+          vars.add(matchAgainstVar, target.token());
+          target = new Expression.AssignExpression(target, matchAgainstVar);
+        }
+
+        EfType.DisjunctiveType targetDisjunction = (EfType.DisjunctiveType) target.resultType();
+
+        Expression targetClosure = target;
+        EfVar matchAgainstVarClosure = matchAgainstVar;
+        List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction.getAlternatives()
+          .stream()
+          .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
+          .map((EfType efType) -> {
+            if (!(efType instanceof EfType.SimpleType)) {
+              errs.add(targetClosure.token(), "unrecognized type (possibly a compiler error): " + efType);
+              return null;
+            }
+            EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
+            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), targetClosure.token());
+            return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
+              null,
+              matchAgainstVarClosure,
+              ignored1 -> casePattern,
+              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, targetClosure, matchAgainstType)
+            );
+          })
+          .filter(Objects::nonNull).collect(Collectors.toList());
+        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(target, alternatives));
+      }
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
-      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null);
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null, null);
     }
   }
 
   private Expression.MethodInvoke getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
                                                                 boolean usedAsExpression,
-                                                                Expression target) {
-    EfType.SimpleType lookOn = target != null
-      ? (EfType.SimpleType) target.resultType()
-      : null;
+                                                                Expression target,
+                                                                EfType.SimpleType lookOn) {
     String methodName = ctx.methodName().getText();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {

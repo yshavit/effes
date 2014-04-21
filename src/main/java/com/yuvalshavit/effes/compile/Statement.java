@@ -109,14 +109,14 @@ public abstract class Statement extends Node {
   }
 
   public static class MethodInvoke extends Statement {
-    private final Expression.MethodInvoke methodExpr;
+    private final Expression methodExpr;
 
-    public MethodInvoke(Expression.MethodInvoke methodExpr) {
+    public MethodInvoke(Expression methodExpr) {
       super(methodExpr.token(), EfType.VOID);
       this.methodExpr = methodExpr;
     }
 
-    public Expression.MethodInvoke methodExpr() {
+    public Expression methodExpr() {
       return methodExpr;
     }
 

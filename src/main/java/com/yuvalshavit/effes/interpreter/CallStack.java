@@ -68,6 +68,10 @@ public final class CallStack {
     assert fip == -1 || (states.get(fip) instanceof FrameInfo) : states.get(fip);
   }
 
+  public int depth() {
+    return states.size();
+  }
+
   public void pushArgToStack(int pos) {
     pushUnsafe(peekArg(pos));
   }

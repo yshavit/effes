@@ -90,10 +90,6 @@ public abstract class ExecutableExpression implements ExecutableElement {
       invoke(body.get(), args, stack, hasRv);
     }
 
-    public boolean hasRv() {
-      return hasRv;
-    }
-
     public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack, boolean hasRv) {
       stack.openFrame(args, hasRv);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {

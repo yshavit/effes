@@ -34,6 +34,37 @@ public abstract class Expression extends Node {
     }
   }
 
+  /**
+   * An inline assign-and-return expression. This is how all expressions work in Java (and C, etc), but not in Effes.
+   * However, there are times we need this construct internally.
+   */
+  public static class AssignExpression extends Expression {
+    private final Expression delegate;
+    private final EfVar assignTo;
+
+    public AssignExpression(Expression delegate, EfVar assignTo) {
+      super(delegate.token(), delegate.resultType());
+      this.delegate = delegate;
+      this.assignTo = assignTo;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s = %s", assignTo.getName(), delegate);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("assignTo", assignTo);
+      out.child(delegate);
+    }
+  }
+
   public static class CaseExpression extends Expression {
     private final CaseConstruct<Expression> delegate;
 
