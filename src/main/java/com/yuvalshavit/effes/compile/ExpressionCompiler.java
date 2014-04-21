@@ -138,11 +138,12 @@ public final class ExpressionCompiler {
             }
             EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
             CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), targetClosure.token());
+            Expression downcast = new Expression.CastExpression(targetClosure, matchAgainstType);
             return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
               null,
               matchAgainstVarClosure,
               ignored1 -> casePattern,
-              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, targetClosure, matchAgainstType)
+              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, downcast, matchAgainstType)
             );
           })
           .filter(Objects::nonNull).collect(Collectors.toList());
