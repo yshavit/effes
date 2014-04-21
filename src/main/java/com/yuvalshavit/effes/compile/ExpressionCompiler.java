@@ -88,17 +88,6 @@ public final class ExpressionCompiler {
 
   private Expression instanceMethodInvokeOrvar(EffesParser.InstanceMethodInvokeOrVarExprContext ctx) {
     Expression target = apply(ctx.expr());
-    EfType genericTargetType = target.resultType();
-    // For now, targetType must be a SimpleType. In the future, we could unroll this to a case. For instance,
-    // if p is (Dog | Cat), then (p breed) would translate to:
-    //    case p of
-    //      Dog: p breed
-    //      Cat: p breed
-    if (!(genericTargetType instanceof EfType.SimpleType)) {
-//      errs.add(ctx.expr().getStart(),
-//               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
-//      return new Expression.UnrecognizedExpression(ctx.getStart());
-    }
     EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
     return methodInvoke(methodInvoke, true, target);
   }
