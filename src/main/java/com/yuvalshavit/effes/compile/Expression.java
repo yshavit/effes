@@ -93,6 +93,39 @@ public abstract class Expression extends Node {
     }
   }
 
+  public static class CastExpression extends Expression {
+    private final Expression delegate;
+
+    public CastExpression(Expression delegate, EfType castTo) {
+      super(delegate.token(), castTo);
+      this.delegate = delegate;
+    }
+
+    public Expression getDelegate() {
+      return delegate;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s) %s", resultType(), delegate);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(errs);
+      if (!delegate.resultType().contains(resultType())) {
+        errs.add(token(), String.format("cannot cast '%s' to '%s' (possibly a compiler error)",
+                                        delegate.resultType(), resultType()));
+      }
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("castTo", resultType());
+      out.child(delegate);
+    }
+  }
+
   public static class CtorInvoke extends Expression {
 
     @Nullable

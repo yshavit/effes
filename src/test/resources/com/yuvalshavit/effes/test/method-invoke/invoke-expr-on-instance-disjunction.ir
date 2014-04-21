@@ -1,0 +1,29 @@
+def unwrap (b: AFalse | ATrue) -> False | True:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: b
+          pos: 0
+      of AFalse:
+        MethodInvoke
+          method: AFalse::mapped
+          arg0:
+            CastExpression
+              castTo: AFalse
+              VarExpression
+                arg: b
+                pos: 0
+      of ATrue:
+        MethodInvoke
+          method: ATrue::mapped
+          arg0:
+            CastExpression
+              castTo: ATrue
+              VarExpression
+                arg: b
+                pos: 0
+def ATrue::mapped () -> False:
+  ReturnStatement
+    CtorInvoke
+      type: False
