@@ -99,6 +99,15 @@ public final class Scopes<T,D> {
     }
   }
 
+  public String uniqueName() {
+    int n = 0;
+    String name;
+    do {
+      name = "$" + n;
+    } while (get(name) != null);
+    return name;
+  }
+
   public static class ScopeCloser implements AutoCloseable {
     private final Scopes<?,?> parent;
 
