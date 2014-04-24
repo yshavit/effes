@@ -107,27 +107,32 @@ public final class ExpressionCompiler {
     } else if (target.resultType() instanceof EfType.DisjunctiveType) {
       try (Scopes.ScopeCloser ignored = vars.pushScope()) {
         EfVar matchAgainstVar = tryGetEfVar(target);
+        Expression caseOf;
+        Expression inMatcher;
         if (matchAgainstVar == null) {
           matchAgainstVar = EfVar.var(vars.uniqueName(), vars.countElems(), target.resultType());
           vars.add(matchAgainstVar, target.token());
-          target = new Expression.AssignExpression(target, matchAgainstVar);
+          caseOf = new Expression.AssignExpression(target, matchAgainstVar);
+          inMatcher = new Expression.VarExpression(target.token(), matchAgainstVar);
+        } else {
+          caseOf = target;
+          inMatcher = target;
         }
 
         EfType.DisjunctiveType targetDisjunction = (EfType.DisjunctiveType) target.resultType();
 
-        Expression targetClosure = target;
         EfVar matchAgainstVarClosure = matchAgainstVar;
         List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction.getAlternatives()
           .stream()
           .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
           .map((EfType efType) -> {
             if (!(efType instanceof EfType.SimpleType)) {
-              errs.add(targetClosure.token(), "unrecognized type (possibly a compiler error): " + efType);
+              errs.add(inMatcher.token(), "unrecognized type (possibly a compiler error): " + efType);
               return null;
             }
             EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
-            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), targetClosure.token());
-            Expression downcast = new Expression.CastExpression(targetClosure, matchAgainstType);
+            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), inMatcher.token());
+            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
             return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
               null,
               matchAgainstVarClosure,
@@ -136,7 +141,7 @@ public final class ExpressionCompiler {
             );
           })
           .filter(Objects::nonNull).collect(Collectors.toList());
-        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(target, alternatives));
+        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
       }
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
@@ -278,7 +283,7 @@ public final class ExpressionCompiler {
     EfVar matchAgainstVar;
     if (expression instanceof Expression.VarExpression) {
       Expression.VarExpression varExpr = (Expression.VarExpression) expression;
-      matchAgainstVar = EfVar.create(varExpr.isArg(), varExpr.name(), varExpr.pos(), varExpr.resultType());
+      matchAgainstVar = varExpr.getVar();
     } else {
       matchAgainstVar = null;
     }

@@ -35,6 +35,24 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
+  public static class AssignExpression extends ExecutableExpression {
+    private final ExecutableExpression delegate;
+    private final EfVar assignTo;
+
+    public AssignExpression(Expression.AssignExpression source, ExecutableExpression delegate) {
+      super(source);
+      this.delegate = delegate;
+      this.assignTo = source.getVar();
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      delegate.execute(stack);
+      stack.push(stack.peek());
+      stack.popToLocal(assignTo.getArgPosition());
+    }
+  }
+
   public static class CastExpression extends ExecutableExpression {
     private final ExecutableExpression delegate;
     private final EfType castTo;
