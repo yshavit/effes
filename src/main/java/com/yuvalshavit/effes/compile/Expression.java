@@ -63,6 +63,14 @@ public abstract class Expression extends Node {
       out.scalar("assignTo", assignTo);
       out.child(delegate);
     }
+
+    public Expression getDelegate() {
+      return delegate;
+    }
+
+    public EfVar getVar() {
+      return assignTo;
+    }
   }
 
   public static class CaseExpression extends Expression {
@@ -285,6 +293,10 @@ public abstract class Expression extends Node {
         : "var";
       out.scalar(label, name);
       out.scalar("pos", pos);
+    }
+
+    public EfVar getVar() {
+      return EfVar.create(isArg(), name(), pos(), resultType());
     }
 
     public String name() {

@@ -27,6 +27,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
 
   private static final Dispatcher<ExecutableExpressionCompiler, Expression, ExecutableExpression> dispatcher =
     Dispatcher.builder(ExecutableExpressionCompiler.class, Expression.class, ExecutableExpression.class)
+      .put(Expression.AssignExpression.class, ExecutableExpressionCompiler::assignExpr)
       .put(Expression.CaseExpression.class, ExecutableExpressionCompiler::caseExpr)
       .put(Expression.InstanceArg.class, ExecutableExpressionCompiler::instanceArg)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
@@ -37,6 +38,10 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
       .build((me, e) -> {
         throw new AssertionError(e);
       });
+
+  private ExecutableExpression assignExpr(Expression.AssignExpression expr) {
+    return new ExecutableExpression.AssignExpression(expr, apply(expr.getDelegate()));
+  }
 
   private ExecutableExpression caseExpr(Expression.CaseExpression expr) {
     ExecutableExpression matchAgainst = apply(expr.construct().getMatchAgainst());
