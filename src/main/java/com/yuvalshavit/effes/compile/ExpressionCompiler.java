@@ -144,17 +144,32 @@ public final class ExpressionCompiler {
     }
   }
 
-  private Expression.MethodInvoke getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
+  private Expression getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
                                                                 boolean usedAsExpression,
                                                                 Expression target,
                                                                 EfType.SimpleType lookOn) {
     String methodName = ctx.methodName().getText();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
-      String msgFormat = couldBeVar(ctx)
-        ? "no such method or variable: '%s'"
-        : "no such method: '%s'";
-      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
+      if (couldBeVar(ctx)) {
+        EfVar var = vars.get(methodName);
+        if (var != null) {
+          return new Expression.VarExpression(ctx.getStart(), var);
+        }
+        else if (target != null) {
+          EfVar arg = lookOn.getArgByName(methodName);
+          if (arg == null) {
+            errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
+          } else {
+            return new Expression.InstanceArg(ctx.getStart(), target, arg);
+          }
+        } else {
+          // couldn't find var or method, and it's not an instance so there's no instance arg
+          errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
+        }
+      } else {
+        errs.add(ctx.methodName().getStart(), "no such method: '" + methodName + '\'');
+      }
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
