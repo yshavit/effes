@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
@@ -87,26 +88,7 @@ public final class ExpressionCompiler {
 
   private Expression instanceMethodInvokeOrvar(EffesParser.InstanceMethodInvokeOrVarExprContext ctx) {
     Expression target = apply(ctx.expr());
-    EfType genericTargetType = target.resultType();
-    // For now, targetType must be a SimpleType. In the future, we could unroll this to a case. For instance,
-    // if p is (Dog | Cat), then (p breed) would translate to:
-    //    case p of
-    //      Dog: p breed
-    //      Cat: p breed
-    if (!(genericTargetType instanceof EfType.SimpleType)) {
-      errs.add(ctx.expr().getStart(),
-               String.format("target of method invocation must be a simple type (was %s)", genericTargetType));
-      return new Expression.UnrecognizedExpression(ctx.getStart());
-    }
-    EfType.SimpleType targetType = (EfType.SimpleType) genericTargetType;
     EffesParser.MethodInvokeContext methodInvoke = ctx.methodInvoke();
-    if (couldBeVar(methodInvoke)) {
-      String argName = methodInvoke.methodName().getText();
-      EfVar arg = targetType.getArgByName(argName);
-      if (arg != null) {
-        return new Expression.InstanceArg(ctx.getStart(), target, arg);
-      }
-    }
     return methodInvoke(methodInvoke, true, target);
   }
 
@@ -114,25 +96,85 @@ public final class ExpressionCompiler {
     return methodInvoke.methodInvokeArgs().expr().isEmpty() && methodInvoke.methodName().VAR_NAME() != null;
   }
 
-  public Expression.MethodInvoke methodInvoke(EffesParser.MethodInvokeContext ctx, boolean usedAsExpression,
-                                              Expression target) {
-    String methodName = ctx.methodName().getText();
-    EfType.SimpleType lookOn;
-    if (target == null) {
-      lookOn = null;
-    } else if (target.resultType() instanceof EfType.SimpleType) {
-      EfType targetType = target.resultType();
-      lookOn = (EfType.SimpleType) targetType;
+  public Expression methodInvoke(EffesParser.MethodInvokeContext ctx,
+                                 boolean usedAsExpression,
+                                 Expression target) {
+    if (target == null || target.resultType() instanceof EfType.SimpleType) {
+      EfType.SimpleType lookOn = target != null
+        ? (EfType.SimpleType) target.resultType()
+        : null;
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, target, lookOn);
+    } else if (target.resultType() instanceof EfType.DisjunctiveType) {
+      try (Scopes.ScopeCloser ignored = vars.pushScope()) {
+        EfVar matchAgainstVar = tryGetEfVar(target);
+        Expression caseOf;
+        Expression inMatcher;
+        if (matchAgainstVar == null) {
+          matchAgainstVar = EfVar.var(vars.uniqueName(), vars.countElems(), target.resultType());
+          vars.add(matchAgainstVar, target.token());
+          caseOf = new Expression.AssignExpression(target, matchAgainstVar);
+          inMatcher = new Expression.VarExpression(target.token(), matchAgainstVar);
+        } else {
+          caseOf = target;
+          inMatcher = target;
+        }
+
+        EfType.DisjunctiveType targetDisjunction = (EfType.DisjunctiveType) target.resultType();
+
+        EfVar matchAgainstVarClosure = matchAgainstVar;
+        List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction.getAlternatives()
+          .stream()
+          .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
+          .map((EfType efType) -> {
+            if (!(efType instanceof EfType.SimpleType)) {
+              errs.add(inMatcher.token(), "unrecognized type (possibly a compiler error): " + efType);
+              return null;
+            }
+            EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
+            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), inMatcher.token());
+            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
+            return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
+              null,
+              matchAgainstVarClosure,
+              ignored1 -> casePattern,
+              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, downcast, matchAgainstType)
+            );
+          })
+          .filter(Objects::nonNull).collect(Collectors.toList());
+        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
+      }
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
-      lookOn = null;
+      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null, null);
     }
+  }
+
+  private Expression getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
+                                                                boolean usedAsExpression,
+                                                                Expression target,
+                                                                EfType.SimpleType lookOn) {
+    String methodName = ctx.methodName().getText();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
-      String msgFormat = couldBeVar(ctx)
-        ? "no such method or variable: '%s'"
-        : "no such method: '%s'";
-      errs.add(ctx.methodName().getStart(), String.format(msgFormat, methodName));
+      if (couldBeVar(ctx)) {
+        EfVar var = vars.get(methodName);
+        if (var != null) {
+          return new Expression.VarExpression(ctx.getStart(), var);
+        }
+        else if (target != null) {
+          EfVar arg = lookOn.getArgByName(methodName);
+          if (arg == null) {
+            errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
+          } else {
+            return new Expression.InstanceArg(ctx.getStart(), target, arg);
+          }
+        } else {
+          // couldn't find var or method, and it's not an instance so there's no instance arg
+          errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
+        }
+      } else {
+        errs.add(ctx.methodName().getStart(), "no such method: '" + methodName + '\'');
+      }
     }
 
     List<Expression> invokeArgs = ctx.methodInvokeArgs().expr().stream().map(this::apply).collect(Collectors.toList());
@@ -241,7 +283,7 @@ public final class ExpressionCompiler {
     EfVar matchAgainstVar;
     if (expression instanceof Expression.VarExpression) {
       Expression.VarExpression varExpr = (Expression.VarExpression) expression;
-      matchAgainstVar = EfVar.create(varExpr.isArg(), varExpr.name(), varExpr.pos(), varExpr.resultType());
+      matchAgainstVar = varExpr.getVar();
     } else {
       matchAgainstVar = null;
     }
@@ -258,27 +300,39 @@ public final class ExpressionCompiler {
     return caseAlternative(
       ctx,
       matchAgainst,
-      EffesParser.CaseAlternativeContext::casePattern,
+      t-> casePattern(t.casePattern()),
       c -> c.exprBlock() != null
         ? apply(c.exprBlock().expr())
         : new Expression.UnrecognizedExpression(c.getStart()));
   }
 
-  @Nullable
-  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
-    C ctx,
-    @Nullable EfVar matchAgainst,
-    Function<C, EffesParser.CasePatternContext> patternExtractor,
-    Function<C, N> ifMatchesExtractor)
-  {
-    EffesParser.CasePatternContext casePattern = patternExtractor.apply(ctx);
+  public CasePattern casePattern(EffesParser.CasePatternContext casePattern) {
     TerminalNode tok = casePattern.TYPE_NAME();
     EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
     if (matchType == null) {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
-    List<TerminalNode> bindingTokens = casePattern.VAR_NAME();
+
+    List<Pair<Token, String>> bindings
+      = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
+
+    return new CasePattern(matchType, bindings, casePattern.getStart());
+  }
+
+  @Nullable
+  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
+    C ctx,
+    @Nullable EfVar matchAgainst,
+    Function<C, CasePattern> patternExtractor,
+    Function<C, N> ifMatchesExtractor)
+  {
+    CasePattern casePattern = patternExtractor.apply(ctx);
+    if (casePattern == null) {
+      return null;
+    }
+    EfType.SimpleType matchType = casePattern.matchType();
+    List<Pair<Token, String>> bindingTokens = casePattern.bindings();
     List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     if (matchAgainst != null) {
@@ -287,21 +341,45 @@ public final class ExpressionCompiler {
     }
     List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
     for (int i = 0; i < bindingTokens.size(); ++i) {
-      TerminalNode bindingToken = bindingTokens.get(i);
-      String bindingName = bindingToken.getText();
+      Pair<Token, String> bindingToken = bindingTokens.get(i);
+      String bindingName = bindingToken.b;
       EfType bindingType = i < matchtypeArgs.size()
         ? matchtypeArgs.get(i).getType()
         : EfType.UNKNOWN;
       EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
-      vars.add(binding, bindingToken.getSymbol());
+      vars.add(binding, bindingToken.a);
       bindingArgs.add(binding);
     }
     N ifMatches = ifMatchesExtractor.apply(ctx);
     vars.popScope();
     if (ifMatches == null) {
-      errs.add(casePattern.getStart(), "unrecognized alternative for pattern " + matchType);
+      errs.add(casePattern.token(), "unrecognized alternative for pattern " + matchType);
     }
     return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
+  }
+
+  public static class CasePattern {
+    private final EfType.SimpleType matchType;
+    private final List<Pair<Token, String>> bindings;
+    private final Token token;
+
+    public CasePattern(EfType.SimpleType matchType, List<Pair<Token, String>> bindings, Token token) {
+      this.matchType = matchType;
+      this.bindings = ImmutableList.copyOf(bindings);
+      this.token = token;
+    }
+
+    public EfType.SimpleType matchType() {
+      return matchType;
+    }
+
+    public List<Pair<Token, String>> bindings() {
+      return bindings;
+    }
+
+    public Token token() {
+      return token;
+    }
   }
 
   private static class MethodLookup {

@@ -1,0 +1,12 @@
+data type ATrue:
+  def mapped -> True: return True
+
+data type AFalse:
+  def mapped -> False: return False
+
+def unwrap (b: ATrue | AFalse):
+  print (b: mapped)
+
+def main:
+  unwrap ATrue
+  unwrap AFalse

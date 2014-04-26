@@ -1,7 +1,5 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -68,7 +66,13 @@ public final class MethodId implements Comparable<MethodId> {
     boolean otherIsTopLevel = other.definedOn == null;
     if (thisIsTopLevel != otherIsTopLevel) {
       return thisIsTopLevel ? -1 : 1;
+    } else if (!thisIsTopLevel) { // ie, they're both top level
+      int typeCmp = EfType.comparator.compare(definedOn, other.definedOn);
+      if (typeCmp != 0) {
+        return typeCmp;
+      }
     }
+    // compare on name either if both are top-level, or if they're of the same type
     return name.compareTo(other.name);
   }
 }

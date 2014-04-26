@@ -64,20 +64,26 @@ public abstract class ExecutableStatement implements ExecutableElement {
   }
 
   public static class MethodInvoke extends ExecutableStatement {
-    private final ExecutableExpression.MethodInvokeExpression method;
+    private final ExecutableExpression method;
 
     public MethodInvoke(Statement.MethodInvoke source,
                         ExecutableExpressionCompiler expressionCompiler,
-                        Expression.MethodInvoke method)
+                        Expression method)
     {
       super(source);
-      this.method = expressionCompiler.methodInvoke(method);
+      this.method = expressionCompiler.apply(method);
     }
 
     @Override
     public void execute(CallStack stack) {
+      int initialDepth = stack.depth();
       method.execute(stack);
-      if (method.hasRv()) {
+      int nextDepth = stack.depth();
+      if (nextDepth != initialDepth) {
+        assert nextDepth == initialDepth + 1 : String.format("stack depth, expected %d or %d but saw %d",
+                                                             initialDepth,
+                                                             initialDepth + 1,
+                                                             nextDepth);
         stack.pop(); // get rid of the return value
       }
     }

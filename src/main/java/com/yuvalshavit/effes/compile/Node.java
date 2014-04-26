@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public abstract class Node {
 
@@ -12,6 +13,11 @@ public abstract class Node {
   protected Node(Token token, @Nonnull EfType resultType) {
     this.token = token;
     this.resultType = resultType;
+  }
+
+  @Nullable
+  public EfVar var() {
+    return null;
   }
 
   public Token token() {
