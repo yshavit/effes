@@ -56,6 +56,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
+      if (declaringType != null && declaringType.getArgByName(name) != null) {
+        errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
+      }
       EfArgs.Builder args = new EfArgs.Builder(errs);
 
       if (declaringType != null) {

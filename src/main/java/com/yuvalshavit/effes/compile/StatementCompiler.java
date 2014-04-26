@@ -87,7 +87,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     return expressionCompiler.caseAlternative(
       ctx,
       matchAgainst,
-      EffesParser.CaseStatAlternativeContext::casePattern,
+      t -> expressionCompiler.casePattern(t.casePattern()),
       c -> c.inlinableBlock() != null
         ? new Block(c.getStart(), c.inlinableBlock().stat().stream().map(this::apply).collect(Collectors.toList()))
         : null

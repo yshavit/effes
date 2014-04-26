@@ -34,6 +34,51 @@ public abstract class Expression extends Node {
     }
   }
 
+  /**
+   * An inline assign-and-return expression. This is how all expressions work in Java (and C, etc), but not in Effes.
+   * However, there are times we need this construct internally.
+   */
+  public static class AssignExpression extends Expression {
+    private final Expression delegate;
+    private final EfVar assignTo;
+
+    public AssignExpression(Expression delegate, EfVar assignTo) {
+      super(delegate.token(), delegate.resultType());
+      this.delegate = delegate;
+      this.assignTo = assignTo;
+    }
+
+    @Nullable
+    @Override
+    public EfVar var() {
+      return assignTo;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s = %s", assignTo.getName(), delegate);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(errs);
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("assignTo", assignTo);
+      out.child(delegate);
+    }
+
+    public Expression getDelegate() {
+      return delegate;
+    }
+
+    public EfVar getVar() {
+      return assignTo;
+    }
+  }
+
   public static class CaseExpression extends Expression {
     private final CaseConstruct<Expression> delegate;
 
@@ -59,6 +104,39 @@ public abstract class Expression extends Node {
 
     public CaseConstruct<Expression> construct() {
       return delegate;
+    }
+  }
+
+  public static class CastExpression extends Expression {
+    private final Expression delegate;
+
+    public CastExpression(Expression delegate, EfType castTo) {
+      super(delegate.token(), castTo);
+      this.delegate = delegate;
+    }
+
+    public Expression getDelegate() {
+      return delegate;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s) %s", resultType(), delegate);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      delegate.validate(errs);
+      if (!delegate.resultType().contains(resultType())) {
+        errs.add(token(), String.format("cannot cast '%s' to '%s' (possibly a compiler error)",
+                                        delegate.resultType(), resultType()));
+      }
+    }
+
+    @Override
+    public void state(NodeStateListener out) {
+      out.scalar("castTo", resultType());
+      out.child(delegate);
     }
   }
 
@@ -221,6 +299,10 @@ public abstract class Expression extends Node {
         : "var";
       out.scalar(label, name);
       out.scalar("pos", pos);
+    }
+
+    public EfVar getVar() {
+      return EfVar.create(isArg(), name(), pos(), resultType());
     }
 
     public String name() {

@@ -35,6 +35,45 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
+  public static class AssignExpression extends ExecutableExpression {
+    private final ExecutableExpression delegate;
+    private final EfVar assignTo;
+
+    public AssignExpression(Expression.AssignExpression source, ExecutableExpression delegate) {
+      super(source);
+      this.delegate = delegate;
+      this.assignTo = source.getVar();
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      delegate.execute(stack);
+      stack.push(stack.peek());
+      stack.popToLocal(assignTo.getArgPosition());
+    }
+  }
+
+  public static class CastExpression extends ExecutableExpression {
+    private final ExecutableExpression delegate;
+    private final EfType castTo;
+
+    public CastExpression(Expression.CastExpression source, ExecutableExpression delegate) {
+      super(source);
+      this.delegate = delegate;
+      this.castTo = source.resultType();
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      delegate.execute(stack);
+      EfValue stackTop = stack.peek();
+      EfType.SimpleType actualType = stackTop.getType();
+      if (!castTo.contains(actualType)) {
+        throw new ClassCastException("expected type " + castTo + " but found " + stackTop);
+      }
+    }
+  }
+
   public static class CtorExpression extends ExecutableExpression {
     private final EfType.SimpleType ctorType;
     private final List<ExecutableExpression> args;
@@ -88,10 +127,6 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       invoke(body.get(), args, stack, hasRv);
-    }
-
-    public boolean hasRv() {
-      return hasRv;
     }
 
     public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack, boolean hasRv) {

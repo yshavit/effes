@@ -11,11 +11,6 @@ public abstract class Statement extends Node {
     super(token, resultType);
   }
 
-  @Nullable
-  public EfVar var() {
-    return null;
-  }
-
   public static class AssignStatement extends Statement {
     private final EfVar var;
     private final Expression value;
@@ -109,14 +104,14 @@ public abstract class Statement extends Node {
   }
 
   public static class MethodInvoke extends Statement {
-    private final Expression.MethodInvoke methodExpr;
+    private final Expression methodExpr;
 
-    public MethodInvoke(Expression.MethodInvoke methodExpr) {
+    public MethodInvoke(Expression methodExpr) {
       super(methodExpr.token(), EfType.VOID);
       this.methodExpr = methodExpr;
     }
 
-    public Expression.MethodInvoke methodExpr() {
+    public Expression methodExpr() {
       return methodExpr;
     }
 

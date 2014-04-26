@@ -1,0 +1,13 @@
+def casey (b: True | False):
+  case b of
+    True:
+      a = True
+      print a
+    False:
+      c = False
+      a = False
+      print c
+
+def main:
+  casey True
+  casey False
