@@ -11,11 +11,6 @@ public abstract class Statement extends Node {
     super(token, resultType);
   }
 
-  @Nullable
-  public EfVar var() {
-    return null;
-  }
-
   public static class AssignStatement extends Statement {
     private final EfVar var;
     private final Expression value;
