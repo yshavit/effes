@@ -25,7 +25,11 @@ def unwrap (b: AFalse | ATrue) -> no result type:
                 VarExpression
                   arg: b
                   pos: 0
-def ATrue::mapped () -> False:
+def AFalse::mapped () -> False:
   ReturnStatement
     CtorInvoke
       type: False
+def ATrue::mapped () -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

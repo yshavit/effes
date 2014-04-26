@@ -1,7 +1,5 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
