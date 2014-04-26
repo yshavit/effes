@@ -28,14 +28,25 @@ public final class Block extends Node {
   }
 
   public int nVars() {
-    return statements
-      .stream()
-      .map(Statement::var)
-      .filter(v -> v != null)
-      .mapToInt(EfVar::getArgPosition)
-      .max()
-      .orElse(-1)
-      + 1;
+    class MaxArgFinder implements NodeStateListener {
+      int pos = -1;
+
+      @Override
+      public void child(Object label, Node child) {
+        EfVar var = child.var();
+        if (var != null) {
+          pos = Math.max(pos, var.getArgPosition());
+        }
+        child.state(this);
+      }
+
+      @Override
+      public void scalar(Object label, Object value) {
+      }
+    }
+    MaxArgFinder argFinder = new MaxArgFinder();
+    state(argFinder);
+    return argFinder.pos + 1;
   }
 
   @Override

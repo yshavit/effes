@@ -1,0 +1,35 @@
+def casey (b: False | True) -> no result type:
+  CaseStatement
+    case:
+      VarExpression
+        arg: b
+        pos: 0
+    of True:
+      AssignStatement
+        var: a (pos=0)
+        val:
+          CtorInvoke
+            type: True
+      MethodInvoke
+        method: print [built-in]
+        arg0:
+          VarExpression
+            var: a
+            pos: 0
+    of False:
+      AssignStatement
+        var: c (pos=0)
+        val:
+          CtorInvoke
+            type: False
+      AssignStatement
+        var: a (pos=1)
+        val:
+          CtorInvoke
+            type: False
+      MethodInvoke
+        method: print [built-in]
+        arg0:
+          VarExpression
+            var: c
+            pos: 0

@@ -48,6 +48,12 @@ public abstract class Expression extends Node {
       this.assignTo = assignTo;
     }
 
+    @Nullable
+    @Override
+    public EfVar var() {
+      return assignTo;
+    }
+
     @Override
     public String toString() {
       return String.format("%s = %s", assignTo.getName(), delegate);
