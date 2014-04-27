@@ -4,6 +4,9 @@ def pushFooTrue () -> no result type:
     val:
       CtorInvoke
         type: Foo
+        arg0:
+          CtorInvoke
+            type: True
   AssignStatement
     var: r (pos=1)
     val:
