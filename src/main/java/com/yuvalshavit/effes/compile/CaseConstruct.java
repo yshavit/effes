@@ -67,9 +67,9 @@ public class CaseConstruct<N extends Node> {
     }
   }
 
-  public void state(NodeStateListener out) {
-    out.child("case", matchAgainst);
-    patterns.forEach(p -> out.child("of " + p.getType(), p.getIfMatched()));
+  public void state(NodeStateVisitor out) {
+    out.visitChild("case", matchAgainst);
+    patterns.forEach(p -> out.visitChild("of " + p.getType(), p.getIfMatched()));
   }
 
   @Override

@@ -12,7 +12,7 @@ import com.yuvalshavit.effes.compile.IrCompiler;
 import com.yuvalshavit.effes.compile.MethodId;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.Node;
-import com.yuvalshavit.effes.compile.NodeStateListener;
+import com.yuvalshavit.effes.compile.NodeStateVisitor;
 import com.yuvalshavit.effes.interpreter.ExecutableBuiltInMethods;
 import com.yuvalshavit.effes.interpreter.Interpreter;
 import com.yuvalshavit.effes.parser.EffesParser;
@@ -123,11 +123,11 @@ public final class EndToEndTest {
     Map<? extends MethodId, ? extends EfMethod<? extends Block>> methods = compiledMethods.getMethodsByName();
     methods = new TreeMap<>(methods); // sort by name
     StringBuilder sb = new StringBuilder();
-    NodeStateListener listener = new NodeStateToString(sb);
+    NodeStateVisitor listener = new NodeStateToString(sb);
     methods.forEach((name, method) -> {
       if(!MethodId.topLevel("main").equals(name)) {
         sb.append("def ").append(name).append(' ').append(method).append(":\n");
-        listener.child(method.getBody());
+        listener.visitChild(method.getBody());
       }
     });
     return sb.toString();
@@ -140,7 +140,7 @@ public final class EndToEndTest {
       : "";
   }
 
-  private static class NodeStateToString implements NodeStateListener {
+  private static class NodeStateToString implements NodeStateVisitor {
     private final StringBuilder out;
     private int depth = 0;
 
@@ -149,15 +149,15 @@ public final class EndToEndTest {
     }
 
     @Override
-    public void child(Object label, Node child) {
+    public void visitChild(Object label, Node child) {
       indent().append(label).append(":\n");
       ++depth;
-      child(child);
+      visitChild(child);
       --depth;
     }
 
     @Override
-    public void child(Node child) {
+    public void visitChild(Node child) {
       if (child.elideFromState()) {
         child.state(this);
         return;
@@ -170,7 +170,7 @@ public final class EndToEndTest {
     }
 
     @Override
-    public void scalar(Object label, Object value) {
+    public void visitScalar(Object label, Object value) {
       indent();
       if (label != null) {
         out.append(label).append(": ");

@@ -39,9 +39,9 @@ public abstract class Statement extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.scalar("var", var);
-      out.child("val", value);
+    public void state(NodeStateVisitor out) {
+      out.visitScalar("var", var);
+      out.visitChild("val", value);
     }
   }
 
@@ -68,7 +68,7 @@ public abstract class Statement extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       delegate.state(out);
     }
   }
@@ -90,8 +90,8 @@ public abstract class Statement extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.child(expression);
+    public void state(NodeStateVisitor out) {
+      out.visitChild(expression);
     }
 
     @Override
@@ -117,8 +117,8 @@ public abstract class Statement extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.child(methodExpr);
+    public void state(NodeStateVisitor out) {
+      out.visitChild(methodExpr);
     }
 
     @Override
@@ -149,7 +149,7 @@ public abstract class Statement extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       throw new UnsupportedOperationException(); // TODO
     }
   }
