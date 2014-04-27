@@ -343,6 +343,8 @@ public final class ParserUtils {
   }
 
   private static class RuleInvocationException extends RuntimeException {
+    private static final long serialVersionUID = -5543180428138631983L;
+
     private RuleInvocationException(Throwable cause) {
       super(cause);
     }
