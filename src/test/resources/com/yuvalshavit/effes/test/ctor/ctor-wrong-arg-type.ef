@@ -1,0 +1,3 @@
+data type Foo(t: True | False)
+
+def makeFoo -> Foo: return Foo(Void)
