@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Scoping handler
@@ -18,7 +19,6 @@ import java.util.function.Function;
 public final class Scopes<T,D> {
   private final Function<? super T, String> namer;
   private final BiConsumer<? super String, ? super D> onDuplicate;
-  private final ScopeCloser closer = new ScopeCloser(this);
   private final Deque<Scope<T>> scopes = new ArrayDeque<>();
   private int elemsCountOffset = 0;
 
@@ -31,9 +31,17 @@ public final class Scopes<T,D> {
     this.onDuplicate = onDuplicate;
   }
 
-  public ScopeCloser pushScope() {
+  public void pushScope() {
     scopes.push(new Scope<>());
-    return closer;
+  }
+
+  public <T> T inScope(Supplier<T> action) {
+    pushScope();
+    try {
+      return action.get();
+    } finally {
+      popScope();
+    }
   }
 
   public void popScope() {
@@ -106,19 +114,6 @@ public final class Scopes<T,D> {
       name = "$" + n;
     } while (get(name) != null);
     return name;
-  }
-
-  public static class ScopeCloser implements AutoCloseable {
-    private final Scopes<?,?> parent;
-
-    private ScopeCloser(Scopes<?,?> parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public void close() {
-      parent.popScope();
-    }
   }
 
   private static class Scope<T> {

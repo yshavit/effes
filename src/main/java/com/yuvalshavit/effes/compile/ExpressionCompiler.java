@@ -105,7 +105,7 @@ public final class ExpressionCompiler {
         : null;
       return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, target, lookOn);
     } else if (target.resultType() instanceof EfType.DisjunctiveType) {
-      try (Scopes.ScopeCloser ignored = vars.pushScope()) {
+      return vars.inScope( () -> {
         EfVar matchAgainstVar = tryGetEfVar(target);
         Expression caseOf;
         Expression inMatcher;
@@ -142,7 +142,7 @@ public final class ExpressionCompiler {
           })
           .filter(Objects::nonNull).collect(Collectors.toList());
         return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
-      }
+      });
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
       return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null, null);

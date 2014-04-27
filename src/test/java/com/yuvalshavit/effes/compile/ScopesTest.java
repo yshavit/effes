@@ -44,12 +44,13 @@ public final class ScopesTest {
     Scopes<Elem, Id> scopes = create();
     assertEquals(scopes.depth(), 0);
 
-    try (Scopes.ScopeCloser ignored = scopes.pushScope()) {
+    scopes.inScope(() -> {
       assertEquals(scopes.depth(), 1);
       Elem one = elem("one");
       scopes.add(one, id(1));
       assertEquals(scopes.get("one"), one);
-    }
+      return null;
+    });
 
     assertEquals(scopes.depth(), 0);
   }
