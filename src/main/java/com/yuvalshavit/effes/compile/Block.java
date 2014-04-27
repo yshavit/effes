@@ -28,11 +28,11 @@ public final class Block extends Node {
   }
 
   public int nVars() {
-    class MaxArgFinder implements NodeStateListener {
+    class MaxArgFinder implements NodeStateVisitor {
       int pos = -1;
 
       @Override
-      public void child(Object label, Node child) {
+      public void visitChild(Object label, Node child) {
         EfVar var = child.var();
         if (var != null) {
           pos = Math.max(pos, var.getArgPosition());
@@ -41,7 +41,7 @@ public final class Block extends Node {
       }
 
       @Override
-      public void scalar(Object label, Object value) {
+      public void visitScalar(Object label, Object value) {
       }
     }
     MaxArgFinder argFinder = new MaxArgFinder();
@@ -56,8 +56,8 @@ public final class Block extends Node {
   }
 
   @Override
-  public void state(NodeStateListener out) {
-    statements.forEach(out::child);
+  public void state(NodeStateVisitor out) {
+    statements.forEach(out::visitChild);
   }
 
   @Override

@@ -40,7 +40,7 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       children.forEach(c -> c.state(out));
     }
   }
@@ -75,9 +75,9 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.scalar("assignTo", assignTo);
-      out.child(delegate);
+    public void state(NodeStateVisitor out) {
+      out.visitScalar("assignTo", assignTo);
+      out.visitChild(delegate);
     }
 
     public Expression getDelegate() {
@@ -108,7 +108,7 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       delegate.state(out);
     }
 
@@ -143,9 +143,9 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.scalar("castTo", resultType());
-      out.child(delegate);
+    public void state(NodeStateVisitor out) {
+      out.visitScalar("castTo", resultType());
+      out.visitChild(delegate);
     }
   }
 
@@ -188,10 +188,10 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.scalar("type", simpleType);
+    public void state(NodeStateVisitor out) {
+      out.visitScalar("type", simpleType);
       for (int i = 0; i < args.size(); ++i) {
-        out.child("arg" + i, args.get(i));
+        out.visitChild("arg" + i, args.get(i));
       }
     }
 
@@ -235,9 +235,9 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
-      out.child("target", target);
-      out.scalar("arg", arg);
+    public void state(NodeStateVisitor out) {
+      out.visitChild("target", target);
+      out.visitScalar("arg", arg);
     }
   }
 
@@ -305,14 +305,14 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       String name = methodId.toString();
       if (isBuiltIn()) {
         name += " [built-in]";
       }
-      out.scalar("method", name);
+      out.visitScalar("method", name);
       for (int i = 0; i < args.size(); ++i) {
-        out.child("arg" + i, args.get(i));
+        out.visitChild("arg" + i, args.get(i));
       }
     }
 
@@ -340,12 +340,12 @@ public abstract class Expression extends Node {
     }
 
     @Override
-    public void state(NodeStateListener out) {
+    public void state(NodeStateVisitor out) {
       String label = isArg
         ? "arg"
         : "var";
-      out.scalar(label, name);
-      out.scalar("pos", pos);
+      out.visitScalar(label, name);
+      out.visitScalar("pos", pos);
     }
 
     public EfVar getVar() {
