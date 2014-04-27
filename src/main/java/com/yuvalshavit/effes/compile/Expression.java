@@ -18,14 +18,21 @@ public abstract class Expression extends Node {
   }
 
   public static class UnrecognizedExpression extends Expression {
+    private final List<Expression> children;
+
+    public UnrecognizedExpression(Token token, List<Expression> children) {
+      super(token, EfType.UNKNOWN);
+      this.children = ImmutableList.copyOf(children);
+    }
 
     public UnrecognizedExpression(Token token) {
-      super(token, EfType.UNKNOWN);
+      this(token, ImmutableList.of());
     }
 
     @Override
     public void validate(CompileErrors errs) {
       // assume that whoever created this already entered the error
+      children.forEach(c -> c.validate(errs));
     }
 
     @Override
@@ -35,7 +42,7 @@ public abstract class Expression extends Node {
 
     @Override
     public void state(NodeStateListener out) {
-      // nothing
+      children.forEach(c -> c.state(out));
     }
   }
 
@@ -229,14 +236,19 @@ public abstract class Expression extends Node {
 
   public static class MethodInvoke extends Expression {
     private final MethodId methodId;
+    private final EfMethod<?> method;
     private final List<Expression> args;
     private final boolean isBuiltIn;
     private final boolean usedAsExpression;
 
-    public MethodInvoke(Token token, MethodId methodId, List<Expression> args, EfType resultType,
+    public MethodInvoke(Token token,
+                        MethodId methodId,
+                        EfMethod<?> method,
+                        List<Expression> args,
                         boolean isBuiltin, boolean usedAsExpression) {
-      super(token, resultType);
+      super(token, method.getResultType());
       this.methodId = methodId;
+      this.method = method;
       this.args = args;
       this.isBuiltIn = isBuiltin;
       this.usedAsExpression = usedAsExpression;
@@ -259,6 +271,30 @@ public abstract class Expression extends Node {
       args.forEach(arg -> arg.validate(errs));
       if (usedAsExpression && EfType.VOID.equals(resultType())) {
         errs.add(token(), String.format("method '%s' has no return value", methodId));
+      }
+      // validate arg types
+      List<EfType> expectedArgs = method.getArgs().viewTypes();
+      for (int i = 0, len = Math.min(args.size(), expectedArgs.size()); i < len; ++i) {
+        EfType invokeArg = args.get(i).resultType();
+        EfType expectedArg = expectedArgs.get(i);
+        // e.g. method (True | False), arg is True
+        if (!expectedArg.contains(invokeArg)) {
+          errs.add(
+            args.get(i).token(),
+            String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
+        }
+      }
+      // validate arity
+      int nExplicitInvokeArgs = args.size();
+      int nExplicitExpectedArgs = expectedArgs.size();
+      if (methodId.getDefinedOn() != null) {
+        --nExplicitExpectedArgs;
+        --nExplicitInvokeArgs;
+      }
+      if (nExplicitExpectedArgs != nExplicitInvokeArgs) {
+        String plural = nExplicitExpectedArgs == 1 ? "" : "s";
+        errs.add(token(), String.format("for method %s, expected %d argument%s but found %d",
+                                         methodId, nExplicitExpectedArgs, plural, nExplicitInvokeArgs));
       }
     }
 
