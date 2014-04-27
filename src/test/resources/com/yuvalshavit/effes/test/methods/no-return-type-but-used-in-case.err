@@ -1,2 +1,2 @@
-method 'foo' has no return value (at line 3, column 30: foo)
 case requires a disjunctive type (found no result type) (at line 3, column 25: case)
+method 'foo' has no return value (at line 3, column 30: foo)
