@@ -7,3 +7,7 @@ def Dog::bark () -> no result type:
 def Dog::woof () -> no result type:
   MethodInvoke
     method: Dog::bark
+    arg0:
+      VarExpression
+        arg: $this
+        pos: 0

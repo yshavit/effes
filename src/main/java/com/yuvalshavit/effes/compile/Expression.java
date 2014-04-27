@@ -12,6 +12,11 @@ public abstract class Expression extends Node {
     super(token, type != null ? type : EfType.UNKNOWN);
   }
 
+  public static Expression thisExpression(Token token, EfType.SimpleType declaringType) {
+    EfVar arg0 = EfVar.arg("$this", 0, declaringType);
+    return new VarExpression(token, arg0);
+  }
+
   public static class UnrecognizedExpression extends Expression {
 
     public UnrecognizedExpression(Token token) {

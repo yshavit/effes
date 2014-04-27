@@ -150,9 +150,10 @@ public final class ExpressionCompiler {
   }
 
   private Expression getMethodInvokeOnSimpleTarget(EffesParser.MethodInvokeContext ctx,
-                                                                boolean usedAsExpression,
-                                                                Expression target,
-                                                                EfType.SimpleType lookOn) {
+                                                   boolean usedAsExpression,
+                                                   Expression target,
+                                                   EfType.SimpleType lookOn)
+  {
     String methodName = ctx.methodName().getText();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
@@ -190,6 +191,9 @@ public final class ExpressionCompiler {
     if (methodLookup != null) {
       isBuiltIn = methodLookup.isBuiltIn;
       methodId = methodLookup.id; // in case it ended up being a different scope
+      if (target == null && methodId.getDefinedOn() != null) {
+        invokeArgs.add(0, Expression.thisExpression(ctx.methodInvokeArgs().getStart(), methodId.getDefinedOn()));
+      }
       resultType = methodLookup.method.getResultType();
       List<EfType> expectedArgs = methodLookup.method.getArgs().viewTypes();
       for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
@@ -201,6 +205,17 @@ public final class ExpressionCompiler {
             invokeArgs.get(i).token(),
             String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
         }
+      }
+      int nExplicitInvokeArgs = invokeArgs.size();
+      int nExplicitExpectedArgs = expectedArgs.size();
+      if (methodId.getDefinedOn() != null) {
+        --nExplicitExpectedArgs;
+        --nExplicitInvokeArgs;
+      }
+      if (nExplicitExpectedArgs != nExplicitInvokeArgs) {
+        String plural = nExplicitExpectedArgs == 1 ? "" : "s";
+        errs.add(ctx.getStop(), String.format("for method %s, expected %d argument%s but found %d",
+                                              methodId, nExplicitExpectedArgs, plural, nExplicitInvokeArgs));
       }
     } else {
       resultType = EfType.UNKNOWN;
