@@ -87,8 +87,7 @@ public final class IrCompiler<E> {
       }
     };
     for (EfMethod<? extends Block> method : compiled.getMethods()) {
-      method.getBody().validate(errs);
-      method.getBody().state(validator);
+      validator.child(method.getBody());
       method.getBody().validateResultType(method.getResultType(), errs);
     }
     return compiled;
