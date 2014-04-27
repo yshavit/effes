@@ -32,7 +32,6 @@ public abstract class Expression extends Node {
     @Override
     public void validate(CompileErrors errs) {
       // assume that whoever created this already entered the error
-      children.forEach(c -> c.validate(errs));
     }
 
     @Override
@@ -73,7 +72,6 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      delegate.validate(errs);
     }
 
     @Override
@@ -138,7 +136,6 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      delegate.validate(errs);
       if (!delegate.resultType().contains(resultType())) {
         errs.add(token(), String.format("cannot cast '%s' to '%s' (possibly a compiler error)",
                                         delegate.resultType(), resultType()));
@@ -179,13 +176,16 @@ public abstract class Expression extends Node {
           errs.add(token(), String.format("expected %d argument%s to %s, but found %d",
             expected, plural, simpleType, actual));
         }
-        getArgs().forEach(a -> a.validate(errs));
+        // TODO arg types
       }
     }
 
     @Override
     public void state(NodeStateListener out) {
       out.scalar("type", simpleType);
+      for (int i = 0; i < args.size(); ++i) {
+        out.child("arg" + i, args.get(i));
+      }
     }
 
     @Override
@@ -268,7 +268,6 @@ public abstract class Expression extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      args.forEach(arg -> arg.validate(errs));
       if (usedAsExpression && EfType.VOID.equals(resultType())) {
         errs.add(token(), String.format("method '%s' has no return value", methodId));
       }

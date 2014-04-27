@@ -38,8 +38,6 @@ public class CaseConstruct<N extends Node> {
     // 2) at least one matcher *will* match the given expression
     // 3) each matcher is reachable (ie, the ones before it may not match)
     // 4) each matcher matches the right number of args
-    matchAgainst.validate(errs);
-
     EfType matchType = matchAgainst.resultType();
     if (matchType instanceof EfType.DisjunctiveType) {
       EfType.DisjunctiveType dis = (EfType.DisjunctiveType) matchType;

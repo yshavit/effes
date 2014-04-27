@@ -77,7 +77,6 @@ public final class Block extends Node {
   public void validate(CompileErrors errs) {
     EfType lastStatementReturned = EfType.VOID;
     for (Statement s : statements) {
-      s.validate(errs);
       if (!EfType.VOID.equals(lastStatementReturned)) {
         errs.add(s.token(), "unreachable statement: " + s);
       }

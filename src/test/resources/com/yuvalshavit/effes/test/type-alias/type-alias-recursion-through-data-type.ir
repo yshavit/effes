@@ -2,6 +2,10 @@ def add (n: One | Zero) -> One | Zero:
   ReturnStatement
     CtorInvoke
       type: One
+      arg0:
+        VarExpression
+          arg: n
+          pos: 0
 def sub (n: One | Zero) -> One | Zero:
   ReturnStatement
     CaseExpression
