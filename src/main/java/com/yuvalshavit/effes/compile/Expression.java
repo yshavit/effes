@@ -176,7 +176,14 @@ public abstract class Expression extends Node {
           errs.add(token(), String.format("expected %d argument%s to %s, but found %d",
             expected, plural, simpleType, actual));
         }
-        // TODO arg types
+        for (int i = 0, len = Math.min(simpleType.getArgs().size(), args.size()); i < len; ++i) {
+          Expression actualArg = args.get(i);
+          EfType actualType = actualArg.resultType();
+          EfType expectedType = simpleType.getArgs().get(i).getType();
+          if (!expectedType.contains(actualType)) {
+            errs.add(actualArg.token(), String.format("expected type %s but found %s", expectedType, actualType));
+          }
+        }
       }
     }
 
