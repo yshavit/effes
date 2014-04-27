@@ -3,7 +3,6 @@ package com.yuvalshavit.effes.compile;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public abstract class Statement extends Node {
 
@@ -37,7 +36,6 @@ public abstract class Statement extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      value.validate(errs);
     }
 
     @Override
@@ -89,7 +87,6 @@ public abstract class Statement extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      expression.validate(errs);
     }
 
     @Override
@@ -117,7 +114,6 @@ public abstract class Statement extends Node {
 
     @Override
     public void validate(CompileErrors errs) {
-      methodExpr.validate(errs);
     }
 
     @Override

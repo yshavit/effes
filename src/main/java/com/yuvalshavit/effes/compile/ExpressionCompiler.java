@@ -145,7 +145,7 @@ public final class ExpressionCompiler {
       });
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
-      return getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, null, null);
+      return new Expression.UnrecognizedExpression(target.token());
     }
   }
 
@@ -185,45 +185,21 @@ public final class ExpressionCompiler {
       invokeArgsWithTarget.addAll(invokeArgs);
       invokeArgs = invokeArgsWithTarget;
     }
-    EfType resultType;
-    boolean isBuiltIn;
-    MethodId methodId;
     if (methodLookup != null) {
-      isBuiltIn = methodLookup.isBuiltIn;
-      methodId = methodLookup.id; // in case it ended up being a different scope
-      if (target == null && methodId.getDefinedOn() != null) {
-        invokeArgs.add(0, Expression.thisExpression(ctx.methodInvokeArgs().getStart(), methodId.getDefinedOn()));
+      // if this is an instance method, but we don't have a target, assume "this"
+      if (target == null && methodLookup.id.getDefinedOn() != null) {
+        invokeArgs.add(0, Expression.thisExpression(ctx.methodInvokeArgs().getStart(), methodLookup.id.getDefinedOn()));
       }
-      resultType = methodLookup.method.getResultType();
-      List<EfType> expectedArgs = methodLookup.method.getArgs().viewTypes();
-      for (int i = 0, len = Math.min(invokeArgs.size(), expectedArgs.size()); i < len; ++i) {
-        EfType invokeArg = invokeArgs.get(i).resultType();
-        EfType expectedArg = expectedArgs.get(i);
-        // e.g. method (True | False), arg is True
-        if (!expectedArg.contains(invokeArg)) {
-          errs.add(
-            invokeArgs.get(i).token(),
-            String.format("mismatched types for '%s': expected %s but found %s", methodId, expectedArg, invokeArg));
-        }
-      }
-      int nExplicitInvokeArgs = invokeArgs.size();
-      int nExplicitExpectedArgs = expectedArgs.size();
-      if (methodId.getDefinedOn() != null) {
-        --nExplicitExpectedArgs;
-        --nExplicitInvokeArgs;
-      }
-      if (nExplicitExpectedArgs != nExplicitInvokeArgs) {
-        String plural = nExplicitExpectedArgs == 1 ? "" : "s";
-        errs.add(ctx.getStop(), String.format("for method %s, expected %d argument%s but found %d",
-                                              methodId, nExplicitExpectedArgs, plural, nExplicitInvokeArgs));
-      }
+      return new Expression.MethodInvoke(ctx.getStart(),
+                                         methodLookup.id,
+                                         methodLookup.method,
+                                         invokeArgs,
+                                         methodLookup.isBuiltIn,
+                                         usedAsExpression);
     } else {
-      resultType = EfType.UNKNOWN;
       // The following won't actually matter; it's only used for the executable, but this is a compile error
-      isBuiltIn = false;
-      methodId = MethodId.topLevel(methodName);
+      return new Expression.UnrecognizedExpression(ctx.getStart(), invokeArgs);
     }
-    return new Expression.MethodInvoke(ctx.getStart(), methodId, invokeArgs, resultType, isBuiltIn, usedAsExpression);
   }
 
   private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {
@@ -262,7 +238,7 @@ public final class ExpressionCompiler {
     if (type == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
       args = ImmutableList.of();
-    }else {
+    } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, args);
