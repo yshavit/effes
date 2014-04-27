@@ -1,0 +1,14 @@
+data type ATrue:
+  def mapped -> True: return True
+
+data type AFalse:
+  def mapped Void -> False: return False
+
+data type AWrap(value: ATrue | AFalse)
+
+def unwrap (b: AWrap) -> True | False:
+  return ((b: value) : mapped Void)
+
+def main:
+  print (unwrap AWrap(ATrue))
+  print (unwrap AWrap(AFalse))

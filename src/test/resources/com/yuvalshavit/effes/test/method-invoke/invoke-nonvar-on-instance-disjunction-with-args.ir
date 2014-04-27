@@ -1,0 +1,44 @@
+def unwrap (b: AWrap) -> False | True:
+  ReturnStatement
+    CaseExpression
+      case:
+        AssignExpression
+          assignTo: $0 (pos=0)
+          InstanceArg
+            target:
+              VarExpression
+                arg: b
+                pos: 0
+            arg: value (pos=0)
+      of AFalse:
+        MethodInvoke
+          method: AFalse::mapped
+          arg0:
+            CastExpression
+              castTo: AFalse
+              VarExpression
+                var: $0
+                pos: 0
+          arg1:
+            CtorInvoke
+              type: Void
+      of ATrue:
+        MethodInvoke
+          method: ATrue::mapped
+          arg0:
+            CastExpression
+              castTo: ATrue
+              VarExpression
+                var: $0
+                pos: 0
+          arg1:
+            CtorInvoke
+              type: Void
+def AFalse::mapped (Void) -> False:
+  ReturnStatement
+    CtorInvoke
+      type: False
+def ATrue::mapped (Void) -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True
