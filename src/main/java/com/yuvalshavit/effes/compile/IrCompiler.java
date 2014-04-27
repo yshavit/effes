@@ -75,19 +75,8 @@ public final class IrCompiler<E> {
       }
       return blockCompiler.apply(parsedMethod.getBody(), parsedMethod.getResultType());
     }));
-    NodeStateVisitor validator = new NodeStateVisitor() {
-      @Override
-      public void visitChild(Object label, Node child) {
-        child.validate(errs);
-        child.state(this);
-      }
-
-      @Override
-      public void visitScalar(Object label, Object value) {
-      }
-    };
     for (EfMethod<? extends Block> method : compiled.getMethods()) {
-      validator.visitChild(method.getBody());
+      NodeStateListener.accept(method.getBody(), child -> child.validate(errs));
       method.getBody().validateResultType(method.getResultType(), errs);
     }
     return compiled;
