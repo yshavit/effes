@@ -28,24 +28,19 @@ public final class Block extends Node {
   }
 
   public int nVars() {
-    class MaxArgFinder implements NodeStateVisitor {
+    class MaxArgFinder implements NodeStateListener {
       int pos = -1;
 
       @Override
-      public void visitChild(Object label, Node child) {
+      public void child(Node child) {
         EfVar var = child.var();
         if (var != null) {
           pos = Math.max(pos, var.getArgPosition());
         }
-        child.state(this);
-      }
-
-      @Override
-      public void visitScalar(Object label, Object value) {
       }
     }
     MaxArgFinder argFinder = new MaxArgFinder();
-    state(argFinder);
+    NodeStateListener.accept(this, argFinder);
     return argFinder.pos + 1;
   }
 
