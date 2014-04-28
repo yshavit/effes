@@ -1,6 +1,6 @@
 data type TwoArg(a: True, b: False)
 
-def foo (b: TwoArg | Void) -> Void:
+foo (b: TwoArg | Void) -> Void:
   return case b of
     TwoArg(a, a): Void
     Void: Void

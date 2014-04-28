@@ -1,6 +1,6 @@
 data type Extra
 
-def foo (a: True | False) -> Void:
+foo (a: True | False) -> Void:
   return case a of
     True: Void
     False: Void

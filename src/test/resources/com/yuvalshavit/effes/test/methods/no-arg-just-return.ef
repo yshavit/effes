@@ -1,1 +1,1 @@
-def foo -> Void: return Void
+foo -> Void: return Void

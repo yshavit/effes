@@ -1,4 +1,4 @@
-def foo (b: BoolWrapper | Void) -> True | False:
+foo (b: BoolWrapper | Void) -> True | False:
   x = True
   return case b of
     BoolWrapper(x): x

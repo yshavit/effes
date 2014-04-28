@@ -1,4 +1,4 @@
-def foo (b: True | False) -> Void:
+foo (b: True | False) -> Void:
   case b of:
     True: Void
     False: Void

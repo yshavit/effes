@@ -1,9 +1,9 @@
-def foo (b: BoolWrapper | Void) -> Void:
+foo (b: BoolWrapper | Void) -> Void:
   t = True
   return case b of
     BoolWrapper(x): print t
     Void: print False
 
-def main -> Void:
+main -> Void:
   foo BoolWrapper(True)
   return Void

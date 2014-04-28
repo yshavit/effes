@@ -1,4 +1,4 @@
-def casey (b: True | False):
+casey (b: True | False):
   case b of
     True:
       a = True
@@ -8,6 +8,6 @@ def casey (b: True | False):
       a = False
       print c
 
-def main:
+main:
   casey True
   casey False

@@ -1,7 +1,7 @@
-def foo True -> True:
+foo True -> True:
   t1 = True
   t2 = t1
   print t2
   return t2
 
-def main -> True: return foo True
+main -> True: return foo True

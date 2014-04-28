@@ -1,10 +1,10 @@
 type Boolean = True | False
 
-def invert (b: Boolean) -> Boolean:
+invert (b: Boolean) -> Boolean:
   return case b of
     True: False
     False: True
 
-def main:
+main:
   print (invert True)
   print (invert False)

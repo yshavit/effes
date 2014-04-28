@@ -13,8 +13,8 @@ public final class MethodsFinderTest {
   public void findMethodNames() {
     TypeRegistry types = TUtils.typeRegistry("True");
     EffesParser parser = ParserUtils.createParser(
-      "def id True -> True: return True",
-      "def ego True -> True: return True");
+      "id True -> True: return True",
+      "ego True -> True: return True");
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectNoErrors(errs -> findMethods(types, methodsRegistry, parser, errs));
     assertEquals(methodsRegistry.getMethodIds(), Sets.newHashSet(MethodId.topLevel("id"), MethodId.topLevel("ego")));
@@ -24,7 +24,7 @@ public final class MethodsFinderTest {
   public void unknownArgType() {
     TypeRegistry types = TUtils.typeRegistry("True");
     EffesParser parser = ParserUtils.createParser(
-      "def bogus False -> True: return True"
+      "bogus False -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectErrors(errs -> findMethods(types, methodsRegistry, parser, errs));
@@ -34,7 +34,7 @@ public final class MethodsFinderTest {
   public void unknownResultType() {
     TypeRegistry types = TUtils.typeRegistry("True");
     EffesParser parser = ParserUtils.createParser(
-      "def not True -> False: return False"
+      "not True -> False: return False"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectErrors(errs -> findMethods(types, methodsRegistry, parser, errs));
@@ -44,8 +44,8 @@ public final class MethodsFinderTest {
   public void overloadedMethods() {
     TypeRegistry types = TUtils.typeRegistry("True", "False");
     EffesParser parser = ParserUtils.createParser(
-      "def not True -> False: return False",
-      "def not False -> True: return True"
+      "not True -> False: return False",
+      "not False -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectErrors(errs -> findMethods(types, methodsRegistry, parser, errs));
@@ -55,8 +55,8 @@ public final class MethodsFinderTest {
   public void identicalMethodSignatures() {
     TypeRegistry types = TUtils.typeRegistry("True", "False");
     EffesParser parser = ParserUtils.createParser(
-      "def not True -> False: return False",
-      "def not True -> True: return True"
+      "not True -> False: return False",
+      "not True -> True: return True"
     );
     MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry = new MethodsRegistry<>();
     TUtils.expectErrors(errs -> findMethods(types, methodsRegistry, parser, errs));

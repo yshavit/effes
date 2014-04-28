@@ -1,1 +1,1 @@
-def foo -> BoolWrapper: return BoolWrapper
+foo -> BoolWrapper: return BoolWrapper

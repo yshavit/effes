@@ -1,5 +1,5 @@
-def foo: print True
+foo: print True
 
-def bar -> True: return case foo of
+bar -> True: return case foo of
   True: True
   Void: True

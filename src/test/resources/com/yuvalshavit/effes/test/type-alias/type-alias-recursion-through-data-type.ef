@@ -2,7 +2,7 @@ data type One(prev: Int)
 data type Zero
 type Int = One | Zero
 
-def add(n: Int) -> Int: return One(n)
-def sub(n: Int) -> Int: return case n of
+add(n: Int) -> Int: return One(n)
+sub(n: Int) -> Int: return case n of
   One(p): p
   Zero: Zero

@@ -1,3 +1,3 @@
-def foo (a: True | False | Void) -> Void:
+foo (a: True | False | Void) -> Void:
   return case a of
     Void: Void

@@ -1,6 +1,6 @@
-def foo:
+foo:
   print True
   print False
 
-def main:
+main:
   foo
