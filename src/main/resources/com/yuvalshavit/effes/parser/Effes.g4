@@ -29,7 +29,7 @@ compilationUnit: NL
                ;
 
 compilationBodyElement: dataTypeDeclr
-                      | DEF methodDeclr
+                      | methodDeclr
                       | typeAliasDeclr
                       ;
 // methods
@@ -72,7 +72,7 @@ dataTypeArgsDeclr: OPEN_PAREN
 
 dataTypeArgDeclr: VAR_NAME COLON type;
 
-typeMember: DEF methodDeclr                                                     # MethodMember
+typeMember: methodDeclr                                                     # MethodMember
           ;
 
 // generics and types
@@ -129,7 +129,6 @@ expr__ForTest__: expr;
 
 DATA: 'data';
 TYPE: 'type';
-DEF: 'def';
 COLON: ':';
 EQ: '=';
 ARROW: '->';

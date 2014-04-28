@@ -1,5 +1,5 @@
-def sayTrue: print True
+sayTrue: print True
 
-def foo -> True:
+foo -> True:
   t = sayTrue
   return True

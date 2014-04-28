@@ -1,9 +1,9 @@
-def extractValue (wrapper: BoolWrapper | VoidWrapper) -> True | False | Void:
+extractValue (wrapper: BoolWrapper | VoidWrapper) -> True | False | Void:
   return case wrapper of
     BoolWrapper(tf): tf
     VoidWrapper(v): v
 
-def main -> Void:
+main -> Void:
   b1 = BoolWrapper(True)
   b2 = BoolWrapper(False)
   v1 = VoidWrapper(Void)

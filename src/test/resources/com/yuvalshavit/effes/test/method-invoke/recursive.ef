@@ -2,11 +2,11 @@ data type Two
 data type One
 data type Three
 
-def recurse (in: One | Two | Three | True) -> True:
+recurse (in: One | Two | Three | True) -> True:
   return case in of
     True: True
     One: recurse True
     Two: recurse One
     Three: recurse Two
 
-def main -> Void: return print recurse Three
+main -> Void: return print recurse Three

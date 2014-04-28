@@ -1,2 +1,2 @@
 data type Foo(hello: True):
-  def hello -> True: return True
+  hello -> True: return True

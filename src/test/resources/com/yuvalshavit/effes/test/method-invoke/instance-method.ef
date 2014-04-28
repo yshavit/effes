@@ -1,8 +1,8 @@
 data type Dog:
-  def isCute -> True: return True
+  isCute -> True: return True
 
-def isDogCute (d: Dog) -> True | False:
+isDogCute (d: Dog) -> True | False:
   return d: isCute
 
-def main:
+main:
   print (isDogCute Dog)

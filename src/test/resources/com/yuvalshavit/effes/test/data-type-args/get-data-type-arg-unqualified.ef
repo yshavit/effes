@@ -1,8 +1,8 @@
 data type BoolWrap(value: True | False):
-  def unwrap -> True | False:
+  unwrap -> True | False:
     return value
 
-def main:
+main:
   w1 = BoolWrap(True)
   w2 = BoolWrap(False)
   u1 = w1: unwrap

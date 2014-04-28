@@ -1,9 +1,9 @@
-def not (bool: True | False) -> (True | False):
+not (bool: True | False) -> (True | False):
   return case bool of
     True: False
     False: True
 
-def main -> Void:
+main -> Void:
   print not True
   print not False
   return Void

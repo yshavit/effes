@@ -1,4 +1,4 @@
-def foo -> Void:
+foo -> Void:
   a = True
   a = False
   return Void

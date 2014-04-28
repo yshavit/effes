@@ -1,9 +1,9 @@
-def foo (bool: BoolWrapper | VoidWrapper) -> True | False | Void:
+foo (bool: BoolWrapper | VoidWrapper) -> True | False | Void:
   return case bool of
     BoolWrapper(v): v
     VoidWrapper(v): v
 
-def main -> Void:
+main -> Void:
   print (foo BoolWrapper(True))
   print foo VoidWrapper(Void)
   return Void

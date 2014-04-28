@@ -1,4 +1,4 @@
-def boolId (bool: True | False) -> True | False:
+boolId (bool: True | False) -> True | False:
   case bool of
     True:
       print True
@@ -8,4 +8,4 @@ def boolId (bool: True | False) -> True | False:
   print Void
   return False
 
-def main: print boolId True
+main: print boolId True

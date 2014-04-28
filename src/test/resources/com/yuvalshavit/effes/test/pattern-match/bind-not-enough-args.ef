@@ -1,6 +1,6 @@
 data type Many(a: Void, b: Void, c: Void)
 
-def foo (w: Many | Void) -> Void:
+foo (w: Many | Void) -> Void:
   return case w of
     Many(a, b): Void
     Void: Void

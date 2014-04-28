@@ -1,7 +1,7 @@
-def sayHi: print True
+sayHi: print True
 
 data type HiSayer:
-  def salute: sayHi
+  salute: sayHi
 
-def main:
+main:
   HiSayer: salute
