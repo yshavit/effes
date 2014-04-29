@@ -1,7 +1,7 @@
-data type ATrue:
+type ATrue:
   mapped -> True: return True
 
-data type AFalse:
+type AFalse:
   mapped -> False: return False
 
 unwrap (b: ATrue | AFalse) -> True | False:

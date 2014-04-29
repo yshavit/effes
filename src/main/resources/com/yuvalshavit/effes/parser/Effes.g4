@@ -63,7 +63,7 @@ typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NA
 
 // data type declr
 
-dataTypeDeclr: DATA TYPE TYPE_NAME dataTypeArgsDeclr?
+dataTypeDeclr: TYPE TYPE_NAME dataTypeArgsDeclr?
                (NL | COLON INDENT typeMember+ DEDENT );
 
 dataTypeArgsDeclr: OPEN_PAREN
@@ -127,7 +127,6 @@ expr__ForTest__: expr;
 
 // tokens
 
-DATA: 'data';
 TYPE: 'type';
 COLON: ':';
 EQ: '=';

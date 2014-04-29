@@ -1,4 +1,4 @@
-data type Many(a: Void, b: Void, c: Void)
+type Many(a: Void, b: Void, c: Void)
 
 foo (w: Many | Void) -> Void:
   return case w of

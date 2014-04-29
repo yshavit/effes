@@ -1,6 +1,6 @@
 sayHi: print True
 
-data type HiSayer:
+type HiSayer:
   salute: sayHi
 
 main:

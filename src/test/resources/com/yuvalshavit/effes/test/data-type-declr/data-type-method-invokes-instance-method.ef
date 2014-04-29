@@ -1,4 +1,4 @@
-data type Dog:
+type Dog:
   bark: print True
   woof: bark
 

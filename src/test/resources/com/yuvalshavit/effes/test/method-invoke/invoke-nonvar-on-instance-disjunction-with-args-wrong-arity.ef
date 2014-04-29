@@ -1,10 +1,10 @@
-data type ATrue:
+type ATrue:
   mapped -> True: return True
 
-data type AFalse:
+type AFalse:
   mapped Void -> False: return False
 
-data type AWrap(value: ATrue | AFalse)
+type AWrap(value: ATrue | AFalse)
 
 unwrap (b: AWrap) -> True | False:
   return ((b: value) : mapped Void)

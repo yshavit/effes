@@ -1,4 +1,4 @@
-data type Foo(bool: True | False):
+type Foo(bool: True | False):
   push (v:Void), (ob: True | False) -> True | False:
     return bool
 

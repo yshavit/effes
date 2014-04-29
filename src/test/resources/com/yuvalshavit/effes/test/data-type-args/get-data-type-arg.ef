@@ -1,4 +1,4 @@
-data type BoolWrap(value: True | False)
+type BoolWrap(value: True | False)
 
 unwrap (wrapped: BoolWrap) -> True | False:
   return wrapped: value

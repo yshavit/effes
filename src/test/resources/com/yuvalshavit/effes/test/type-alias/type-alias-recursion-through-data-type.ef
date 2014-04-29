@@ -1,5 +1,5 @@
-data type One(prev: Int)
-data type Zero
+type One(prev: Int)
+type Zero
 type Int = One | Zero
 
 add(n: Int) -> Int: return One(n)

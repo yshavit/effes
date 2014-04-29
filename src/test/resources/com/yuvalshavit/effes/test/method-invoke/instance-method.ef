@@ -1,4 +1,4 @@
-data type Dog:
+type Dog:
   isCute -> True: return True
 
 isDogCute (d: Dog) -> True | False:
