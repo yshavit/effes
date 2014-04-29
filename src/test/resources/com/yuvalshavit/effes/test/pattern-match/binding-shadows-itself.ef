@@ -1,4 +1,4 @@
-data type TwoArg(a: True, b: False)
+type TwoArg(a: True, b: False)
 
 foo (b: TwoArg | Void) -> Void:
   return case b of

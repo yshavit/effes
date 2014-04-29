@@ -1,2 +1,2 @@
-data type Foo(hello: True):
+type Foo(hello: True):
   hello -> True: return True

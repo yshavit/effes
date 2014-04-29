@@ -1,4 +1,4 @@
-data type Extra
+type Extra
 
 foo (a: True | False) -> Void:
   return case a of

@@ -1,6 +1,6 @@
-data type Two
-data type One
-data type Three
+type Two
+type One
+type Three
 
 recurse (in: One | Two | Three | True) -> True:
   return case in of

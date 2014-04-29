@@ -24,8 +24,8 @@ public final class TypesFinderTest {
   @Test
   public void findDataTypes() throws IOException {
     EffesParser parser = ParserUtils.createParser(
-      "data type True",
-      "data type False");
+      "type True",
+      "type False");
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(parser.compilationUnit());
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
@@ -34,8 +34,8 @@ public final class TypesFinderTest {
   @Test
   public void duplicateTypes() {
     EffesParser parser = ParserUtils.createParser(
-      "data type True",
-      "data type True"
+      "type True",
+      "type True"
     );
     TUtils.expectErrors(errs -> {
       TypeRegistry registry = new TypeRegistry(errs);
@@ -46,9 +46,9 @@ public final class TypesFinderTest {
   @Test
   public void dataTypeHasSimpleArgs() {
     EffesParser parser = ParserUtils.createParser(
-      "data type One",
-      "data type Another",
-      "data type Two(only: One, okay: Another)"
+      "type One",
+      "type Another",
+      "type Two(only: One, okay: Another)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(parser.compilationUnit());
@@ -66,9 +66,9 @@ public final class TypesFinderTest {
   @Test
   public void dataTypeHasDisjunctionArg() {
     EffesParser parser = ParserUtils.createParser(
-      "data type Cat",
-      "data type Dog",
-      "data type Pet(species: Cat | Dog)"
+      "type Cat",
+      "type Dog",
+      "type Pet(species: Cat | Dog)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(parser.compilationUnit());
@@ -87,7 +87,7 @@ public final class TypesFinderTest {
   @Test
   public void infiniteRecursion() {
     EffesParser parser = ParserUtils.createParser(
-      "data type Infinity(forever: Infinity)"
+      "type Infinity(forever: Infinity)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(parser.compilationUnit());
@@ -102,9 +102,9 @@ public final class TypesFinderTest {
   @Test
   public void normalRecursion() {
     EffesParser parser = ParserUtils.createParser(
-      "data type Elem",
-      "data type Empty",
-      "data type Cons(head: Elem, tail: Cons | Empty)"
+      "type Elem",
+      "type Empty",
+      "type Cons(head: Elem, tail: Cons | Empty)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(parser.compilationUnit());
@@ -125,8 +125,8 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
-      "data type False",
+      "type True",
+      "type False",
       "type Boolean = True | False"
     );
     assertFalse(errs.hasErrors());
@@ -138,9 +138,9 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
-      "data type False",
-      "data type Void",
+      "type True",
+      "type False",
+      "type Void",
       "type BooleanA = True | False",
       "type BooleanB = BooleanA | Void"
     );
@@ -154,9 +154,9 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
-      "data type False",
-      "data type Void",
+      "type True",
+      "type False",
+      "type Void",
       "type BooleanA = BooleanB | Void",
       "type BooleanB = True | False"
     );
@@ -170,7 +170,7 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
+      "type True",
       "type AlsoTrue = True"
     );
     assertFalse(errs.hasErrors());
@@ -184,7 +184,7 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
+      "type True",
       "type Boolean = True | Boolean"
     );
     assertEquals(errs.getErrors().toString(), "[cyclic type alias definition (at line 2, column 6: Boolean)]");
@@ -196,7 +196,7 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
+      "type True",
       "type AlsoTrue = True | Boolean",
       "type Boolean = True | AlsoTrue"
     );
@@ -210,7 +210,7 @@ public final class TypesFinderTest {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
       errs,
-      "data type True",
+      "type True",
       "type Boolean = True | False"
     );
     assertEquals(errs.getErrors().toString(), "[unknown type (at line 2, column 23: False)]");

@@ -1,4 +1,4 @@
-data type TwoArgs(v: Void, shouldPrint: True | False)
+type TwoArgs(v: Void, shouldPrint: True | False)
 
 sayHi (value: Void), (vocal: True | False) -> Void:
   return case vocal of

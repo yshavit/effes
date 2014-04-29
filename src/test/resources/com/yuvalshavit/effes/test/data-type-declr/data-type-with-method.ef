@@ -1,4 +1,4 @@
-data type Dog:
+type Dog:
   isCute: print True
 
 main:

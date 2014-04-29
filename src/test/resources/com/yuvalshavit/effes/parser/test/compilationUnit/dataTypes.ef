@@ -1,2 +1,2 @@
-data type True
-data type False
+type True
+type False
