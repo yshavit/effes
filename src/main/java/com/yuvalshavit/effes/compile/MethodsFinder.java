@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -26,10 +27,11 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
   @Override
   public void accept(EffesParser.CompilationUnitContext source) {
-    ParserUtils.walk(new Listener(), source);
+    ParserUtils.walk(new Finder(), source);
+    ParserUtils.walk(new Verifier(), source);
   }
 
-  private class Listener extends EffesBaseListener {
+  private class Finder extends EffesBaseListener {
 
     private EfType.SimpleType declaringType = null;
 
@@ -91,4 +93,64 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     }
   }
 
+  private enum VerifierMode {
+    DATA_TYPE, OPEN_TYPE, NONE
+  }
+
+  private class Verifier extends EffesBaseListener {
+
+    private VerifierMode mode = VerifierMode.NONE;
+
+    @Override
+    public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      checkModeNone(ctx.getStart());
+    }
+
+    @Override
+    public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      if (mode != VerifierMode.DATA_TYPE) {
+        errs.add(ctx.getStart(), "expected DATA_TYPE mode (this is a compiler bug)");
+      }
+      mode = VerifierMode.NONE;
+    }
+
+    @Override
+    public void enterOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
+      checkModeNone(ctx.getStart());
+    }
+
+    @Override
+    public void exitOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
+      if (mode != VerifierMode.OPEN_TYPE) {
+        errs.add(ctx.getStart(), "expected OPEN_TYPE mode (this is a compiler bug)");
+      }
+      mode = VerifierMode.NONE;
+    }
+
+    @Override
+    public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
+      switch (mode) {
+      case DATA_TYPE:
+        if (ctx.inlinableBlock() == null) {
+          errs.add(ctx.getStop(), "expected method body");
+        }
+        break;
+      case OPEN_TYPE:
+        if (ctx.inlinableBlock() != null) {
+          errs.add(ctx.inlinableBlock().getStart(), "methods in open types can't have bodies");
+        }
+        break;
+      default:
+        errs.add(ctx.getStart(), "unrecognized mode " + mode + " (this is a compiler bug)");
+        break;
+      }
+    }
+
+    private void checkModeNone(Token token) {
+      if (mode != VerifierMode.NONE) {
+        errs.add(token, "unrecognized mode " + mode + " (this is a compiler bug)");
+      }
+      mode = VerifierMode.DATA_TYPE;
+    }
+  }
 }

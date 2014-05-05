@@ -80,6 +80,10 @@ public final class Block extends Node {
   }
 
   public void validateResultType(EfType requiredReturnType, CompileErrors errs) {
+    if (token() == null) {
+      // This means there's no body; this will have been checked and reported on by MethodsFinder
+      return;
+    }
     EfType actualReturnType = resultType();
     if (EfType.VOID.equals(requiredReturnType)) {
       if (!EfType.VOID.equals(actualReturnType)) {
