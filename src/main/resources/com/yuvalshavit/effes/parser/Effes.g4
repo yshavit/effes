@@ -37,7 +37,7 @@ compilationBodyElement: dataTypeDeclr
 methodDeclr: methodName
              methodArgs
              methodReturnDeclr
-             COLON inlinableBlock
+             ((COLON inlinableBlock) | NL)
            ;
 
 methodName: VAR_NAME
@@ -57,9 +57,12 @@ methodReturnDeclr: ARROW type
                  | // nothing
                  ;
 
-// data alias
+// non-date type declrs
 
 typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NAME)* NL;
+
+openTypeDeclr : TYPE name=TYPE_NAME EQ QUESTION
+                (NL | COLON INDENT methodDeclr+ DEDENT );
 
 // data type declr
 
@@ -72,7 +75,8 @@ dataTypeArgsDeclr: OPEN_PAREN
 
 dataTypeArgDeclr: VAR_NAME COLON type;
 
-typeMember: methodDeclr                                                     # MethodMember
+typeMember: methodDeclr                                                         # MethodMember
+          | IS VAR_NAME                                                         # OpenTypeAlternative
           ;
 
 // generics and types
@@ -142,6 +146,7 @@ CLOSE_BRACE: '}';
 COMMA: ',';
 PIPE: '|';
 IF: 'if';
+IS: 'is';
 THEN: 'then';
 ELSE: 'else';
 THIS: 'this';
@@ -153,6 +158,7 @@ UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
 AT: '@';
+QUESTION: '?';
 LCOMPOSE: '</';
 
 INT: '0' | [1-9] [0-9]*;
