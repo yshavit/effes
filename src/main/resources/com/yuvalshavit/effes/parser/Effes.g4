@@ -31,6 +31,7 @@ compilationUnit: NL
 compilationBodyElement: dataTypeDeclr
                       | methodDeclr
                       | typeAliasDeclr
+                      | openTypeDeclr
                       ;
 // methods
 
@@ -61,7 +62,7 @@ methodReturnDeclr: ARROW type
 
 typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NAME)* NL;
 
-openTypeDeclr : TYPE name=TYPE_NAME EQ QUESTION
+openTypeDeclr : TYPE name=TYPE_NAME QUESTION
                 (NL | COLON INDENT methodDeclr+ DEDENT );
 
 // data type declr
