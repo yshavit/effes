@@ -1,0 +1,10 @@
+type Pet ?
+  isHappy (fed: True | False) -> True | False
+
+type Cat:
+  is Pet
+  isHappy (fed: True) -> True | False: return True -- not allowed, because Pet::isHappy needs to accept False
+
+type Dog:
+  is Pet
+  isHappy (fed: True | False) -> True | False | Void: return True -- not allowed, because Pet::isHappy can't return Void

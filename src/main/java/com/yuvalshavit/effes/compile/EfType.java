@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public abstract class EfType {
 
@@ -26,6 +27,8 @@ public abstract class EfType {
   public abstract boolean equals(Object obj);
   @Override
   public abstract int hashCode();
+
+  public abstract Collection<SimpleType> simpleTypes();
 
   public boolean isFakeType() {
     return getClass().equals(UnknownType.class);
@@ -64,6 +67,11 @@ public abstract class EfType {
     @Override
     public boolean contains(EfType other) {
       return false;
+    }
+
+    @Override
+    public Collection<SimpleType> simpleTypes() {
+      return Collections.emptySet();
     }
 
     @Override
@@ -110,6 +118,11 @@ public abstract class EfType {
         }
       }
       return null;
+    }
+
+    @Override
+    public Collection<SimpleType> simpleTypes() {
+      return Collections.singleton(this);
     }
 
     public void setArgs(List<EfVar> args) {
@@ -234,6 +247,11 @@ public abstract class EfType {
           return false;
         }
       }.accept(other);
+    }
+
+    @Override
+    public Collection<SimpleType> simpleTypes() {
+      return options.stream().flatMap(t -> t.simpleTypes().stream()).collect(Collectors.toList());
     }
 
     @Override
