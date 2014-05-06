@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,13 +32,13 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
   @Override
   public void accept(EffesParser.CompilationUnitContext source) {
-    MethodsRegistry<?> openMethods = ParserUtils.walk(new Finder(), source).openMethods;
+    MethodsInfo info = ParserUtils.walk(new Finder(), source).methodsInfo;
     ParserUtils.walk(new Verifier(), source);
-    checkOpenMethods(openMethods);
+    checkOpenMethods(info);
   }
 
-  private void checkOpenMethods(MethodsRegistry<?> openMethods) {
-    for (Map.Entry<? extends MethodId, ? extends EfMethod<?>> entry : openMethods.getMethodsByName().entrySet()) {
+  private void checkOpenMethods(MethodsInfo info) {
+    for (Map.Entry<? extends MethodId, ? extends EfMethod<?>> entry : info.openMethods.getMethodsByName().entrySet()) {
       MethodId methodId = entry.getKey();
       String methodName = methodId.getName();
       EfMethod<?> method = entry.getValue();
@@ -47,21 +48,22 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       assert openType != null : methodId;
       openType.simpleTypes().forEach(t -> {
         MethodId tId = MethodId.of(t, methodName);
-        isSubmethod(methodId, method, tId, methodsRegistry.getMethod(tId));
+        isSubmethod(methodId, method, tId, methodsRegistry.getMethod(tId), info);
       });
     }
   }
 
-  @Deprecated
-  private static Token UNKNOWN = null; // TODO
   /**
    * Checks if <tt>toCheck</tt> is a "submethod" of <tt>prototype</tt>. That's true iff it has the same number of
    * arguments, each argument is a supertype of the corresponding method in prototype, and the result type is a subtype
    * of prototype's result.
    * @param prototype the "super" method
    * @param toCheck the "sub" method, possibly
+   * @param methodsInfo lots of info about the methods, and specifically their tokens
    */
-  private void isSubmethod(MethodId prototypeId, EfMethod<?> prototype, MethodId toCheckId, EfMethod<?> toCheck) {
+  private void isSubmethod(MethodId prototypeId, EfMethod<?> prototype, MethodId toCheckId, EfMethod<?> toCheck,
+                           MethodsInfo methodsInfo)
+  {
     int nArgsProto = prototype.getArgs().length();
     int nArgsToCheck = toCheck.getArgs().length();
     int nArgsBoth;
@@ -71,8 +73,9 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       String plural = nArgsToCheck == 1
         ? ""
         : "s";
-      errs.add(UNKNOWN, String.format("%s takes %d argument%s, but it should take %d because of %s",
-                                      toCheckId, nArgsToCheck, plural, nArgsProto, prototypeId));
+      errs.add(methodsInfo.argsStart(toCheckId),
+               String.format("%s takes %d argument%s, but it should take %d because of %s",
+                             toCheckId, nArgsToCheck, plural, nArgsProto, prototypeId));
       nArgsBoth = Math.min(nArgsProto, nArgsToCheck);
     }
 
@@ -91,21 +94,22 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       // e.g. if proto has an arg (True | False), then toCheck's arg can be (True | False | Void) but not
       // (True). toCheck must be able to accept any args that proto accepts.
       if (!toCheckArg.type().contains(protoArg.type())) {
-        errs.add(UNKNOWN,
+        errs.add(methodsInfo.getArgToken(toCheckId, toCheckArg.name()),
                  String.format("in %s, %s is %s but must be %s because of %s",
                                toCheckId, toCheckArg.name(), toCheckArg.type(), protoArg.type(), prototypeId));
       }
     }
 
     if (!prototype.getResultType().contains(toCheck.getResultType())) {
-      errs.add(UNKNOWN, String.format("%s returns %s but must return %s because of %s",
-                                      toCheckId, toCheck.getResultType(), prototype.getResultType(), prototypeId));
+      errs.add(methodsInfo.resultTypeToken(toCheckId),
+               String.format("%s returns %s but must return %s because of %s",
+                             toCheckId, toCheck.getResultType(), prototype.getResultType(), prototypeId));
     }
   }
 
   private class Finder extends EffesBaseListener {
 
-    private final MethodsRegistry<Object> openMethods = new MethodsRegistry<>();
+    private final MethodsInfo methodsInfo = new MethodsInfo();
     private EfType.SimpleType declaringType = null;
     private String declaringOpenType = null;
 
@@ -146,6 +150,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
       EfArgs.Builder args = new EfArgs.Builder(errs);
+      MethodTokens methodTokens = new MethodTokens();
 
       if (declaringType != null) {
         args.add(ctx.getStart(), EfVar.THIS_VAR_NAME, declaringType);
@@ -154,6 +159,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         assert type != null : declaringOpenType;
         args.add(ctx.getStart(), EfVar.THIS_VAR_NAME, type);
       }
+      methodTokens.argsStart = ctx.methodArgs().getStart();
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
         if (typeContext != null) {
@@ -161,24 +167,34 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
           EfType type = typeResolver.apply(typeContext);
           String argName = Optional.ofNullable(argContext.VAR_NAME()).map(TerminalNode::getText).orElseGet(() -> null);
           args.add(typeContext.getStart(), argName, type);
+          methodTokens.argTokens.put(argName, argContext.getStart());
         }
       }
-      EfType resultType = ctx.methodReturnDeclr().type() != null
-        ? typeResolver.apply(ctx.methodReturnDeclr().type())
-        : EfType.VOID;
+      EfType resultType;
+      if (ctx.methodReturnDeclr().type() != null) {
+        resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
+        methodTokens.resultTypeStart = ctx.methodReturnDeclr().type().getStart();
+      } else {
+        resultType = EfType.VOID;
+        methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
+      }
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
+      MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;
         EfType.SimpleType openSimple = new EfType.SimpleType(declaringOpenType);
-        openMethods.registerMethod(MethodId.of(openSimple, name), method);
+        methodId = MethodId.of(openSimple, name);
+        methodsInfo.openMethods.registerMethod(methodId, method);
       } else {
+        methodId = MethodId.of(declaringType, name);
         try {
-          methodsRegistry.registerMethod(MethodId.of(declaringType, name), method);
+          methodsRegistry.registerMethod(methodId, method);
         } catch (DuplicateMethodNameException e) {
           errs.add(ctx.methodName().getStart(), e.getMessage());
         }
       }
+      methodsInfo.register(methodId, methodTokens);
     }
 
     @Override
@@ -194,6 +210,38 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         throw new IllegalStateException("already have declaring type context: " + declaringOpenType);
       }
     }
+  }
+
+  /**
+   * Everything you want to know about methods we find!
+   */
+  private static class MethodsInfo {
+    private static final MethodTokens blankInfos = new MethodTokens();
+    private final MethodsRegistry<Object> openMethods = new MethodsRegistry<>();
+    private final Map<MethodId, MethodTokens> methodsTokens = new HashMap<>();
+
+    public void register(MethodId methodId, MethodTokens tokens) {
+      MethodTokens old = methodsTokens.put(methodId, tokens);
+      assert old == null : old;
+    }
+
+    public Token argsStart(MethodId methodId) {
+      return methodsTokens.getOrDefault(methodId, blankInfos).argsStart;
+    }
+
+    public Token getArgToken(MethodId methodId, String argName) {
+      return methodsTokens.getOrDefault(methodId, blankInfos).argTokens.get(argName);
+    }
+
+    public Token resultTypeToken(MethodId methodId) {
+      return methodsTokens.getOrDefault(methodId, blankInfos).resultTypeStart;
+    }
+  }
+
+  private static class MethodTokens {
+    private final Map<String, Token> argTokens = new HashMap<>();
+    private Token argsStart;
+    private Token resultTypeStart;
   }
 
   private enum VerifierMode {
