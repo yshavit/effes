@@ -1,0 +1,10 @@
+type Boolean ?
+  negate -> Boolean
+
+type BTrue:
+  is Boolean
+  negate -> BFalse: return BFalse
+
+type BFalse:
+  is Boolean
+  negate -> BTrue: return BTrue
