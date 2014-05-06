@@ -104,6 +104,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       checkModeNone(ctx.getStart());
+      mode = VerifierMode.DATA_TYPE;
     }
 
     @Override
@@ -117,6 +118,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
       checkModeNone(ctx.getStart());
+      mode = VerifierMode.OPEN_TYPE;
     }
 
     @Override
@@ -130,6 +132,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       switch (mode) {
+      case NONE:
       case DATA_TYPE:
         if (ctx.inlinableBlock() == null) {
           errs.add(ctx.getStop(), "expected method body");
@@ -150,7 +153,6 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       if (mode != VerifierMode.NONE) {
         errs.add(token, "unrecognized mode " + mode + " (this is a compiler bug)");
       }
-      mode = VerifierMode.DATA_TYPE;
     }
   }
 }
