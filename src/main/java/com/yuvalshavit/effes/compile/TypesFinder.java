@@ -1,6 +1,8 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
@@ -33,6 +36,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   public void accept(EffesParser.CompilationUnitContext source) {
     ParserUtils.walk(new FindTypeNames(), source);
     ParserUtils.walk(new FindSimpleTypeArgs(), source);
+    ParserUtils.walk(new FindOpenTypes(), source).finish();
   }
 
   @VisibleForTesting
@@ -143,6 +147,64 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       EfType argType = resolver.apply(ctx.type());
       EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);
+    }
+  }
+
+  private class FindOpenTypes extends EffesBaseListener {
+
+    private final Map<String, Token> openTypeDeclrs = new HashMap<>();
+    private final Multimap<String, String> typeMappings = HashMultimap.create();
+    private String currentDataType;
+
+    @Override
+    public void enterOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
+      Token nameToken = ctx.name;
+      if (registry.getType(nameToken.getText()) != null || openTypeDeclrs.containsKey(nameToken.getText())) {
+        errs.add(nameToken, "duplicate type name");
+      } else {
+        Token old = openTypeDeclrs.put(nameToken.getText(), nameToken);
+        assert old == null : nameToken.getText() + " -> " + nameToken;
+      }
+    }
+
+    @Override
+    public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      assert currentDataType == null : currentDataType;
+      currentDataType = ctx.TYPE_NAME().getText();
+    }
+
+    @Override
+    public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      assert currentDataType != null;
+      currentDataType = null;
+    }
+
+    @Override
+    public void enterOpenTypeAlternative(@NotNull EffesParser.OpenTypeAlternativeContext ctx) {
+      assert currentDataType != null;
+      TerminalNode openTypeName = ctx.TYPE_NAME();
+      if (openTypeName != null) {
+        typeMappings.put(openTypeName.getText(), currentDataType);
+      } else {
+        errs.add(ctx.getStart(), "expected name of open type");
+      }
+    }
+
+    public void finish() {
+      for (Map.Entry<String, Collection<String>> openTypeToAlts : typeMappings.asMap().entrySet()) {
+        String openTypeName = openTypeToAlts.getKey();
+        Collection<String> alternativeNames = openTypeToAlts.getValue();
+        EfType alternatives = EfType.disjunction(
+          alternativeNames.stream().map(registry::getSimpleType).collect(Collectors.toList()));
+        registry.registerAlias(openTypeDeclrs.get(openTypeName), openTypeName, alternatives);
+      }
+      openTypeDeclrs.entrySet().forEach(entry -> {
+        if (!typeMappings.containsKey(entry.getKey())) {
+          // The entry is for an open type that's not used by any concrete type. That is, it has no alternatives. It
+          // doesn't matter what type we assign it, but we do want to give it some type, for MethodsFinder's sake.
+          registry.registerAlias(entry.getValue(), entry.getKey(), EfType.UNKNOWN);
+        }
+      });
     }
   }
 }

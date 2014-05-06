@@ -1,0 +1,5 @@
+def id (p: Cat | Dog) -> Cat | Dog:
+  ReturnStatement
+    VarExpression
+      arg: p
+      pos: 0

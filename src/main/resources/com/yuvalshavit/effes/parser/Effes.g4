@@ -63,7 +63,7 @@ methodReturnDeclr: ARROW type
 typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NAME)* NL;
 
 openTypeDeclr : TYPE name=TYPE_NAME QUESTION
-                (NL | COLON INDENT methodDeclr+ DEDENT );
+                (NL | INDENT methodDeclr+ DEDENT );
 
 // data type declr
 
@@ -77,7 +77,7 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS VAR_NAME                                                         # OpenTypeAlternative
+          | IS TYPE_NAME NL                                                     # OpenTypeAlternative
           ;
 
 // generics and types

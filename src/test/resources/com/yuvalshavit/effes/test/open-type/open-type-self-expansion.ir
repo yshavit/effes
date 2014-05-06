@@ -1,0 +1,8 @@
+def BFalse::negate () -> BTrue:
+  ReturnStatement
+    CtorInvoke
+      type: BTrue
+def BTrue::negate () -> BFalse:
+  ReturnStatement
+    CtorInvoke
+      type: BFalse

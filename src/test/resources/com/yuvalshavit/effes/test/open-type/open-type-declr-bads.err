@@ -1,0 +1,2 @@
+in Cat::isHappy, fed is True but must be False | True because of Pet::isHappy (at line 6, column 17: True)
+Dog::isHappy returns False | True | Void but must return False | True because of Pet::isHappy (at line 10, column 34)
