@@ -1,0 +1,42 @@
+def feedThenCheck (pet: Cat | Dog) (whenFed: False | True) -> False | True:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: pet
+          pos: 0
+      of Cat:
+        MethodInvoke
+          method: Cat::isHappy
+          arg0:
+            CastExpression
+              castTo: Cat
+              VarExpression
+                arg: pet
+                pos: 0
+          arg1:
+            VarExpression
+              arg: whenFed
+              pos: 1
+      of Dog:
+        MethodInvoke
+          method: Dog::isHappy
+          arg0:
+            CastExpression
+              castTo: Dog
+              VarExpression
+                arg: pet
+                pos: 0
+          arg1:
+            VarExpression
+              arg: whenFed
+              pos: 1
+def Cat::isHappy (fed: False | True) -> False | True:
+  ReturnStatement
+    VarExpression
+      arg: fed
+      pos: 1
+def Dog::isHappy (fed: False | True | Void) -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

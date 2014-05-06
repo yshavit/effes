@@ -1,0 +1,9 @@
+type Pet ?
+
+type Dog:
+  is Pet
+
+type Cat:
+  is Pet
+
+id (p: Pet) -> Pet: return p

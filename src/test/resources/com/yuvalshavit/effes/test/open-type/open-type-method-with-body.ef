@@ -1,0 +1,2 @@
+type OpenFoo ?
+  hello -> True: return True

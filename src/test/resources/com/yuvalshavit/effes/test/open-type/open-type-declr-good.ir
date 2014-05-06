@@ -1,0 +1,9 @@
+def Cat::isHappy (fed: False | True) -> False | True:
+  ReturnStatement
+    VarExpression
+      arg: fed
+      pos: 1
+def Dog::isHappy (fed: False | True | Void) -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True

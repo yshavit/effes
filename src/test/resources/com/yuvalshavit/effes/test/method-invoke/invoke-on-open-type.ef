@@ -1,0 +1,21 @@
+type Bool = True | False
+
+type Pet ?
+  isHappy (fed: Bool) -> Bool
+
+type Dog:
+  is Pet
+  isHappy (fed: Bool | Void) -> True: return True -- Dogs are always happy! wag wag wag
+
+type Cat:
+  is Pet
+  isHappy (fed: Bool) -> Bool: return fed         -- This is not true! My cats are often happy, even when not eating.
+
+feedThenCheck (pet: Pet), (whenFed: Bool) -> Bool:
+  return pet: isHappy whenFed
+
+main:
+  print (feedThenCheck Dog [True])
+  print (feedThenCheck Dog [False])
+  print (feedThenCheck Cat [True])
+  print (feedThenCheck Cat [False])
