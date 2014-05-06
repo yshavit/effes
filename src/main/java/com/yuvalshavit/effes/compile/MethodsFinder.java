@@ -221,8 +221,11 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     private final Map<MethodId, MethodTokens> methodsTokens = new HashMap<>();
 
     public void register(MethodId methodId, MethodTokens tokens) {
-      MethodTokens old = methodsTokens.put(methodId, tokens);
-      assert old == null : old;
+      if (!methodsTokens.containsKey(methodId)) {
+        // if it already contains this method, it's a dupe. Other code will complain about that; for here, assume
+        // the first one
+        methodsTokens.put(methodId, tokens);
+      }
     }
 
     public Token argsStart(MethodId methodId) {
