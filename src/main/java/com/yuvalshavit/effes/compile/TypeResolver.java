@@ -19,7 +19,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   @Override
   public EfType apply(EffesParser.TypeContext typeContext) {
     return typeContext != null
-      ? EfType.disjunction(typeContext.singleTypeA().stream().map(this::lookupSingleType).collect(Collectors.toList()))
+      ? EfType.disjunction(typeContext.singleType().stream().map(this::lookupSingleType).collect(Collectors.toList()))
       : EfType.UNKNOWN;
   }
 
@@ -28,7 +28,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     return typeRegistry.getSimpleType(name);
   }
 
-  private EfType lookupSingleType(EffesParser.SingleTypeAContext ctx) {
+  private EfType lookupSingleType(EffesParser.SingleTypeContext ctx) {
     TerminalNode typeName = ctx.TYPE_NAME();
     EfType.handleGenerics(ctx.genericsDeclr());
     EfType type = typeRegistry.getType(typeName.getText());

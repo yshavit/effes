@@ -75,16 +75,16 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS singleTypeA NL                                                    # OpenTypeAlternative
+          | IS singleType NL                                                    # OpenTypeAlternative
           ;
 
 genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)+ CLOSE_BRACKET)?;
 
 // generics and types
 
-singleTypeA: TYPE_NAME genericsDeclr?;
+singleType: TYPE_NAME genericsDeclr?;
 
-type: singleTypeA (PIPE singleTypeA)*;
+type: singleType (PIPE singleType)*;
 
 // blocks and statements
 

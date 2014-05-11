@@ -4,12 +4,12 @@ methodDeclr
   methodArgs
     methodArg
       type
-        singleTypeA
+        singleType
           TYPE_NAME: Foo
           genericsDeclr
   methodReturnDeclr
     type
-      singleTypeA
+      singleType
         TYPE_NAME: Bar
         genericsDeclr
   inlinableBlock
