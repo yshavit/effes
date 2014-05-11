@@ -123,13 +123,6 @@ casePattern: TYPE_NAME (OPEN_PAREN VAR_NAME (COMMA VAR_NAME)* CLOSE_PAREN)?;
 
 exprBlock: expr NL;
 
-/**
- * The expr rule is rewritten in such a way that it takes an int arg and needs
- * a surrounding context. For test purposes, it's convenient to have a variant
- * that can be called "plain".
- */
-expr__ForTest__: expr;
-
 // tokens
 
 TYPE: 'type';
