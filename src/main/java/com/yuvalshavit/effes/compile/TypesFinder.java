@@ -71,7 +71,8 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         String name = ctx.name.getText();
         Set<String> targetNames = new HashSet<>();
         List<Token> targetTokens = new ArrayList<>();
-        ctx.targets.singleType().stream().forEach(targetCtx -> {
+        ctx.targets.singleTypeA().stream().forEach(targetCtx -> {
+          EfType.handleGenerics(targetCtx.genericsDeclr());
           Token tok = targetCtx.TYPE_NAME().getSymbol();
           if (!targetNames.add(tok.getText())) {
             errs.add(tok, String.format("duplicate target '%s' for type alias '%s'", tok.getText(), name));
@@ -186,7 +187,8 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     @Override
     public void enterOpenTypeAlternative(@NotNull EffesParser.OpenTypeAlternativeContext ctx) {
       assert currentDataType != null;
-      TerminalNode openTypeName = ctx.singleType().TYPE_NAME();
+      TerminalNode openTypeName = ctx.singleTypeA().TYPE_NAME();
+      EfType.handleGenerics(ctx.singleTypeA().genericsDeclr());
       if (openTypeName != null) {
         typeMappings.put(openTypeName.getText(), currentDataType);
       } else {

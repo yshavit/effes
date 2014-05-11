@@ -1,3 +1,4 @@
 type
-  singleType
+  singleTypeA
     TYPE_NAME: Foo
+    genericsDeclr

@@ -58,16 +58,14 @@ methodReturnDeclr: ARROW type
                  | // nothing
                  ;
 
-// non-date type declrs
+// type declrs
 
-typeAliasDeclr: TYPE name=TYPE_NAME EQ targets=type NL;
+typeAliasDeclr: TYPE name=TYPE_NAME genericsDeclr EQ targets=type NL;
 
-openTypeDeclr : TYPE name=TYPE_NAME QUESTION
+openTypeDeclr : TYPE name=TYPE_NAME QUESTION genericsDeclr
                 (NL | INDENT methodDeclr+ DEDENT );
 
-// data type declr
-
-dataTypeDeclr: TYPE TYPE_NAME dataTypeArgsDeclr?
+dataTypeDeclr: TYPE TYPE_NAME genericsDeclr dataTypeArgsDeclr?
                (NL | COLON INDENT typeMember+ DEDENT );
 
 dataTypeArgsDeclr: OPEN_PAREN
@@ -77,14 +75,16 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS singleType NL                                                    # OpenTypeAlternative
+          | IS singleTypeA NL                                                    # OpenTypeAlternative
           ;
+
+genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)+ CLOSE_BRACKET)?;
 
 // generics and types
 
-singleType: TYPE_NAME;
+singleTypeA: TYPE_NAME genericsDeclr?;
 
-type: singleType (PIPE singleType)*;
+type: singleTypeA (PIPE singleTypeA)*;
 
 // blocks and statements
 

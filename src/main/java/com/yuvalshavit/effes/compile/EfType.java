@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
 import javax.annotation.Nonnull;
@@ -18,6 +19,13 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public abstract class EfType {
+
+  @Deprecated
+  public static void handleGenerics(EffesParser.GenericsDeclrContext ctx) {
+    if (ctx.OPEN_BRACKET() != null) {
+      throw new UnsupportedOperationException(); // TODO
+    }
+  }
 
   public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
   public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
