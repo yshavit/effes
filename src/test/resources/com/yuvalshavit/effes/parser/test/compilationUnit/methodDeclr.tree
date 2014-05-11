@@ -5,11 +5,13 @@ compilationUnit
         VAR_NAME: not
       methodArgs
         methodArg
-          SimpleType
-            TYPE_NAME: True
+          type
+            singleType
+              TYPE_NAME: True
       methodReturnDeclr
-        SimpleType
-          TYPE_NAME: False
+        type
+          singleType
+            TYPE_NAME: False
       inlinableBlock
         ReturnStat
           SingleLineExpression
