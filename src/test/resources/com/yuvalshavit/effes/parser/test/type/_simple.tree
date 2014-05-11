@@ -1,2 +1,3 @@
-SimpleType
-  TYPE_NAME: Foo
+type
+  singleType
+    TYPE_NAME: Foo

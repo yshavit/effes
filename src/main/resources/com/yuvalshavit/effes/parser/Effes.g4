@@ -60,7 +60,7 @@ methodReturnDeclr: ARROW type
 
 // non-date type declrs
 
-typeAliasDeclr: TYPE name=TYPE_NAME EQ targets+=TYPE_NAME (PIPE targets+=TYPE_NAME)* NL;
+typeAliasDeclr: TYPE name=TYPE_NAME EQ targets=type NL;
 
 openTypeDeclr : TYPE name=TYPE_NAME QUESTION
                 (NL | INDENT methodDeclr+ DEDENT );
@@ -77,14 +77,14 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS TYPE_NAME NL                                                     # OpenTypeAlternative
+          | IS singleType NL                                                    # OpenTypeAlternative
           ;
 
 // generics and types
 
-type: type (PIPE type)+                                                         # DisunctiveType
-    | TYPE_NAME                                                                 # SimpleType
-    ;
+singleType: TYPE_NAME;
+
+type: singleType (PIPE singleType)*;
 
 // blocks and statements
 

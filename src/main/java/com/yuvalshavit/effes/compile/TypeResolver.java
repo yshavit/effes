@@ -1,11 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
 import com.yuvalshavit.effes.parser.EffesParser;
-import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -21,7 +19,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   @Override
   public EfType apply(EffesParser.TypeContext typeContext) {
     return typeContext != null
-      ? typesDispatcher.apply(this, typeContext)
+      ? EfType.disjunction(typeContext.singleType().stream().map(this::lookupSingleType).collect(Collectors.toList()))
       : EfType.UNKNOWN;
   }
 
@@ -30,22 +28,8 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     return typeRegistry.getSimpleType(name);
   }
 
-  private static final Dispatcher<TypeResolver, EffesParser.TypeContext, EfType> typesDispatcher
-    = Dispatcher.builder(TypeResolver.class, EffesParser.TypeContext.class, EfType.class)
-    .put(EffesParser.SimpleTypeContext.class, TypeResolver::lookupSimpleType)
-    .put(EffesParser.DisunctiveTypeContext.class, TypeResolver::createDisjunctiveType)
-    .build((me, t) -> EfType.UNKNOWN);
-
-  private EfType createDisjunctiveType(EffesParser.DisunctiveTypeContext ctx) {
-    List<EfType> options = ctx.type().stream().map(this::apply).collect(Collectors.toList());
-    return EfType.disjunction(options);
-  }
-
-  private EfType lookupSimpleType(EffesParser.SimpleTypeContext typeContext) {
-    return lookupSimpleType(typeContext.TYPE_NAME());
-  }
-
-  private EfType lookupSimpleType(TerminalNode typeName) {
+  private EfType lookupSingleType(EffesParser.SingleTypeContext ctx) {
+    TerminalNode typeName = ctx.TYPE_NAME();
     EfType type = typeRegistry.getType(typeName.getText());
     if (type == null) {
       errs.add(typeName.getSymbol(), "unknown type: " + typeName.getText());

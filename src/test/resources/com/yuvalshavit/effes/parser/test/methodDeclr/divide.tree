@@ -3,11 +3,13 @@ methodDeclr
     MULT_OPS: /
   methodArgs
     methodArg
-      SimpleType
-        TYPE_NAME: Foo
+      type
+        singleType
+          TYPE_NAME: Foo
   methodReturnDeclr
-    SimpleType
-      TYPE_NAME: Bar
+    type
+      singleType
+        TYPE_NAME: Bar
   inlinableBlock
     ReturnStat
       SingleLineExpression
