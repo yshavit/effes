@@ -6,12 +6,12 @@ compilationUnit
       methodArgs
         methodArg
           type
-            singleTypeA
+            singleType
               TYPE_NAME: True
               genericsDeclr
       methodReturnDeclr
         type
-          singleTypeA
+          singleType
             TYPE_NAME: False
             genericsDeclr
       inlinableBlock
