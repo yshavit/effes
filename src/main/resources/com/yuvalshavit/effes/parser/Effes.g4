@@ -82,7 +82,7 @@ genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)+ CLOSE_BRACKET)?;
 
 // generics and types
 
-singleType: TYPE_NAME genericsDeclr?;
+singleType: TYPE_NAME genericsDeclr;
 
 type: singleType (PIPE singleType)*;
 

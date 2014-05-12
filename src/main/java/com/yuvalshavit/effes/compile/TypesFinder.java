@@ -61,10 +61,12 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       TerminalNode typeName = ctx.TYPE_NAME();
       registry.registerType(typeName.getSymbol(), typeName.getText());
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterTypeAliasDeclr(@NotNull EffesParser.TypeAliasDeclrContext ctx) {
+      EfType.handleGenerics(ctx.genericsDeclr());
       if (ctx.name == null || ctx.targets == null) {
         errs.add(ctx.getStart(), "unrecognized targets for type alias");
       } else {
@@ -136,6 +138,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert argsBuilder.isEmpty() : argsBuilder;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -144,6 +147,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       assert type != null : ctx.TYPE_NAME().getText();
       type.setArgs(argsBuilder);
       argsBuilder.clear();
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -170,18 +174,21 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         Token old = openTypeDeclrs.put(nameToken.getText(), nameToken);
         assert old == null : nameToken.getText() + " -> " + nameToken;
       }
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert currentDataType == null : currentDataType;
       currentDataType = ctx.TYPE_NAME().getText();
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert currentDataType != null;
       currentDataType = null;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
