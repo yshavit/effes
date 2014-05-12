@@ -116,6 +116,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       enterCheck();
+      EfType.handleGenerics(ctx.genericsDeclr());
       declaringType = typeResolver.getSimpleType(ctx.TYPE_NAME().getText());
       if (declaringType == null) {
         // This shouldn't happen, since the typeResolver should have already picked up all declared types, and this
@@ -129,18 +130,21 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert declaringType != null;
       declaringType = null;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
       enterCheck();
       declaringOpenType = ctx.TYPE_NAME().getText();
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void exitOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
       assert declaringOpenType != null;
       declaringOpenType = null;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -259,6 +263,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       checkModeNone(ctx.getStart());
       mode = VerifierMode.DATA_TYPE;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -267,12 +272,14 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         errs.add(ctx.getStart(), "expected DATA_TYPE mode (this is a compiler bug)");
       }
       mode = VerifierMode.NONE;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterOpenTypeDeclr(@NotNull EffesParser.OpenTypeDeclrContext ctx) {
       checkModeNone(ctx.getStart());
       mode = VerifierMode.OPEN_TYPE;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -281,6 +288,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         errs.add(ctx.getStart(), "expected OPEN_TYPE mode (this is a compiler bug)");
       }
       mode = VerifierMode.NONE;
+      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
