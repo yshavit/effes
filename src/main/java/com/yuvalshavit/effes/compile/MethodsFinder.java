@@ -6,6 +6,7 @@ import com.yuvalshavit.effes.parser.ParserUtils;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
@@ -169,7 +170,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         if (typeContext != null) {
           // if it's null, there was a parse error that'll be handled
           EfType type = typeResolver.apply(typeContext);
-          String argName = Optional.ofNullable(argContext.VAR_NAME()).map(TerminalNode::getText).orElseGet(() -> null);
+          String argName = Optional.ofNullable(argContext.VAR_NAME()).map(ParseTree::getText).orElseGet(() -> null);
           args.add(typeContext.getStart(), argName, type);
           methodTokens.argTokens.put(argName, argContext.getStart());
         }
