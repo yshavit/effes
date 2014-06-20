@@ -134,11 +134,11 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   private class FindSimpleTypeArgs extends EffesBaseListener {
     private final TypeResolver resolver = new TypeResolver(registry, errs);
     private final List<EfVar> argsBuilder = new ArrayList<>();
+    private final List<String> genericParamsBuilder = new ArrayList<>();
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert argsBuilder.isEmpty() : argsBuilder;
-      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
@@ -146,8 +146,9 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       assert type != null : ctx.TYPE_NAME().getText();
       type.setArgs(argsBuilder);
+      type.setGenericParams(genericParamsBuilder);
       argsBuilder.clear();
-      EfType.handleGenerics(ctx.genericsDeclr());
+      genericParamsBuilder.clear();
     }
 
     @Override
@@ -156,6 +157,20 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       EfType argType = resolver.apply(ctx.type());
       EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);
+    }
+
+    @Override
+    public void enterGenericsDeclr(@NotNull EffesParser.GenericsDeclrContext ctx) {
+      assert genericParamsBuilder.isEmpty() : genericParamsBuilder;
+      Set<String> paramsSet = new HashSet<>(genericParamsBuilder.size());
+      ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
+        String paramName = tok.getText();
+        if (paramsSet.add(paramName)) {
+          genericParamsBuilder.add(paramName);
+        } else {
+          errs.add(tok, "duplicate generic parameter '" + paramName + "'");
+        }
+      });
     }
   }
 

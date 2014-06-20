@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -100,6 +101,7 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
+    private List<String> genericParams;
     private List<EfVar> args;
 
     public SimpleType(String name) {
@@ -134,8 +136,8 @@ public abstract class EfType {
     }
 
     public void setArgs(List<EfVar> args) {
-      if (args == null) {
-        throw new IllegalStateException("args already set" + this.args);
+      if (this.args != null) {
+        throw new IllegalStateException("args already set: " + this.args);
       }
       for (int pos = 0; pos < args.size(); ++pos) {
         EfVar arg = args.get(pos);
@@ -146,8 +148,19 @@ public abstract class EfType {
       this.args = ImmutableList.copyOf(args);
     }
 
+    public void setGenericParams(List<String> genericParams) {
+      if (this.genericParams != null) {
+        throw new IllegalStateException("generic params already set: " + this.genericParams);
+      }
+      Set<String> genericsSet = new HashSet<>(genericParams);
+      if (genericsSet.size() != genericParams.size()) {
+        throw new IllegalArgumentException("illegal generic params: " + genericParams);
+      }
+      this.genericParams = ImmutableList.copyOf(genericParams);
+    }
+
     /**
-     * Returns just the simple type's name &mdash; not its args.
+     * Returns just the simple type's name and generic parameters &mdash; not its args.
      *
      * Printing the args has some problems. If the type's args are somewhat complex, this recursion would get
      * unwieldy: Foo(hello: World(solarSystem: Star(name: String))), for instance. In the extreme case, for recursive
@@ -159,7 +172,9 @@ public abstract class EfType {
      */
     @Override
     public String toString() {
-      return name;
+      return (genericParams == null || genericParams.isEmpty())
+        ? name
+        : String.format("%s[%s]", name, genericParams);
     }
 
     @Override
