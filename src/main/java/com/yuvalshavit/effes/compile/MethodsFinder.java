@@ -7,7 +7,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -154,6 +153,8 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       if (declaringType != null && declaringType.getArgByName(name) != null) {
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
+
+      List<String> generics = TypesFinder.buildGenericsParamsList(ctx.genericsDeclr(), errs);
       EfArgs.Builder args = new EfArgs.Builder(errs);
       MethodTokens methodTokens = new MethodTokens();
 
@@ -184,7 +185,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
       }
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
-      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
+      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(generics, args.build(), resultType, body);
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;
