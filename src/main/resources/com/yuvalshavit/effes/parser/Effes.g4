@@ -36,6 +36,7 @@ compilationBodyElement: dataTypeDeclr
 // methods
 
 methodDeclr: methodName
+             genericsDeclr
              methodArgs
              methodReturnDeclr
              ((COLON inlinableBlock) | NL)
