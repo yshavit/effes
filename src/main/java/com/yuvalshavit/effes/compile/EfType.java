@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
+import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,6 +39,8 @@ public abstract class EfType {
   public abstract int hashCode();
 
   public abstract Collection<SimpleType> simpleTypes();
+
+  public abstract EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token);
 
   public boolean isFakeType() {
     return getClass().equals(UnknownType.class);
@@ -84,6 +87,12 @@ public abstract class EfType {
     }
 
     @Override
+    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
+      errs.add(token, "can't rename generics for unknown type (this is a compiler bug): " + variant);
+      return this;
+    }
+
+    @Override
     public String toString() {
       return variant.description;
     }
@@ -107,6 +116,25 @@ public abstract class EfType {
     public SimpleType(String name) {
       assert name != null;
       this.name = name;
+    }
+
+    @Override
+    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
+      int nExpectedParams = genericParams.size();
+      if (newGenericParams.size() != nExpectedParams) {
+        String plural = nExpectedParams == 1
+          ? ""
+          : "s";
+        String msg = String.format("expected %s generic parameter%s but found %s",
+          nExpectedParams,
+          plural,
+          newGenericParams.size());
+        errs.add(token, msg);
+      }
+      SimpleType r = new SimpleType(name);
+      r.args = args;
+      r.genericParams = ImmutableList.copyOf(newGenericParams);
+      return r;
     }
 
     public String getName() {
@@ -275,6 +303,12 @@ public abstract class EfType {
     @Override
     public Collection<SimpleType> simpleTypes() {
       return options.stream().flatMap(t -> t.simpleTypes().stream()).collect(Collectors.toList());
+    }
+
+    @Override
+    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
+      errs.add(token, "can't rename generics for disjunctive type (this is a compiler bug): " + this);
+      return this;
     }
 
     @Override

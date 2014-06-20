@@ -161,17 +161,30 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
 
     @Override
     public void enterGenericsDeclr(@NotNull EffesParser.GenericsDeclrContext ctx) {
-      assert genericParamsBuilder.isEmpty() : genericParamsBuilder;
-      Set<String> paramsSet = new HashSet<>(genericParamsBuilder.size());
-      ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
-        String paramName = tok.getText();
-        if (paramsSet.add(paramName)) {
-          genericParamsBuilder.add(paramName);
-        } else {
-          errs.add(tok, "duplicate generic parameter '" + paramName + "'");
-        }
-      });
+      buildGenericsParamsList(ctx, errs, genericParamsBuilder);
     }
+  }
+
+  public static void buildGenericsParamsList(EffesParser.GenericsDeclrContext ctx,
+                                             CompileErrors errs,
+                                             List<String> out)
+  {
+    assert out.isEmpty() : out;
+    Set<String> paramsSet = new HashSet<>(ctx.GENERIC_NAME().size());
+    ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
+      String paramName = tok.getText();
+      if (paramsSet.add(paramName)) {
+        out.add(paramName);
+      } else {
+        errs.add(tok, "duplicate generic parameter '" + paramName + "'");
+      }
+    });
+  }
+
+  public static List<String> buildGenericsParamsList(EffesParser.GenericsDeclrContext ctx, CompileErrors errs) {
+    List<String> results = new ArrayList<>();
+    buildGenericsParamsList(ctx, errs, results);
+    return results;
   }
 
   private class FindOpenTypes extends EffesBaseListener {
