@@ -5,7 +5,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.compile.node.Block;
-import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
+import com.yuvalshavit.effes.compile.node.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfMethod;
 import com.yuvalshavit.effes.compile.IrCompiler;
