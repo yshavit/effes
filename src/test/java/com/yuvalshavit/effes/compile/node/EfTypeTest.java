@@ -1,14 +1,13 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes.compile.node;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.yuvalshavit.effes.compile.EfType.VOID;
-import static com.yuvalshavit.effes.compile.EfType.UNKNOWN;
-import static com.yuvalshavit.effes.compile.EfType.disjunction;
+import static com.yuvalshavit.effes.compile.node.EfType.disjunction;
 import static org.testng.Assert.assertEquals;
 
 public final class EfTypeTest {
@@ -21,11 +20,11 @@ public final class EfTypeTest {
   @Test
   public void simpleOrdering() {
     EfType dis = EfType.disjunction(simpleA, simpleB);
-    List<EfType> unordered = Arrays.asList(simpleA, simpleB, simpleB, simpleC, UNKNOWN, UNKNOWN, null, null, dis);
+    List<EfType> unordered = Arrays.asList(simpleA, simpleB, simpleB, simpleC, EfType.UNKNOWN, EfType.UNKNOWN, null, null, dis);
     Collections.shuffle(unordered);
     Collections.sort(unordered, EfType.comparator);
 
-    List<EfType> expected = Arrays.asList(null, null, UNKNOWN, UNKNOWN, simpleA, simpleB, simpleB, simpleC, dis);
+    List<EfType> expected = Arrays.asList(null, null, EfType.UNKNOWN, EfType.UNKNOWN, simpleA, simpleB, simpleB, simpleC, dis);
     assertEquals(unordered, expected);
   }
 
@@ -41,7 +40,7 @@ public final class EfTypeTest {
 
   @Test
   public void disjunctivesDifferentWithDifferentLengths() {
-    EfType d1 = EfType.disjunction(simpleA, simpleB, UNKNOWN);
+    EfType d1 = EfType.disjunction(simpleA, simpleB, EfType.UNKNOWN);
     EfType d2 = EfType.disjunction(simpleA, simpleC);
     // if we only compared lengths, d2 would be first. But we compare by elements (in order) first, so d1 is first
     assertEquals(cmp(d1, d2), -2);
@@ -71,12 +70,12 @@ public final class EfTypeTest {
 
   @Test
   public void unknownDisjunctionIsUnknown() {
-    assertEquals(disjunction(simpleA, simpleB, UNKNOWN), UNKNOWN);
+    Assert.assertEquals(EfType.disjunction(simpleA, simpleB, EfType.UNKNOWN), EfType.UNKNOWN);
   }
 
   @Test
   public void voidDisjunctionIsVoid() {
-    assertEquals(disjunction(simpleA, simpleB, VOID), EfType.VOID);
+    Assert.assertEquals(EfType.disjunction(simpleA, simpleB, EfType.VOID), EfType.VOID);
   }
 
   private static int cmp(EfType t1, EfType t2) {

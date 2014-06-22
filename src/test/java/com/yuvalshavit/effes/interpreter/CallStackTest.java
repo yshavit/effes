@@ -1,8 +1,8 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.EfType;
-import com.yuvalshavit.effes.compile.EfVar;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
 import org.testng.annotations.Test;
 
 import java.util.NoSuchElementException;

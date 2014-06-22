@@ -1,8 +1,8 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.Statement;
+import com.yuvalshavit.effes.compile.node.Block;
+import com.yuvalshavit.effes.compile.node.Statement;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;

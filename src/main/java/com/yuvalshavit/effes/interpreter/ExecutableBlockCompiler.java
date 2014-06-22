@@ -1,6 +1,6 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.yuvalshavit.effes.compile.Block;
+import com.yuvalshavit.effes.compile.node.Block;
 
 import java.util.List;
 import java.util.function.Function;

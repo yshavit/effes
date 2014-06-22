@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes.compile.node;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

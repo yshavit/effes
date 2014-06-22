@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.EfType;
+import com.yuvalshavit.effes.compile.node.EfType;
 
 import java.util.List;
 

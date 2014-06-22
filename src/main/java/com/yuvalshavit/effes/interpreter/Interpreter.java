@@ -1,12 +1,12 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.Block;
-import com.yuvalshavit.effes.compile.CompileErrors;
-import com.yuvalshavit.effes.compile.EfMethod;
-import com.yuvalshavit.effes.compile.EfType;
+import com.yuvalshavit.effes.compile.node.Block;
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfMethod;
+import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.IrCompiler;
-import com.yuvalshavit.effes.compile.MethodId;
+import com.yuvalshavit.effes.compile.node.MethodId;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.parser.EffesParser;

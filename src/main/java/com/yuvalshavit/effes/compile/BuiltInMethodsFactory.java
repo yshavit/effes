@@ -1,5 +1,10 @@
 package com.yuvalshavit.effes.compile;
 
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfArgs;
+import com.yuvalshavit.effes.compile.node.EfMethod;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.MethodId;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.antlr.v4.runtime.Token;

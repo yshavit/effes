@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes.compile.node;
 
 import org.antlr.v4.runtime.Token;
 

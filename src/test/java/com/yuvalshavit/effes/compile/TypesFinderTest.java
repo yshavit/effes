@@ -2,6 +2,9 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.TUtils;
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import org.testng.annotations.Test;

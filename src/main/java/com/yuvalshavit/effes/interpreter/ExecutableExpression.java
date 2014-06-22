@@ -2,9 +2,9 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.EfType;
-import com.yuvalshavit.effes.compile.EfVar;
-import com.yuvalshavit.effes.compile.Expression;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
+import com.yuvalshavit.effes.compile.node.Expression;
 
 import java.util.List;
 import java.util.function.Supplier;

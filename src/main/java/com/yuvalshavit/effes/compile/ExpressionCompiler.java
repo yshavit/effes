@@ -1,6 +1,14 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.compile.node.CaseConstruct;
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfMethod;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
+import com.yuvalshavit.effes.compile.node.Expression;
+import com.yuvalshavit.effes.compile.node.MethodId;
+import com.yuvalshavit.effes.compile.node.Node;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;

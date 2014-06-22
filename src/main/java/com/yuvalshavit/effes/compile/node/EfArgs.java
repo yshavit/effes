@@ -1,4 +1,4 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
