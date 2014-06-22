@@ -5,7 +5,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.EfType;
+import com.yuvalshavit.effes.compile.node.EfType;
 
 import java.util.ArrayList;
 import java.util.List;

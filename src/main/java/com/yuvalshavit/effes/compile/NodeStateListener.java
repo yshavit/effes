@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
+import com.yuvalshavit.effes.compile.node.Node;
+
 public interface NodeStateListener {
   void child(Node child);
 

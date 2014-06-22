@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
 

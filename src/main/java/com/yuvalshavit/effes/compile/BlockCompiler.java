@@ -1,6 +1,9 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.compile.node.Block;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.Statement;
 import com.yuvalshavit.effes.parser.EffesParser;
 
 import java.util.List;

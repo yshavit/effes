@@ -2,6 +2,8 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.yuvalshavit.effes.compile.node.EfMethod;
+import com.yuvalshavit.effes.compile.node.MethodId;
 
 import javax.annotation.Nullable;
 import java.util.Collection;

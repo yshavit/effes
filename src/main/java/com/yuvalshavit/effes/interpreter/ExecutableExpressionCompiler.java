@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
-import com.yuvalshavit.effes.compile.Expression;
-import com.yuvalshavit.effes.compile.MethodId;
+import com.yuvalshavit.effes.compile.node.Expression;
+import com.yuvalshavit.effes.compile.node.MethodId;
 import com.yuvalshavit.util.Dispatcher;
 
 import java.util.List;

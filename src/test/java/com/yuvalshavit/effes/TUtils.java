@@ -1,6 +1,6 @@
 package com.yuvalshavit.effes;
 
-import com.yuvalshavit.effes.compile.CompileErrors;
+import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import java.util.function.Consumer;

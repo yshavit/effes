@@ -1,6 +1,8 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.EfType;
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nullable;

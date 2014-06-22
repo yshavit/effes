@@ -1,7 +1,6 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.yuvalshavit.effes.compile.BuiltInMethodsFactory;
-import com.yuvalshavit.effes.compile.CompileErrors;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import java.io.PrintStream;

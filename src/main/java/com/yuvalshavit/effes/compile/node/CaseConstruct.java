@@ -1,7 +1,8 @@
-package com.yuvalshavit.effes.compile;
+package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.yuvalshavit.effes.compile.NodeStateVisitor;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
