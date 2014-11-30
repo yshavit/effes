@@ -46,7 +46,7 @@ public final class EndToEndTest {
     String regexPattern = System.getProperty("test.regex", "");
     String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err|out)$";
     return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
-      .flatMap((Function<String, Stream<String>>)EndToEndTest::readFileOrDir) // IDEA-123366
+      .flatMap(EndToEndTest::readFileOrDir)
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
       .distinct()
