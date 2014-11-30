@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,9 +51,19 @@ public final class EndToEndTest {
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
       .distinct()
+      .filter(EndToEndTest::dataProviderFilter)
       .map(s -> new Object[]{s})
       .collect(Collectors.toList())
       .toArray(new Object[0][]);
+  }
+
+  private static boolean dataProviderFilter(String testName) {
+    String testparam = System.getProperty("test.params");
+    if (testparam == null) {
+      return true;
+    }
+    Pattern pattern = Pattern.compile(testparam);
+    return pattern.matcher(testName).find();
   }
 
   private static Stream<String> readFileOrDir(String file) {
