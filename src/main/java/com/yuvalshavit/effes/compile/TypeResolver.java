@@ -6,6 +6,8 @@ import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -39,7 +41,11 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
       type = EfType.UNKNOWN;
     } else {
       List<String> genericParams = TypesFinder.buildGenericsParamsList(ctx.genericsDeclr(), errs);
-      type = type.withRenamedGenericParams(genericParams, errs, ctx.getStart());
+      if (type instanceof EfType.SimpleType) {
+        type = type.withRenamedGenericParams(genericParams, errs, ctx.getStart());
+      } else if (!genericParams.isEmpty()) {
+        throw new UnsupportedOperationException("alias type with generic"); // TODO
+      }
     }
     return type;
   }
