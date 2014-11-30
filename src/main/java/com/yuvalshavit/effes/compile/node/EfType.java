@@ -120,7 +120,9 @@ public abstract class EfType {
 
     @Override
     public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
-      int nExpectedParams = genericParams.size();
+      int nExpectedParams = genericParams == null
+        ? 0
+        : genericParams.size();
       if (newGenericParams.size() != nExpectedParams) {
         String plural = nExpectedParams == 1
           ? ""
