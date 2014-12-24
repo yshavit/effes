@@ -54,10 +54,7 @@ methodArg: type
          | OPEN_PAREN VAR_NAME COLON type CLOSE_PAREN
          ;
 
-methodReturnDeclr: ARROW type
-                 | ARROW OPEN_PAREN type CLOSE_PAREN
-                 | // nothing
-                 ;
+methodReturnDeclr: (ARROW type)?;
 
 // type declrs
 
@@ -79,13 +76,16 @@ typeMember: methodDeclr                                                         
           | IS singleType NL                                                    # OpenTypeAlternative
           ;
 
-genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)+ CLOSE_BRACKET)?;
+genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)* CLOSE_BRACKET)?;
 
 // generics and types
 
-singleType: TYPE_NAME genericsDeclr;
+singleType: TYPE_NAME genericsDeclr                                             # SingleDataType
+          | GENERIC_NAME                                                        # SingleGenericType
+          ;
 
-type: singleType (PIPE singleType)*;
+type: singleType (PIPE singleType)*
+    | OPEN_PAREN singleType (PIPE singleType)* CLOSE_PAREN;
 
 // blocks and statements
 

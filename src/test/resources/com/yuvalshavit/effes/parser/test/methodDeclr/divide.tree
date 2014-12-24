@@ -5,12 +5,12 @@ methodDeclr
   methodArgs
     methodArg
       type
-        singleType
+        SingleDataType
           TYPE_NAME: Foo
           genericsDeclr
   methodReturnDeclr
     type
-      singleType
+      SingleDataType
         TYPE_NAME: Bar
         genericsDeclr
   inlinableBlock

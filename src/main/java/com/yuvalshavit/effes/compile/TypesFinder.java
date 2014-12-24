@@ -76,15 +76,18 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         String name = ctx.name.getText();
         Set<String> targetNames = new HashSet<>();
         List<Token> targetTokens = new ArrayList<>();
-        ctx.targets.singleType().stream().forEach(targetCtx -> {
-          EfType.handleGenerics(targetCtx.genericsDeclr());
-          Token tok = targetCtx.TYPE_NAME().getSymbol();
-          if (!targetNames.add(tok.getText())) {
-            errs.add(tok, String.format("duplicate target '%s' for type alias '%s'", tok.getText(), name));
-          } else {
-            targetTokens.add(tok);
-          }
-        });
+        ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
+          .onDataType(targetCtx -> {
+            EfType.handleGenerics(targetCtx.genericsDeclr());
+            Token tok = targetCtx.TYPE_NAME().getSymbol();
+            if (!targetNames.add(tok.getText())) {
+              errs.add(tok, String.format("duplicate target '%s' for type alias '%s'", tok.getText(), name));
+            } else {
+              targetTokens.add(tok);
+            }
+          })
+          .onGeneric(targetCtx -> {})
+        );
         aliases.put(name, new Pair<>(ctx.name, targetTokens));
       }
     }
@@ -225,13 +228,21 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     @Override
     public void enterOpenTypeAlternative(@NotNull EffesParser.OpenTypeAlternativeContext ctx) {
       assert currentDataType != null;
-      TerminalNode openTypeName = ctx.singleType().TYPE_NAME();
-      EfType.handleGenerics(ctx.singleType().genericsDeclr());
-      if (openTypeName != null) {
-        typeMappings.put(openTypeName.getText(), currentDataType);
-      } else {
-        errs.add(ctx.getStart(), "expected name of open type");
-      }
+      
+      SingleTypeHandler.consumer(errs)
+        .onDataType(dataTypeCtx -> {
+          TerminalNode openTypeName = dataTypeCtx.TYPE_NAME();
+          EfType.handleGenerics(dataTypeCtx.genericsDeclr());
+          if (openTypeName != null) {
+            typeMappings.put(openTypeName.getText(), currentDataType);
+          } else {
+            errs.add(dataTypeCtx.getStart(), "expected name of open type");
+          }
+        })
+        .onGeneric(g -> {
+          throw new UnsupportedOperationException();
+        })
+        .accept(ctx.singleType());
     }
 
     public void finish() {
