@@ -1,0 +1,10 @@
+type FirstOpen ?
+  hello -> True
+
+type SecondOpen ?
+  hello -> False
+
+type Both:
+  is FirstOpen
+  is SecondOpen
+  hello -> True | False: return True

@@ -3,6 +3,7 @@ compilationUnit
     methodDeclr
       methodName
         VAR_NAME: not
+      genericsDeclr
       methodArgs
         methodArg
           type

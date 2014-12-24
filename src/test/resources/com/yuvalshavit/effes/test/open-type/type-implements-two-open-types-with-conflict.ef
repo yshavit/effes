@@ -1,0 +1,11 @@
+type FirstOpen ?
+  hello -> True
+
+type SecondOpen ?
+  hello -> True | False
+
+type Both:
+  is FirstOpen
+  is SecondOpen
+  hello -> True: return True
+  isHappy (fed: True) -> True | False: return True -- not allowed, because Pet::isHappy needs to accept False
