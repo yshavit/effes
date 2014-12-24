@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 public final class EndToEndTest {
   private static final RelativeUrl urls = new RelativeUrl(EndToEndTest.class);
@@ -101,7 +103,11 @@ public final class EndToEndTest {
   }
 
   private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
-    String efFile = Resources.toString(urls.get(fileBaseName + ".ef"), Charsets.UTF_8) + "\n\n" + efPrefix;
+    URL url = urls.get(fileBaseName + ".ef");
+    if (url == null) {
+      fail("missing " + fileBaseName + ".ef");
+    }
+    String efFile = Resources.toString(url, Charsets.UTF_8) + "\n\n" + efPrefix;
     EffesParser parser = ParserUtils.createParser(efFile);
     return parser.compilationUnit();
   }

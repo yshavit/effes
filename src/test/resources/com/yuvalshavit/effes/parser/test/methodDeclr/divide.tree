@@ -1,6 +1,7 @@
 methodDeclr
   methodName
     MULT_OPS: /
+  genericsDeclr
   methodArgs
     methodArg
       type
