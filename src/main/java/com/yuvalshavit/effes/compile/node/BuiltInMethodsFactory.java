@@ -42,7 +42,7 @@ public interface BuiltInMethodsFactory<T> {
           EffesParser parser = ParserUtils.createParser(String.format("(%s)", s));
           EffesParser.TypeContext parsedType = parser.type();
           assert parsedType.getStop().getStopIndex() - 1 == s.length() : "invalid type declaration: " + s;
-          EfType type = resolver.apply(parsedType);
+            EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
         List<String> generics = Arrays.asList(meta.generics());

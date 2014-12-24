@@ -1,0 +1,13 @@
+dataTypeDeclr
+  TYPE_NAME: Integer
+  genericsDeclr
+  dataTypeArgsDeclr
+    dataTypeArgDeclr
+      VAR_NAME: val
+      type
+        SingleDataType
+          TYPE_NAME: Zero
+          genericsDeclr
+        SingleDataType
+          TYPE_NAME: Integer
+          genericsDeclr

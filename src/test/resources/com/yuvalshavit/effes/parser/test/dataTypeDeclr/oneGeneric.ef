@@ -1,0 +1,1 @@
+type Optional[T](value: T)

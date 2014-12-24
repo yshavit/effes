@@ -1,0 +1,11 @@
+dataTypeDeclr
+  TYPE_NAME: Marker
+  genericsDeclr
+    GENERIC_NAME: T
+  dataTypeArgsDeclr
+    dataTypeArgDeclr
+      VAR_NAME: value
+      type
+        SingleDataType
+          TYPE_NAME: Nothing
+          genericsDeclr
