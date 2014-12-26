@@ -4,10 +4,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
-import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,10 +21,19 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.antlr.v4.runtime.Token;
+
 public abstract class EfType {
 
   @Deprecated
   public static void handleGenerics(EffesParser.GenericsDeclrContext ctx) {
+    if (ctx.OPEN_BRACKET() != null) {
+      throw new UnsupportedOperationException(); // TODO
+    }
+  }
+
+  @Deprecated
+  public static void handleGenerics(EffesParser.SingleTypeParametersContext ctx) {
     if (ctx.OPEN_BRACKET() != null) {
       throw new UnsupportedOperationException(); // TODO
     }
@@ -39,8 +49,6 @@ public abstract class EfType {
   public abstract int hashCode();
 
   public abstract Collection<SimpleType> simpleTypes();
-
-  public abstract EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token);
 
   public boolean isFakeType() {
     return getClass().equals(UnknownType.class);
@@ -87,12 +95,6 @@ public abstract class EfType {
     }
 
     @Override
-    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
-      errs.add(token, "can't rename generics for unknown type (this is a compiler bug): " + variant);
-      return this;
-    }
-
-    @Override
     public String toString() {
       return variant.description;
     }
@@ -110,35 +112,41 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
-    private List<String> genericParams;
     private List<EfVar> args;
+    private List<String> genericParams;
+    private List<EfType> reification;
 
     public SimpleType(String name) {
       assert name != null;
       this.name = name;
     }
 
-    @Override
-    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
-      int nExpectedParams = genericParams == null
-        ? 0
-        : genericParams.size();
-      if (newGenericParams.size() != nExpectedParams) {
+    public SimpleType reify(List<EfType> genericParams, CompileErrors errs, Token token) {
+      int nExpectedParams = genericParams.size();
+      if (genericParams.size() != nExpectedParams) {
         String plural = nExpectedParams == 1
           ? ""
           : "s";
         String msg = String.format("expected %s generic parameter%s but found %s",
           nExpectedParams,
           plural,
-          newGenericParams.size());
+          genericParams.size());
         errs.add(token, msg);
+        if (genericParams.size() > nExpectedParams) {
+          genericParams = genericParams.subList(0, nExpectedParams);
+        } else {
+          genericParams = new ArrayList<>(nExpectedParams);
+          while (genericParams.size() < nExpectedParams) {
+            genericParams.add(EfType.UNKNOWN);
+          }
+        }
       }
       SimpleType r = new SimpleType(name);
       r.args = args;
-      r.genericParams = ImmutableList.copyOf(newGenericParams);
+      r.reification = ImmutableList.copyOf(genericParams);
       return r;
     }
-
+    
     public String getName() {
       return name;
     }
@@ -202,23 +210,54 @@ public abstract class EfType {
      */
     @Override
     public String toString() {
-      return (genericParams == null || genericParams.isEmpty())
-        ? name
-        : String.format("%s[%s]", name, genericParams);
+      if (reification != null && !reification.isEmpty()) {
+        return name + reification;
+      } else if (genericParams != null && !genericParams.isEmpty()) {
+        return name + genericParams;
+      } else {
+        return name;
+      }
     }
 
     @Override
     public boolean contains(EfType other) {
-      return equals(other);
+      if (reification == null) {
+        throw new IllegalStateException("both types must be reified");
+      }
+      if (other.getClass() != SimpleType.class) {
+        return false;
+      }
+      SimpleType otherSimple = (SimpleType) other;
+      if (otherSimple.reification == null) {
+        throw new IllegalStateException("both types must be reified");
+      }
+      if (!name.equals(otherSimple.name)) {
+        return false;
+      }
+      assert reification.size() == otherSimple.reification.size() : String.format("%d != %d", reification.size(), otherSimple.reification.size());
+      for (int i = 0, len = reification.size(); i < len; ++i) {
+        EfType myParam = reification.get(i);
+        EfType otherParam = otherSimple.reification.get(i);
+        if (!myParam.equals(otherParam)) {
+          return false;
+        }
+      }
+      return true;
     }
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
 
       SimpleType that = (SimpleType) o;
-      return name.equals(that.name);
+
+      return name.equals(that.name)
+        && (reification == null
+        ? that.reification == null
+        : reification.equals(that.reification));
     }
 
     @Override
@@ -305,12 +344,6 @@ public abstract class EfType {
     @Override
     public Collection<SimpleType> simpleTypes() {
       return options.stream().flatMap(t -> t.simpleTypes().stream()).collect(Collectors.toList());
-    }
-
-    @Override
-    public EfType withRenamedGenericParams(List<String> newGenericParams, CompileErrors errs, Token token) {
-      errs.add(token, "can't rename generics for disjunctive type (this is a compiler bug): " + this);
-      return this;
     }
 
     @Override

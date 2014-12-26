@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,10 +46,16 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         errs.add(typeName.getSymbol(), "unknown type: " + typeName.getText());
         type = EfType.UNKNOWN;
       } else {
-        List<String> genericParams = TypesFinder.buildGenericsParamsList(ctx.genericsDeclr(), errs);
+        EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
         if (type instanceof EfType.SimpleType) {
-          type = type.withRenamedGenericParams(genericParams, errs, ctx.getStart());
-        } else if (!genericParams.isEmpty()) {
+          List<EfType> reification;
+          if (params == null) {
+            reification = Collections.emptyList();
+          } else {
+            reification = params.type().stream().map(TypeResolver.this::apply).collect(Collectors.toList());
+          }
+          type = ((EfType.SimpleType) type).reify(reification, errs, ctx.getStart());
+        } else if (params != null) {
           throw new UnsupportedOperationException("alias type with generic"); // TODO
         }
       }

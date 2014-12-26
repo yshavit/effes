@@ -48,7 +48,6 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   }
 
   private class FindTypeNames extends EffesBaseListener {
-    private List<String> generics;
     /**
      * Keys are the name of an alias, and the values are a pair whose "a" is the token that declared that alias,
      * and whose "b" is the tokens that it was declared to point to. For instance, given "Boolean = True | False",
@@ -96,7 +95,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         List<Token> targetTokens = new ArrayList<>();
         ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
           .onDataType(targetCtx -> {
-            EfType.handleGenerics(targetCtx.genericsDeclr());
+            EfType.handleGenerics(targetCtx.singleTypeParameters());
             Token tok = targetCtx.TYPE_NAME().getSymbol();
             if (!targetNames.add(tok.getText())) {
               errs.add(tok, String.format("duplicate target '%s' for type alias '%s'", tok.getText(), name));
@@ -170,6 +169,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       assert type != null : ctx.TYPE_NAME().getText();
       type.setArgs(argsBuilder);
+      if (true) throw new UnsupportedOperationException("how is this different from the other setGenericParams?!");
       type.setGenericParams(genericParamsBuilder);
       argsBuilder.clear();
       genericParamsBuilder.clear();
@@ -250,7 +250,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       SingleTypeHandler.consumer(errs)
         .onDataType(dataTypeCtx -> {
           TerminalNode openTypeName = dataTypeCtx.TYPE_NAME();
-          EfType.handleGenerics(dataTypeCtx.genericsDeclr());
+          EfType.handleGenerics(dataTypeCtx.singleTypeParameters());
           if (openTypeName != null) {
             typeMappings.put(openTypeName.getText(), currentDataType);
           } else {
