@@ -80,12 +80,15 @@ genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)* CLOSE_BRACKET)?;
 
 // generics and types
 
-singleType: TYPE_NAME genericsDeclr                                             # SingleDataType
+
+singleTypeParameters: (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
+
+singleType: TYPE_NAME singleTypeParameters                                      # SingleDataType
           | GENERIC_NAME                                                        # SingleGenericType
           ;
 
 type: singleType (PIPE singleType)*
-    | OPEN_PAREN singleType (PIPE singleType)* CLOSE_PAREN;
+    | OPEN_PAREN singleType (PIPE singleType)* CLOSE_PAREN;  // OPEN_PAREN type CLOSE_PAREN ?
 
 // blocks and statements
 
