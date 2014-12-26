@@ -1,1 +1,5 @@
-type One[T] (val: T)
+type One[T] (value: T)
+
+main:
+  o = One[Boolean](True)
+  print (o: value)
