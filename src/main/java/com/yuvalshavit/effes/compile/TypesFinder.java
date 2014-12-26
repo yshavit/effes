@@ -48,7 +48,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   }
 
   private class FindTypeNames extends EffesBaseListener {
-
+    private List<String> generics;
     /**
      * Keys are the name of an alias, and the values are a pair whose "a" is the token that declared that alias,
      * and whose "b" is the tokens that it was declared to point to. For instance, given "Boolean = True | False",
@@ -63,8 +63,26 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       TerminalNode typeName = ctx.TYPE_NAME();
-      registry.registerType(typeName.getSymbol(), typeName.getText());
-      EfType.handleGenerics(ctx.genericsDeclr());
+      EfType.SimpleType registeredType = registry.registerType(typeName.getSymbol(), typeName.getText());
+
+      List<TerminalNode> generics = ctx.genericsDeclr().GENERIC_NAME();
+      if (generics != null) {
+        List<String> genericNames = new ArrayList<>(generics.size());
+        Set<String> uniqueGenericNames = new HashSet<>(generics.size());
+        
+        generics.stream().forEach(genericNode -> {
+          String generic = genericNode.getText();
+          if (uniqueGenericNames.add(generic)) {
+            genericNames.add(generic);
+          } else {
+            genericNames.add("!<" + generic + " >");
+            errs.add(genericNode.getSymbol(), "duplicate generic name");
+          }
+        });
+        if (registeredType != null) {
+          registeredType.setGenericParams(genericNames);
+        }
+      }
     }
 
     @Override

@@ -27,10 +27,14 @@ public final class TypeRegistry {
     }
   }
 
-  public void registerType(Token token, String name) {
+  @Nullable
+  public EfType.SimpleType registerType(Token token, String name) {
     if (nameIsAvailable(token, name)) {
       EfType.SimpleType r = new EfType.SimpleType(name);
       simpleTypes.put(name, r);
+      return r;
+    } else {
+      return null;
     }
   }
 

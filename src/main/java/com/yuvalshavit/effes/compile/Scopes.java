@@ -35,7 +35,7 @@ public final class Scopes<T,D> {
     scopes.push(new Scope<>());
   }
 
-  public <T> T inScope(Supplier<T> action) {
+  public <V> V inScope(Supplier<V> action) {
     pushScope();
     try {
       return action.get();
