@@ -36,7 +36,7 @@ public interface BuiltInMethodsFactory<T> {
         }
         @SuppressWarnings("unchecked")
         T casted = (T) raw; // we know this works because of the above checks of getGenericReturnType
-        TypeResolver resolver = new TypeResolver(typeRegistry, errs);
+        TypeResolver resolver = new TypeResolver(typeRegistry, errs, null); // TODO need better than null when handling generic built-ins?
         EfArgs.Builder args = new EfArgs.Builder(errs);
         Function<String, Pair<Token, EfType>> typeParser = s -> {
           EffesParser parser = ParserUtils.createParser(String.format("(%s)", s));

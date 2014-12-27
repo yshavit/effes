@@ -113,7 +113,7 @@ public abstract class EfType {
   public static final class SimpleType extends EfType {
     private final String name;
     private List<EfVar> args;
-    private List<String> genericParams;
+    private List<GenericType> genericParams;
     private List<EfType> reification;
 
     public SimpleType(String name) {
@@ -194,7 +194,11 @@ public abstract class EfType {
       if (genericsSet.size() != genericParams.size()) {
         throw new IllegalArgumentException("illegal generic params: " + genericParams);
       }
-      this.genericParams = ImmutableList.copyOf(genericParams);
+      this.genericParams = ImmutableList.copyOf(genericParams.stream().map(g -> new GenericType(this, g)).collect(Collectors.toList()));
+    }
+    
+    public GenericType getGeneric(String name) {
+      return genericParams.stream().filter(g -> g.name.equals(name)).findFirst().orElse(null);
     }
 
     /**
@@ -213,7 +217,7 @@ public abstract class EfType {
       if (reification != null && !reification.isEmpty()) {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
-        return name + genericParams;
+        return name + (genericParams.stream().map(GenericType::getName).collect(Collectors.toList()));
       } else {
         return name;
       }
@@ -303,6 +307,11 @@ public abstract class EfType {
         }
 
         @Override
+        public boolean accept(GenericType type) {
+          return optionsBuilder.add(type);
+        }
+
+        @Override
         public boolean accept(UnknownType type) {
           return optionsBuilder.add(type);
         }
@@ -332,6 +341,11 @@ public abstract class EfType {
         public boolean accept(DisjunctiveType type) {
           Collection<EfType> otherComponents = type.options;
           return options.containsAll(otherComponents);
+        }
+
+        @Override
+        public boolean accept(GenericType type) {
+          return false;
         }
 
         @Override
@@ -366,14 +380,63 @@ public abstract class EfType {
       return options.hashCode();
     }
   }
+  
+  public static class GenericType extends EfType {
+    private final EfType.SimpleType simpleType;
+    private final String name;
+
+    private GenericType(SimpleType simpleType, String name) {
+      this.simpleType = simpleType;
+      this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      GenericType that = (GenericType) o;
+      return name.equals(that.name) && simpleType.equals(that.simpleType);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = simpleType.hashCode();
+      result = 31 * result + name.hashCode();
+      return result;
+    }
+
+    @Override
+    public Collection<SimpleType> simpleTypes() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean contains(EfType other) {
+      return equals(other);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s on %s", name, simpleType);
+    }
+    
+    String getName() {
+      return name;
+    }
+  }
 
   private static abstract class EfTypeDispatch {
     static final Dispatcher<EfTypeDispatch, EfType, Boolean> dispatcher
       = Dispatcher.builder(EfTypeDispatch.class, EfType.class, Boolean.class)
       .put(SimpleType.class, EfTypeDispatch::accept)
       .put(DisjunctiveType.class, EfTypeDispatch::accept)
+      .put(GenericType.class, EfTypeDispatch::accept)
       .put(UnknownType.class, EfTypeDispatch::accept)
-      .build((me, t) -> { throw new AssertionError(t); });
+      .build((me, t) -> {
+        throw new AssertionError(t);
+      });
 
     public boolean accept(EfType type) {
       return type != null
@@ -383,6 +446,7 @@ public abstract class EfType {
 
     public abstract boolean accept(SimpleType type);
     public abstract boolean accept(DisjunctiveType type);
+    public abstract boolean accept(GenericType type);
     public abstract boolean accept(UnknownType type);
   }
 

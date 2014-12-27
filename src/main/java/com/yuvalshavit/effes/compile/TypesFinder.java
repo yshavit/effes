@@ -155,9 +155,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   }
 
   private class FindSimpleTypeArgs extends EffesBaseListener {
-    private final TypeResolver resolver = new TypeResolver(registry, errs);
     private final List<EfVar> argsBuilder = new ArrayList<>();
-    private final List<String> genericParamsBuilder = new ArrayList<>();
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
@@ -169,45 +167,30 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       assert type != null : ctx.TYPE_NAME().getText();
       type.setArgs(argsBuilder);
-      if (true) throw new UnsupportedOperationException("how is this different from the other setGenericParams?!");
-      type.setGenericParams(genericParamsBuilder);
       argsBuilder.clear();
-      genericParamsBuilder.clear();
     }
 
     @Override
     public void enterDataTypeArgDeclr(@NotNull EffesParser.DataTypeArgDeclrContext ctx) {
       String argName = ctx.VAR_NAME().getText();
+      TypeResolver resolver = new TypeResolver(registry, errs, null);
       EfType argType = resolver.apply(ctx.type());
       EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);
     }
-
-    @Override
-    public void enterGenericsDeclr(@NotNull EffesParser.GenericsDeclrContext ctx) {
-      buildGenericsParamsList(ctx, errs, genericParamsBuilder);
-    }
-  }
-
-  public static void buildGenericsParamsList(EffesParser.GenericsDeclrContext ctx,
-                                             CompileErrors errs,
-                                             List<String> out)
-  {
-    assert out.isEmpty() : out;
-    Set<String> paramsSet = new HashSet<>(ctx.GENERIC_NAME().size());
-    ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
-      String paramName = tok.getText();
-      if (paramsSet.add(paramName)) {
-        out.add(paramName);
-      } else {
-        errs.add(tok, "duplicate generic parameter '" + paramName + "'");
-      }
-    });
   }
 
   public static List<String> buildGenericsParamsList(EffesParser.GenericsDeclrContext ctx, CompileErrors errs) {
     List<String> results = new ArrayList<>();
-    buildGenericsParamsList(ctx, errs, results);
+    Set<String> paramsSet = new HashSet<>(ctx.GENERIC_NAME().size());
+    ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
+      String paramName = tok.getText();
+      if (paramsSet.add(paramName)) {
+        results.add(paramName);
+      } else {
+        errs.add(tok, "duplicate generic parameter '" + paramName + "'");
+      }
+    });
     return results;
   }
 
