@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 
 public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
-  private final TypeResolver typeResolver;
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
   private final CompileErrors errs;
   private final TypeRegistry typeRegistry;
@@ -31,7 +30,6 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
                        MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
                        CompileErrors errs) {
     this.typeRegistry = typeRegistry;
-    this.typeResolver = new TypeResolver(typeRegistry, errs);
     this.methodsRegistry = methodsRegistry;
     this.errs = errs;
   }
@@ -123,7 +121,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       enterCheck();
       EfType.handleGenerics(ctx.genericsDeclr());
-      declaringType = typeResolver.getSimpleType(ctx.TYPE_NAME().getText());
+      declaringType = new TypeResolver(typeRegistry, errs, null).getSimpleType(ctx.TYPE_NAME().getText());
       if (declaringType == null) {
         // This shouldn't happen, since the typeResolver should have already picked up all declared types, and this
         // method only gets called when the listener sees a type declaration!
@@ -172,6 +170,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         args.add(ctx.getStart(), EfVar.THIS_VAR_NAME, type);
       }
       methodTokens.argsStart = ctx.methodArgs().getStart();
+      TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, declaringType);
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
         if (typeContext != null) {

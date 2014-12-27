@@ -15,10 +15,12 @@ import java.util.stream.Collectors;
 public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
+  private final EfType.SimpleType context;
 
-  public TypeResolver(TypeRegistry typeRegistry, CompileErrors errs) {
+  public TypeResolver(TypeRegistry typeRegistry, CompileErrors errs, EfType.SimpleType context) {
     this.typeRegistry = typeRegistry;
     this.errs = errs;
+    this.context = context;
   }
 
   @Override
@@ -64,7 +66,19 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
 
     @Override
     protected EfType lookupGenericType(EffesParser.SingleGenericTypeContext ctx) {
-      throw new UnsupportedOperationException(); // TODO
+      String genericName = ctx.GENERIC_NAME().getText();
+      if (context == null) {
+        errs.add(ctx.getStart(), String.format("unknown generic '%s' due to lack of context (this is a compiler bug)", genericName));
+        return EfType.UNKNOWN;
+      }
+      EfType.GenericType type = context.getGeneric(genericName);
+      if (type == null) {
+        errs.add(ctx.getStart(), "unknown generic " + genericName);
+        return EfType.UNKNOWN;
+      }
+      else {
+        return type;
+      }
     }
   }
 }
