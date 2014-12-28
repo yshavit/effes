@@ -441,12 +441,14 @@ public abstract class EfType {
       NULL,
       UNKNOWN,
       SIMPLE,
-      DISJUNCTIVE
+      GENERIC,
+      DISJUNCTIVE,
     }
     static final Dispatcher<?, EfType, TypeOrdinal> typeClassOrdinal
       = Dispatcher.builder(Object.class, EfType.class, TypeOrdinal.class)
       .put(SimpleType.class, (d, i) -> TypeOrdinal.SIMPLE)
       .put(DisjunctiveType.class, (d, i) -> TypeOrdinal.DISJUNCTIVE)
+      .put(GenericType.class, (d, i) -> TypeOrdinal.GENERIC)
       .put(UnknownType.class, (d, i) -> TypeOrdinal.UNKNOWN)
       .build((me, t) -> {throw new AssertionError(t); });
 
@@ -470,6 +472,13 @@ public abstract class EfType {
         SimpleType s1 = (SimpleType) o1;
         SimpleType s2 = (SimpleType) o2;
         return s1.toString().compareTo(s2.toString());
+      case GENERIC:
+        GenericType g1 = (GenericType) o1;
+        GenericType g2 = (GenericType) o2;
+        int genericCmp = compare(g1.simpleType, g2.simpleType);
+        return genericCmp == 0
+          ? g1.name.compareTo(g2.name)
+          : genericCmp;
       case DISJUNCTIVE:
         Iterator<EfType> d1Iter = ((DisjunctiveType) o1).options.iterator();
         Iterator<EfType> d2Iter = ((DisjunctiveType) o2).options.iterator();
