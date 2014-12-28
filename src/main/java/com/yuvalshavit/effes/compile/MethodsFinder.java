@@ -154,7 +154,6 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
 
-      List<String> generics = TypesFinder.buildGenericsParamsList(ctx.genericsDeclr(), errs);
       EfArgs.Builder args = new EfArgs.Builder(errs);
       MethodTokens methodTokens = new MethodTokens();
 
@@ -186,7 +185,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
       }
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
-      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(generics, args.build(), resultType, body);
+      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;

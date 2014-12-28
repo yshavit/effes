@@ -11,8 +11,6 @@ import org.antlr.v4.runtime.misc.Pair;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -45,8 +43,7 @@ public interface BuiltInMethodsFactory<T> {
             EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
-        List<String> generics = Arrays.asList(meta.generics());
-        if (!generics.isEmpty()) {
+        if (meta.generics().length > 0) {
           throw new UnsupportedOperationException("generics not supported for built-in methods"); // TODO
         }
         Stream.of(meta.args()).forEach(s -> {
@@ -56,7 +53,7 @@ public interface BuiltInMethodsFactory<T> {
         EfType resultType = typeParser.apply(meta.resultType()).b;
         outRegistry.registerMethod(
           MethodId.topLevel(meta.name()),
-          new EfMethod<>(generics, args.build(), resultType, casted));
+          new EfMethod<>(args.build(), resultType, casted));
       }
     }
   }
