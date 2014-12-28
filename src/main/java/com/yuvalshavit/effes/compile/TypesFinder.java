@@ -158,24 +158,32 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
 
   private class FindSimpleTypeArgs extends EffesBaseListener {
     private final List<EfVar> argsBuilder = new ArrayList<>();
+    private EfType.SimpleType context;
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      String typeName = ctx.TYPE_NAME().getText();
+      context = registry.getSimpleType(typeName);
+      if (context == null) {
+        errs.add(ctx.TYPE_NAME().getSymbol(), "unknown type \"" + typeName + '"');
+      }
       assert argsBuilder.isEmpty() : argsBuilder;
     }
 
     @Override
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
-      assert type != null : ctx.TYPE_NAME().getText();
-      type.setArgs(argsBuilder);
+      if (type != null) {
+        type.setArgs(argsBuilder);
+      }
       argsBuilder.clear();
+      context = null;
     }
 
     @Override
     public void enterDataTypeArgDeclr(@NotNull EffesParser.DataTypeArgDeclrContext ctx) {
       String argName = ctx.VAR_NAME().getText();
-      TypeResolver resolver = new TypeResolver(registry, errs, null);
+      TypeResolver resolver = new TypeResolver(registry, errs, context);
       EfType argType = resolver.apply(ctx.type());
       EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);
