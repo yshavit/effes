@@ -25,20 +25,6 @@ import org.antlr.v4.runtime.Token;
 
 public abstract class EfType {
 
-  @Deprecated
-  public static void handleGenerics(EffesParser.GenericsDeclrContext ctx) {
-    if (ctx.OPEN_BRACKET() != null) {
-      throw new UnsupportedOperationException(); // TODO
-    }
-  }
-
-  @Deprecated
-  public static void handleGenerics(EffesParser.SingleTypeParametersContext ctx) {
-    if (ctx.OPEN_BRACKET() != null) {
-      throw new UnsupportedOperationException(); // TODO
-    }
-  }
-
   public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
   public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
   public static final Comparator<EfType> comparator = new EfTypeComparator();
@@ -217,9 +203,9 @@ public abstract class EfType {
       if (reification != null && !reification.isEmpty()) {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
-        return name + (genericParams.stream().map(GenericType::getName).collect(Collectors.toList()));
+        return name + "*" + (genericParams.stream().map(GenericType::getName).collect(Collectors.toList()));
       } else {
-        return name;
+        return name + "**";
       }
     }
 

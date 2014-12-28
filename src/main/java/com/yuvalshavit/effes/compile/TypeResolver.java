@@ -41,7 +41,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     }
 
     @Override
-    protected EfType lookupDataType(EffesParser.SingleDataTypeContext ctx) {
+    protected EfType lookupDataType(EffesParser.SingleNonGenericContext ctx) {
       TerminalNode typeName = ctx.TYPE_NAME();
       EfType type = typeRegistry.getType(typeName.getText());
       if (type == null) {
