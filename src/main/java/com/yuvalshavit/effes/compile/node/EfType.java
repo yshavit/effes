@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
 import javax.annotation.Nonnull;
@@ -101,10 +100,12 @@ public abstract class EfType {
     private List<EfVar> args;
     private List<GenericType> genericParams;
     private List<EfType> reification;
+    private SimpleType genericForm;
 
     public SimpleType(String name) {
       assert name != null;
       this.name = name;
+      this.genericForm = this;
     }
 
     public SimpleType reify(List<EfType> genericParams, CompileErrors errs, Token token) {
@@ -130,7 +131,12 @@ public abstract class EfType {
       SimpleType r = new SimpleType(name);
       r.args = args;
       r.reification = ImmutableList.copyOf(genericParams);
+      r.genericForm = genericForm;
       return r;
+    }
+    
+    public boolean isReified() {
+      return reification != null;
     }
     
     public String getName() {
@@ -200,25 +206,25 @@ public abstract class EfType {
      */
     @Override
     public String toString() {
-      if (reification != null && !reification.isEmpty()) {
+      if (isReified() && !reification.isEmpty()) {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
         return name + "*" + (genericParams.stream().map(GenericType::getName).collect(Collectors.toList()));
       } else {
-        return name + "**";
+        return name;
       }
     }
 
     @Override
     public boolean contains(EfType other) {
-      if (reification == null) {
+      if (!isReified()) {
         throw new IllegalStateException("both types must be reified");
       }
       if (other.getClass() != SimpleType.class) {
         return false;
       }
       SimpleType otherSimple = (SimpleType) other;
-      if (otherSimple.reification == null) {
+      if (!otherSimple.isReified()) {
         throw new IllegalStateException("both types must be reified");
       }
       if (!name.equals(otherSimple.name)) {
@@ -244,15 +250,23 @@ public abstract class EfType {
 
       SimpleType that = (SimpleType) o;
 
-      return name.equals(that.name)
-        && (reification == null
-        ? that.reification == null
-        : reification.equals(that.reification));
+      return genericForm.equals(that.genericForm)
+        && (isReified() ? reification.equals(that.reification) : that.reification == null);
     }
 
     @Override
     public int hashCode() {
       return name.hashCode();
+    }
+
+    public EfType getReified(GenericType generic) {
+      if (!isReified()) {
+        throw new IllegalStateException("tried to get reification of non-reified type");
+      }
+      if (!generic.simpleType.equals(genericForm)) {
+        return UNKNOWN;
+      }
+      return reification.get(generic.getIndex());
     }
   }
 
@@ -374,6 +388,16 @@ public abstract class EfType {
     private GenericType(SimpleType simpleType, String name) {
       this.simpleType = simpleType;
       this.name = name;
+    }
+    
+    int getIndex() {
+      List<GenericType> genericParams = simpleType.genericParams;
+      for (int i = 0; i < genericParams.size(); i++) {
+        if (genericParams.get(i) == this) {
+          return i;
+        }
+      }
+      throw new AssertionError("generic couldn't find its own index: " + this);
     }
 
     @Override

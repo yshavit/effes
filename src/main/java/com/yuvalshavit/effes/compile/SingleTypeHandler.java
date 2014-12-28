@@ -70,6 +70,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
     return new Adapter();
   }
 
+  // TODO can I suppress this warning of raw types?
   private static final Dispatcher<SingleTypeHandler,EffesParser.SingleTypeContext,Object> dispatcher =
     Dispatcher.builder(SingleTypeHandler.class, EffesParser.SingleTypeContext.class, Object.class)
       .put(EffesParser.SingleDataTypeContext.class, SingleTypeHandler::lookupDataType)

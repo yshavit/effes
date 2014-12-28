@@ -49,15 +49,16 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         type = EfType.UNKNOWN;
       } else {
         EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
+        boolean genericArgsPresent = params.OPEN_BRACKET() != null;
         if (type instanceof EfType.SimpleType) {
           List<EfType> reification;
-          if (params == null) {
+          if (!genericArgsPresent) {
             reification = Collections.emptyList();
           } else {
             reification = params.type().stream().map(TypeResolver.this::apply).collect(Collectors.toList());
           }
           type = ((EfType.SimpleType) type).reify(reification, errs, ctx.getStart());
-        } else if (params != null) {
+        } else if (genericArgsPresent) {
           throw new UnsupportedOperationException("alias type with generic"); // TODO
         }
       }

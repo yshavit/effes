@@ -1,5 +1,1 @@
-type One[T] (value: T)
-
-main:
-  o = One[Boolean](True)
-  print (o: value)
+ir ir ir
