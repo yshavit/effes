@@ -51,7 +51,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
       }
 
       @Override
-      protected Void lookupDataType(EffesParser.SingleDataTypeContext ctx) {
+      protected Void lookupDataType(EffesParser.SingleNonGenericContext ctx) {
         consumer.lookupDataType(ctx);
         return null;
       }
@@ -84,11 +84,15 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
     return onErr;
   }
 
-  protected abstract T lookupDataType(EffesParser.SingleDataTypeContext ctx);
+  protected abstract T lookupDataType(EffesParser.SingleNonGenericContext ctx);
   protected abstract T lookupGenericType(EffesParser.SingleGenericTypeContext ctx);
+  
+  private T lookupDataType(EffesParser.SingleDataTypeContext ctx) {
+    return lookupDataType(ctx.singleNonGeneric());
+  }
 
   public interface ConsumerBuilder0 {
-    ConsumerBuilder1 onDataType(Consumer<EffesParser.SingleDataTypeContext> consumer);
+    ConsumerBuilder1 onDataType(Consumer<EffesParser.SingleNonGenericContext> consumer);
   }
 
   public interface ConsumerBuilder1 {
@@ -97,7 +101,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
   
   private static class ConsumerBuilderImpl extends SingleTypeConsumer implements ConsumerBuilder0, ConsumerBuilder1 {
     private final CompileErrors errs;
-    private Consumer<EffesParser.SingleDataTypeContext> dataTypeConsumer;
+    private Consumer<EffesParser.SingleNonGenericContext> dataTypeConsumer;
     private Consumer<EffesParser.SingleGenericTypeContext> genericConsumer;
 
     public ConsumerBuilderImpl(CompileErrors errs) {
@@ -105,7 +109,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
     }
 
     @Override
-    protected void lookupDataType(EffesParser.SingleDataTypeContext ctx) {
+    protected void lookupDataType(EffesParser.SingleNonGenericContext ctx) {
       dataTypeConsumer.accept(ctx);
     }
 
@@ -115,7 +119,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
     }
 
     @Override
-    public ConsumerBuilder1 onDataType(Consumer<EffesParser.SingleDataTypeContext> consumer) {
+    public ConsumerBuilder1 onDataType(Consumer<EffesParser.SingleNonGenericContext> consumer) {
       dataTypeConsumer = consumer;
       return this;
     }
@@ -128,7 +132,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
   }
   
   static abstract class SingleTypeConsumer {
-    protected abstract void lookupDataType(EffesParser.SingleDataTypeContext ctx);
+    protected abstract void lookupDataType(EffesParser.SingleNonGenericContext ctx);
     protected abstract void lookupGenericType(EffesParser.SingleGenericTypeContext ctx);
   }
   

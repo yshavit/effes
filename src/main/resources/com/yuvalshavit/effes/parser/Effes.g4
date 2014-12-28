@@ -58,9 +58,9 @@ methodReturnDeclr: (ARROW type)?;
 
 // type declrs
 
-typeAliasDeclr: TYPE name=TYPE_NAME genericsDeclr EQ targets=type NL;
+typeAliasDeclr: TYPE name=TYPE_NAME EQ targets=type NL;
 
-openTypeDeclr : TYPE name=TYPE_NAME QUESTION genericsDeclr
+openTypeDeclr : TYPE name=TYPE_NAME QUESTION
                 (NL | INDENT methodDeclr+ DEDENT );
 
 dataTypeDeclr: TYPE TYPE_NAME genericsDeclr dataTypeArgsDeclr?
@@ -73,7 +73,7 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS singleType NL                                                    # OpenTypeAlternative
+          | IS singleNonGeneric NL                                              # OpenTypeAlternative
           ;
 
 genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)* CLOSE_BRACKET)?;
@@ -83,9 +83,11 @@ genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)* CLOSE_BRACKET)?;
 
 singleTypeParameters: (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
-singleType: TYPE_NAME singleTypeParameters                                      # SingleDataType
+singleType: singleNonGeneric                                                    # SingleDataType
           | GENERIC_NAME                                                        # SingleGenericType
           ;
+          
+singleNonGeneric: TYPE_NAME singleTypeParameters;
 
 type: singleType (PIPE singleType)*
     | OPEN_PAREN singleType (PIPE singleType)* CLOSE_PAREN;  // OPEN_PAREN type CLOSE_PAREN ?

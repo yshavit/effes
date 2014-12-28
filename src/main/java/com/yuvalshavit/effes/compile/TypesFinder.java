@@ -86,7 +86,6 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
 
     @Override
     public void enterTypeAliasDeclr(@NotNull EffesParser.TypeAliasDeclrContext ctx) {
-      EfType.handleGenerics(ctx.genericsDeclr());
       if (ctx.name == null || ctx.targets == null) {
         errs.add(ctx.getStart(), "unrecognized targets for type alias");
       } else {
@@ -95,7 +94,10 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         List<Token> targetTokens = new ArrayList<>();
         ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
           .onDataType(targetCtx -> {
-            EfType.handleGenerics(targetCtx.singleTypeParameters());
+            if (targetCtx.singleTypeParameters().OPEN_BRACKET() != null) {
+              errs.add(targetCtx.singleTypeParameters().OPEN_BRACKET().getSymbol(), "generics aren't allowed for open types");
+              return;
+            }
             Token tok = targetCtx.TYPE_NAME().getSymbol();
             if (!targetNames.add(tok.getText())) {
               errs.add(tok, String.format("duplicate target '%s' for type alias '%s'", tok.getText(), name));
@@ -103,7 +105,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
               targetTokens.add(tok);
             }
           })
-          .onGeneric(targetCtx -> {})
+          .onGeneric(targetCtx -> errs.add(targetCtx.getStart(), "generics aren't allowed for open types"))
         );
         aliases.put(name, new Pair<>(ctx.name, targetTokens));
       }
@@ -208,42 +210,36 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
       } else {
         Token old = openTypeDeclrs.put(nameToken.getText(), nameToken);
         assert old == null : nameToken.getText() + " -> " + nameToken;
+        // reified generics info would be captured here, too
       }
-      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert currentDataType == null : currentDataType;
       currentDataType = ctx.TYPE_NAME().getText();
-      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       assert currentDataType != null;
       currentDataType = null;
-      EfType.handleGenerics(ctx.genericsDeclr());
     }
 
     @Override
     public void enterOpenTypeAlternative(@NotNull EffesParser.OpenTypeAlternativeContext ctx) {
       assert currentDataType != null;
-      
-      SingleTypeHandler.consumer(errs)
-        .onDataType(dataTypeCtx -> {
-          TerminalNode openTypeName = dataTypeCtx.TYPE_NAME();
-          EfType.handleGenerics(dataTypeCtx.singleTypeParameters());
-          if (openTypeName != null) {
-            typeMappings.put(openTypeName.getText(), currentDataType);
-          } else {
-            errs.add(dataTypeCtx.getStart(), "expected name of open type");
-          }
-        })
-        .onGeneric(g -> {
-          throw new UnsupportedOperationException();
-        })
-        .accept(ctx.singleType());
+
+      EffesParser.SingleNonGenericContext dataTypeCtx = ctx.singleNonGeneric();
+      TerminalNode openTypeName = dataTypeCtx.TYPE_NAME();
+      if (dataTypeCtx.singleTypeParameters().OPEN_BRACKET() != null) {
+        errs.add(dataTypeCtx.singleTypeParameters().OPEN_BRACKET().getSymbol(), "generics aren't supported for open types");
+      }
+      if (openTypeName != null) {
+        typeMappings.put(openTypeName.getText(), currentDataType);
+      } else {
+        errs.add(dataTypeCtx.getStart(), "expected name of open type");
+      }
     }
 
     public void finish() {
