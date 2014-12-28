@@ -1,1 +1,9 @@
-type One[T] (val: T)
+type Boolean = True | False
+
+type One[T] (value: T):
+  describeMe -> Void: print value
+  
+main:
+  o = One[Boolean](True)
+  o: describeMe
+  print (o: value)

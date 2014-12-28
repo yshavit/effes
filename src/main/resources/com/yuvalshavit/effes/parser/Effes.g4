@@ -116,7 +116,7 @@ caseStatAlternative: casePattern COLON inlinableBlock;
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | methodInvoke                                                              # MethodInvokeOrVarExpr
     | expr COLON methodInvoke                                                   # InstanceMethodInvokeOrVarExpr
-    | TYPE_NAME ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?                  # CtorInvoke
+    | TYPE_NAME singleTypeParameters ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?  # CtorInvoke
     ;
 
 methodInvoke: methodName methodInvokeArgs;

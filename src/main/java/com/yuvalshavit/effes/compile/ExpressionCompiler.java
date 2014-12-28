@@ -17,6 +17,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -248,6 +249,14 @@ public final class ExpressionCompiler {
       args = ImmutableList.of();
     } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
+      List<EffesParser.TypeContext> ctorGenericParams = ctx.singleTypeParameters().type();
+      if (ctorGenericParams == null) {
+        ctorGenericParams = Collections.emptyList();
+      }
+      TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, null); // TODO move to ctor, hook up to current type context
+      
+      List<EfType> reificationParams = ctorGenericParams.stream().map(typeResolver::apply).collect(Collectors.toList());
+      type = type.reify(reificationParams, errs, ctx.singleTypeParameters().getStart());
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, args);
   }
