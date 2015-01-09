@@ -30,6 +30,7 @@ public abstract class EfType {
 
   @Override
   public abstract boolean equals(Object obj);
+
   @Override
   public abstract int hashCode();
 
