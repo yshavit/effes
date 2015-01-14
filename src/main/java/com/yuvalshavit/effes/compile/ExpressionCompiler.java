@@ -400,5 +400,10 @@ public final class ExpressionCompiler {
       this.method = method;
       this.isBuiltIn = isBuiltIn;
     }
+
+    @Override
+    public String toString() {
+      return id + " " + method;
+    }
   }
 }
