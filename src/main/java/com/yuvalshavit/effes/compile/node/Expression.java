@@ -256,6 +256,9 @@ public abstract class Expression extends Node {
                         List<Expression> args,
                         boolean isBuiltin, boolean usedAsExpression) {
       super(token, method.getResultType());
+      if (method.getResultType() instanceof EfType.GenericType) {
+        throw new UnsupportedOperationException("TODO, but also if the result type *has* a generic!"); // TODO
+      }
       this.methodId = methodId;
       this.method = method;
       this.args = args;

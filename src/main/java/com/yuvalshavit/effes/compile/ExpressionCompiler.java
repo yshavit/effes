@@ -1,14 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.node.CaseConstruct;
-import com.yuvalshavit.effes.compile.node.CompileErrors;
-import com.yuvalshavit.effes.compile.node.EfMethod;
-import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
-import com.yuvalshavit.effes.compile.node.Expression;
-import com.yuvalshavit.effes.compile.node.MethodId;
-import com.yuvalshavit.effes.compile.node.Node;
+import com.yuvalshavit.effes.compile.node.*;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
@@ -212,6 +205,7 @@ public final class ExpressionCompiler {
   }
 
   private MethodLookup lookUp(String methodName, EfType.SimpleType lookOn) {
+    // If we had method specialization, it would probably be done by prefixing more-specific scopes.
     Stream<EfType.SimpleType> scopes;
     if (lookOn != null) {
       scopes = lookOn.equals(declaringType)
@@ -226,6 +220,10 @@ public final class ExpressionCompiler {
     for (MethodId scope : scopes.map(s -> MethodId.of(s, methodName)).collect(Collectors.toList())) {
       EfMethod<?> m = methodsRegistry.getMethod(scope);
       if (m != null) {
+        if (lookOn != null && lookOn.getGeneric().equals(scope.getDefinedOn())) {
+          Function<EfType.GenericType, EfType> reification = lookOn.getReification();
+          m = m.reify(reification);
+        }
         return new MethodLookup(scope, m, false);
       }
       m = builtInMethods.getMethod(scope);

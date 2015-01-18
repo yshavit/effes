@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class EfArgs {
@@ -39,6 +40,11 @@ public final class EfArgs {
     return argsSansThis.isEmpty()
       ? "()"
       : Joiner.on(' ').join(argsSansThis.stream().map(a -> "(" + a + ")").iterator());
+  }
+
+  public EfArgs reify(Function<EfType.GenericType, EfType> reification) {
+    List<Arg> rArgs = args.stream().map(a -> new Arg(a.name, a.type.reify(reification))).collect(Collectors.toList());
+    return new EfArgs(rArgs);
   }
 
   public static class Arg {
