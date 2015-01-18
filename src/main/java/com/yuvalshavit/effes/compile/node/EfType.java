@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.Token;
@@ -53,6 +54,8 @@ public abstract class EfType {
   @Override
   public abstract String toString();
 
+  public abstract EfType reify(Function<GenericType, EfType> reification);
+
   private static final class UnknownType extends EfType {
     private enum Variant {
       UNKNOWN("unknown type"),
@@ -78,6 +81,11 @@ public abstract class EfType {
     @Override
     public Collection<SimpleType> simpleTypes() {
       return Collections.emptySet();
+    }
+
+    @Override
+    public EfType reify(Function<GenericType, EfType> reification) {
+      return this;
     }
 
     @Override
@@ -131,6 +139,7 @@ public abstract class EfType {
       }
       SimpleType r = new SimpleType(name);
       r.args = args;
+      r.genericParams = this.genericParams;
       r.reification = ImmutableList.copyOf(genericParams);
       r.genericForm = genericForm;
       return r;
@@ -142,6 +151,22 @@ public abstract class EfType {
     
     public String getName() {
       return name;
+    }
+
+    @Override
+    public EfType reify(Function<GenericType, EfType> reificationFunc) {
+      SimpleType reified = new SimpleType(name);
+      reified.args = args
+              .stream()
+              .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), a.getType().reify(reificationFunc)))
+              .collect(Collectors.toList());
+      reified.genericParams = genericParams;
+      if (reified.reification != null) {
+        throw new UnsupportedOperationException("TODO is this right?");
+      }
+      reified.reification = this.genericParams.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList());
+      reified.genericForm = genericForm;
+      return reified;
     }
 
     @Nonnull
@@ -263,6 +288,19 @@ public abstract class EfType {
     private String bothMustBeReifiedMessage(EfType other) {
       return String.format("both types must be reified (when checking if %s contains %s)", this, other);
     }
+
+    public Function<GenericType, EfType> getReification() {
+      if (reification == null) {
+        throw new IllegalStateException("not a reified type: " + this);
+      }
+      return g -> {
+        int idx = genericParams.indexOf(g);
+        if (idx < 0) {
+          throw new IllegalArgumentException("unrecognized generic " + g); // TODO is this right?
+        }
+        return reification.get(idx);
+      };
+    }
   }
 
   public static EfType disjunction(EfType t1, EfType... rest) {
@@ -317,6 +355,11 @@ public abstract class EfType {
 
     public Set<EfType> getAlternatives() {
       return Collections.unmodifiableSet(options);
+    }
+
+    @Override
+    public EfType reify(Function<GenericType, EfType> reification) {
+      return new DisjunctiveType(options.stream().map(r -> r.reify(reification)).collect(Collectors.toSet()));
     }
 
     @Override
@@ -399,6 +442,15 @@ public abstract class EfType {
     }
 
     @Override
+    public EfType reify(Function<GenericType, EfType> reification) {
+      EfType reified = reification.apply(this);
+      if (reified == null) {
+        throw new IllegalArgumentException("can't reify " + this);
+      }
+      return reified;
+    }
+
+    @Override
     public Collection<SimpleType> simpleTypes() {
       throw new UnsupportedOperationException();
     }
@@ -412,7 +464,7 @@ public abstract class EfType {
     public String toString() {
       return name;
     }
-    
+
     String getName() {
       return name;
     }

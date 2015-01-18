@@ -47,7 +47,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       String methodName = methodId.getName();
       EfMethod<?> method = entry.getValue();
       assert methodId.getDefinedOn() != null : methodId;
-      String openTypeName = methodId.getDefinedOn().getName();
+      String openTypeName = methodId.getDefinedOn().getName(); // TODO generics?!
       EfType openType = typeRegistry.getType(openTypeName);
       assert openType != null : methodId;
       openType.simpleTypes().forEach(t -> {

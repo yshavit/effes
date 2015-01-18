@@ -29,6 +29,12 @@ public final class EfMethod<B> {
     return new EfMethod<>(args, resultType, func.apply(this));
   }
 
+  public EfMethod<B> reify(Function<EfType.GenericType, EfType> reification) {
+    EfType reifiedRv = getResultType().reify(reification); // TODO could same-named generics get confused in e.g. Foo[One[Bar]] where Foo[T] and One[T] reuse the same?
+    EfArgs reifiedArgs = getArgs().reify(reification);
+    return new EfMethod<>(reifiedArgs, reifiedRv, getBody());
+  }
+
   @Override
   public String toString() {
     return String.format("%s -> %s", args, resultType);
