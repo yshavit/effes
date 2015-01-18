@@ -190,8 +190,8 @@ public abstract class EfType {
       this.genericParams = ImmutableList.copyOf(genericParams.stream().map(GenericType::new).collect(Collectors.toList()));
     }
     
-    public GenericType getGeneric(String name) {
-      return genericParams.stream().filter(g -> g.name.equals(name)).findFirst().orElse(null);
+    public SimpleType getGeneric() {
+      return genericForm;
     }
 
     /**
@@ -210,7 +210,7 @@ public abstract class EfType {
       if (isReified() && !reification.isEmpty()) {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
-        return name + "*" + (genericParams.stream().map(GenericType::getName).collect(Collectors.toList()));
+        return name + genericParams.stream().map(GenericType::getName).collect(Collectors.toList());
       } else {
         return name;
       }
@@ -219,14 +219,14 @@ public abstract class EfType {
     @Override
     public boolean contains(EfType other) {
       if (!isReified()) {
-        throw new IllegalStateException("both types must be reified");
+        throw new IllegalStateException(bothMustBeReifiedMessage(other));
       }
       if (other.getClass() != SimpleType.class) {
         return false;
       }
       SimpleType otherSimple = (SimpleType) other;
       if (!otherSimple.isReified()) {
-        throw new IllegalStateException("both types must be reified");
+        throw new IllegalStateException(bothMustBeReifiedMessage(other));
       }
       if (!name.equals(otherSimple.name)) {
         return false;
@@ -258,6 +258,10 @@ public abstract class EfType {
     @Override
     public int hashCode() {
       return name.hashCode();
+    }
+
+    private String bothMustBeReifiedMessage(EfType other) {
+      return String.format("both types must be reified (when checking if %s contains %s)", this, other);
     }
   }
 
@@ -375,7 +379,7 @@ public abstract class EfType {
   public static class GenericType extends EfType {
     private final String name;
 
-    private GenericType(String name) {
+    public GenericType(String name) {
       this.name = name;
     }
     
