@@ -182,9 +182,6 @@ public abstract class Expression extends Node {
           Expression actualArg = args.get(i);
           EfType actualType = actualArg.resultType();
           EfType expectedType = simpleType.getArgs().get(i).getType();
-          if (expectedType instanceof EfType.GenericType) {
-            expectedType = simpleType.getReified((EfType.GenericType) expectedType);
-          }
           if (!expectedType.contains(actualType)) {
             errs.add(actualArg.token(), String.format("expected type %s but found %s", expectedType, actualType));
           }
