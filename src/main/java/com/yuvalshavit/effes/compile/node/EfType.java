@@ -187,7 +187,7 @@ public abstract class EfType {
       if (genericsSet.size() != genericParams.size()) {
         throw new IllegalArgumentException("illegal generic params: " + genericParams);
       }
-      this.genericParams = ImmutableList.copyOf(genericParams.stream().map(g -> new GenericType(this, g)).collect(Collectors.toList()));
+      this.genericParams = ImmutableList.copyOf(genericParams.stream().map(GenericType::new).collect(Collectors.toList()));
     }
     
     public GenericType getGeneric(String name) {
@@ -258,16 +258,6 @@ public abstract class EfType {
     @Override
     public int hashCode() {
       return name.hashCode();
-    }
-
-    public EfType getReified(GenericType generic) {
-      if (!isReified()) {
-        throw new IllegalStateException("tried to get reification of non-reified type");
-      }
-      if (!generic.simpleType.equals(genericForm)) {
-        return UNKNOWN;
-      }
-      return reification.get(generic.getIndex());
     }
   }
 
@@ -383,24 +373,12 @@ public abstract class EfType {
   }
   
   public static class GenericType extends EfType {
-    private final EfType.SimpleType simpleType;
     private final String name;
 
-    private GenericType(SimpleType simpleType, String name) {
-      this.simpleType = simpleType;
+    private GenericType(String name) {
       this.name = name;
     }
     
-    int getIndex() {
-      List<GenericType> genericParams = simpleType.genericParams;
-      for (int i = 0; i < genericParams.size(); i++) {
-        if (genericParams.get(i) == this) {
-          return i;
-        }
-      }
-      throw new AssertionError("generic couldn't find its own index: " + this);
-    }
-
     @Override
     public boolean equals(Object o) {
       if (this == o)
@@ -408,14 +386,12 @@ public abstract class EfType {
       if (o == null || getClass() != o.getClass())
         return false;
       GenericType that = (GenericType) o;
-      return name.equals(that.name) && simpleType.equals(that.simpleType);
+      return name.equals(that.name);
     }
 
     @Override
     public int hashCode() {
-      int result = simpleType.hashCode();
-      result = 31 * result + name.hashCode();
-      return result;
+      return name.hashCode();
     }
 
     @Override
@@ -430,7 +406,7 @@ public abstract class EfType {
 
     @Override
     public String toString() {
-      return String.format("%s on %s", name, simpleType);
+      return name;
     }
     
     String getName() {
@@ -500,10 +476,7 @@ public abstract class EfType {
       case GENERIC:
         GenericType g1 = (GenericType) o1;
         GenericType g2 = (GenericType) o2;
-        int genericCmp = compare(g1.simpleType, g2.simpleType);
-        return genericCmp == 0
-          ? g1.name.compareTo(g2.name)
-          : genericCmp;
+        return g1.name.compareTo(g2.name);
       case DISJUNCTIVE:
         Iterator<EfType> d1Iter = ((DisjunctiveType) o1).options.iterator();
         Iterator<EfType> d2Iter = ((DisjunctiveType) o2).options.iterator();
