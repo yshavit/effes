@@ -23,6 +23,9 @@ public final class MethodId implements Comparable<MethodId> {
   }
 
   private MethodId(@Nullable EfType.SimpleType definedOn, @Nonnull String name) {
+    if (definedOn != null) {
+      definedOn = definedOn.getGeneric();
+    }
     this.definedOn = definedOn;
     this.name = name;
   }

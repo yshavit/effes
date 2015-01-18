@@ -68,18 +68,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     @Override
     protected EfType lookupGenericType(EffesParser.SingleGenericTypeContext ctx) {
       String genericName = ctx.GENERIC_NAME().getText();
-      if (context == null) {
-        errs.add(ctx.getStart(), String.format("unknown generic '%s' due to lack of context (this is a compiler bug)", genericName));
-        return EfType.UNKNOWN;
-      }
-      EfType.GenericType type = context.getGeneric(genericName);
-      if (type == null) {
-        errs.add(ctx.getStart(), "unknown generic " + genericName);
-        return EfType.UNKNOWN;
-      }
-      else {
-        return type;
-      }
+      return new EfType.GenericType(genericName);
     }
   }
 }
