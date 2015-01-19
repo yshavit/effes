@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class Expression extends Node {
   private Expression(Token token, EfType type) {
@@ -171,6 +172,7 @@ public abstract class Expression extends Node {
     public void validate(CompileErrors errs) {
       if (simpleType != null) {
         // if it's null, the call site that created this object should lodge the error; it has the missing type's name
+        Function<EfType.GenericType, EfType> reification = simpleType.getReification();
         int expected = simpleType.getArgs().size();
         int actual = getArgs().size();
         if (expected != actual) {
@@ -182,6 +184,7 @@ public abstract class Expression extends Node {
           Expression actualArg = args.get(i);
           EfType actualType = actualArg.resultType();
           EfType expectedType = simpleType.getArgs().get(i).getType();
+          expectedType = expectedType.reify(reification);
           if (!expectedType.contains(actualType)) {
             errs.add(actualArg.token(), String.format("expected type %s but found %s", expectedType, actualType));
           }

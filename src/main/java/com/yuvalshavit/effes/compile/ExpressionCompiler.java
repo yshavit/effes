@@ -221,8 +221,7 @@ public final class ExpressionCompiler {
       EfMethod<?> m = methodsRegistry.getMethod(scope);
       if (m != null) {
         if (lookOn != null && lookOn.getGeneric().equals(scope.getDefinedOn())) {
-          Function<EfType.GenericType, EfType> reification = lookOn.getReification();
-          m = m.reify(reification);
+          m = m.reify(lookOn.getReification());
         }
         return new MethodLookup(scope, m, false);
       }
@@ -247,14 +246,28 @@ public final class ExpressionCompiler {
       args = ImmutableList.of();
     } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
+
+
       List<EffesParser.TypeContext> ctorGenericParams = ctx.singleTypeParameters().type();
       if (ctorGenericParams == null) {
         ctorGenericParams = Collections.emptyList();
       }
       TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, null); // TODO move to ctor, hook up to current type context
-      
+
       List<EfType> reificationParams = ctorGenericParams.stream().map(typeResolver::apply).collect(Collectors.toList());
-      type = type.reify(reificationParams, errs, ctx.singleTypeParameters().getStart());
+      List<EfType.GenericType> typeGenerics = type.getGenericsDeclr();
+      if (reificationParams.size() != typeGenerics.size()) {
+        String msg = String.format("expected %d type parameter%s but saw %d",
+          typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
+        errs.add(ctx.singleTypeParameters().getStart(), msg);
+      }
+      type = type.reify(g -> {
+        int idx = typeGenerics.indexOf(g);
+        if (idx < 0) {
+          throw new IllegalArgumentException("TODO need a better error message");
+        }
+        return reificationParams.get(idx);
+      });
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, args);
   }
