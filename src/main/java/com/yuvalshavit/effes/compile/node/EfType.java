@@ -117,6 +117,10 @@ public abstract class EfType {
       this.genericForm = this;
     }
 
+    /**
+     * @deprecated See ExpressionCompiler's handling of ctors to see how I think this should be handled instead
+     */
+    @Deprecated
     public SimpleType reify(List<EfType> genericParams, CompileErrors errs, Token token) {
       int nExpectedParams = genericParams.size();
       if (genericParams.size() != nExpectedParams) {
@@ -154,7 +158,7 @@ public abstract class EfType {
     }
 
     @Override
-    public EfType reify(Function<GenericType, EfType> reificationFunc) {
+    public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
       reified.args = args
               .stream()
@@ -300,6 +304,10 @@ public abstract class EfType {
         }
         return reification.get(idx);
       };
+    }
+
+    public List<GenericType> getGenericsDeclr() {
+      return Collections.unmodifiableList(genericParams);
     }
   }
 
