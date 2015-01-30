@@ -14,10 +14,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
@@ -170,7 +167,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         EffesParser.TypeContext typeContext = argContext.type();
         if (typeContext != null) {
           // if it's null, there was a parse error that'll be handled
-          EfType type = typeResolver.apply(typeContext);
+          EfType type = typeResolver.apply(typeContext); // TODO handle generic in a way that handles declared generics as well as context type
           String argName = Optional.ofNullable(argContext.VAR_NAME()).map(ParseTree::getText).orElseGet(() -> null);
           args.add(typeContext.getStart(), argName, type);
           methodTokens.argTokens.put(argName, argContext.getStart());
@@ -185,7 +182,8 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
       }
       EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
-      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(args.build(), resultType, body);
+      List<String> generics = Collections.emptyList(); // TODO; needs to account for method's genericsDeclr as well as context type!
+      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(generics, args.build(), resultType, body);
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;

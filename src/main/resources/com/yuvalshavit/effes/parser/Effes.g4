@@ -119,7 +119,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | TYPE_NAME singleTypeParameters ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?  # CtorInvoke
     ;
 
-methodInvoke: methodName methodInvokeArgs;
+methodInvoke: methodName singleTypeParameters methodInvokeArgs;
 
 methodInvokeArgs: (expr (OPEN_BRACKET expr (COMMA expr)* CLOSE_BRACKET)?)?;
 

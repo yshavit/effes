@@ -11,10 +11,14 @@ import org.antlr.v4.runtime.misc.Pair;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
+  @BuiltInMethod(name = "printT", resultType = "Void", args = "T", generics = {"T"})
+  public T printT();
+
   @BuiltInMethod(name = "print", resultType = "Void", args = "True | False | Void", generics = {})
   public T print();
 
@@ -43,9 +47,6 @@ public interface BuiltInMethodsFactory<T> {
             EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
-        if (meta.generics().length > 0) {
-          throw new UnsupportedOperationException("generics not supported for built-in methods"); // TODO
-        }
         Stream.of(meta.args()).forEach(s -> {
           Pair<Token, EfType> parse = typeParser.apply(s);
           args.add(parse.a, null, parse.b);
@@ -53,7 +54,7 @@ public interface BuiltInMethodsFactory<T> {
         EfType resultType = typeParser.apply(meta.resultType()).b;
         outRegistry.registerMethod(
           MethodId.topLevel(meta.name()),
-          new EfMethod<>(args.build(), resultType, casted));
+          new EfMethod<>(Arrays.asList(meta.generics()), args.build(), resultType, casted));
       }
     }
   }
