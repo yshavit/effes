@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.*;
 import com.yuvalshavit.effes.parser.EffesParser;
@@ -9,10 +10,7 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -157,6 +155,7 @@ public final class ExpressionCompiler {
                                                    EfType.SimpleType lookOn)
   {
     String methodName = ctx.methodName().getText();
+    List<EffesParser.TypeContext> explicitGenericsCtx = ctx.singleTypeParameters().type();
     MethodLookup methodLookup = lookUp(methodName, lookOn);
     if (methodLookup == null) {
       if (couldBeVar(ctx)) {
@@ -191,6 +190,25 @@ public final class ExpressionCompiler {
       // if this is an instance method, but we don't have a target, assume "this"
       if (target == null && methodLookup.id.getDefinedOn() != null) {
         invokeArgs.add(0, Expression.thisExpression(ctx.methodInvokeArgs().getStart(), methodLookup.id.getDefinedOn()));
+      }
+      if (!explicitGenericsCtx.isEmpty()) {
+        TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, null); // TODO move to ctor, hook up to current type context
+        List<EfType> explicitGenerics = explicitGenericsCtx.stream().map(typeResolver::apply).collect(Collectors.toList());
+        int nExplicitGenerics = explicitGenerics.size();
+        int nExpectedGenerics = methodLookup.method.getGenerics().size();
+        if (nExplicitGenerics > nExpectedGenerics) {
+          errs.add(explicitGenericsCtx.get(nExplicitGenerics).getStart(), "too many generics provided");
+        }
+        int nGenerics = Math.min(nExplicitGenerics, nExpectedGenerics);
+        Map<EfType.GenericType, EfType> genericsMapping = new HashMap<>(nGenerics);
+        for (int i = 0; i < nGenerics; ++i) {
+          genericsMapping.put(methodLookup.method.getGenerics().get(i), explicitGenerics.get(i));
+        }
+        Function<EfType.GenericType, EfType> genericsLookup = Functions.forMap(genericsMapping, EfType.UNKNOWN)::apply;
+        methodLookup = methodLookup.reify(genericsLookup);
+      } else if (!methodLookup.method.getGenerics().isEmpty()) {
+        // TODO need to infer
+        methodLookup = methodLookup.reify(g -> EfType.UNKNOWN);
       }
       return new Expression.MethodInvoke(ctx.getStart(),
                                          methodLookup.id,
@@ -410,6 +428,10 @@ public final class ExpressionCompiler {
       this.id = id;
       this.method = method;
       this.isBuiltIn = isBuiltIn;
+    }
+
+    public MethodLookup reify(Function<EfType.GenericType, EfType> reification) {
+      return new MethodLookup(id, method.reify(reification), isBuiltIn);
     }
 
     @Override

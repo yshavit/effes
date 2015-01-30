@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
@@ -216,7 +217,8 @@ public abstract class EfType {
       if (genericsSet.size() != genericParams.size()) {
         throw new IllegalArgumentException("illegal generic params: " + genericParams);
       }
-      this.genericParams = ImmutableList.copyOf(genericParams.stream().map(GenericType::new).collect(Collectors.toList()));
+      this.genericParams = ImmutableList.copyOf(
+        genericParams.stream().map(g -> new GenericType(g, this)).collect(Collectors.toList()));
     }
     
     public SimpleType getGeneric() {
@@ -429,9 +431,11 @@ public abstract class EfType {
   
   public static class GenericType extends EfType {
     private final String name;
+    private final Object owner;
 
-    public GenericType(String name) {
-      this.name = name;
+    public GenericType(String name, Object owner) {
+      this.name = Preconditions.checkNotNull(name);
+      this.owner = Preconditions.checkNotNull(owner);
     }
     
     @Override
@@ -441,12 +445,14 @@ public abstract class EfType {
       if (o == null || getClass() != o.getClass())
         return false;
       GenericType that = (GenericType) o;
-      return name.equals(that.name);
+      return name.equals(that.name) && owner.equals(that.owner);
     }
 
     @Override
     public int hashCode() {
-      return name.hashCode();
+      int result = name.hashCode();
+      result = 31 * result + owner.hashCode();
+      return result;
     }
 
     @Override
@@ -470,7 +476,7 @@ public abstract class EfType {
 
     @Override
     public String toString() {
-      return name;
+      return name + " on " + owner;
     }
 
     String getName() {
