@@ -479,8 +479,12 @@ public abstract class EfType {
       return name + " on " + owner;
     }
 
-    String getName() {
+    public String getName() {
       return name;
+    }
+
+    public Object getOwner() {
+      return owner;
     }
   }
 

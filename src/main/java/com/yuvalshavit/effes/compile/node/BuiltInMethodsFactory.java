@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile.node;
 
+import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.compile.MethodsRegistry;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 import com.yuvalshavit.effes.compile.TypeResolver;
@@ -12,14 +13,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
-  @BuiltInMethod(name = "printT", resultType = "Void", args = "T", generics = {"T"})
-  public T printT();
-
-  @BuiltInMethod(name = "print", resultType = "Void", args = "True | False | Void", generics = {})
+  @BuiltInMethod(name = "print", resultType = "Void", args = "T", generics = {"T"})
   public T print();
 
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry, CompileErrors errs) {
@@ -47,14 +48,25 @@ public interface BuiltInMethodsFactory<T> {
             EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
+        EfMethod.Id id = new EfMethod.Id(meta.name());
+        Set<String> genericsSet = Sets.newHashSet(meta.generics());
+        List<EfType.GenericType> genericsList = Stream.of(meta.generics()).map(g -> new EfType.GenericType(g, id)).collect(Collectors.toList());
+        if (genericsList.size() != genericsSet.size()) {
+          throw new AssertionError("duplicate generics: " + genericsList);
+        }
         Stream.of(meta.args()).forEach(s -> {
-          Pair<Token, EfType> parse = typeParser.apply(s);
+          Pair<Token, EfType> parse;
+          if (genericsSet.contains(s)) {
+            parse = new Pair<>(null, new EfType.GenericType(s, id));
+          } else {
+            parse = typeParser.apply(s);
+          }
           args.add(parse.a, null, parse.b);
         });
         EfType resultType = typeParser.apply(meta.resultType()).b;
         outRegistry.registerMethod(
           MethodId.topLevel(meta.name()),
-          new EfMethod<>(Arrays.asList(meta.generics()), args.build(), resultType, casted));
+          new EfMethod<>(id, genericsList, args.build(), resultType, casted));
       }
     }
   }
