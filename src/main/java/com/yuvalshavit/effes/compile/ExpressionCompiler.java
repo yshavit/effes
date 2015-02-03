@@ -207,8 +207,13 @@ public final class ExpressionCompiler {
         Function<EfType.GenericType, EfType> genericsLookup = Functions.forMap(genericsMapping, EfType.UNKNOWN)::apply;
         methodLookup = methodLookup.reify(genericsLookup);
       } else if (!methodLookup.method.getGenerics().isEmpty()) {
-        // TODO need to infer
-        methodLookup = methodLookup.reify(g -> EfType.UNKNOWN);
+        Map<EfType.GenericType, EfType> inferredGenerics = new HashMap<>();
+        List<EfType> declaredTypes = methodLookup.method.getArgs().viewTypes();
+        List<EfType> invokeTypes = invokeArgs.stream().map(Expression::resultType).collect(Collectors.toList());
+        for (int i = 0, len = Math.min(declaredTypes.size(), invokeTypes.size()); i < len; ++i) {
+          infer(methodLookup.method.getTrueId(), declaredTypes.get(i), invokeTypes.get(i), inferredGenerics);
+        }
+        methodLookup = methodLookup.reify(g -> inferredGenerics.getOrDefault(g, EfType.UNKNOWN));
       }
       return new Expression.MethodInvoke(ctx.getStart(),
                                          methodLookup.id,
@@ -219,6 +224,16 @@ public final class ExpressionCompiler {
     } else {
       // The following won't actually matter; it's only used for the executable, but this is a compile error
       return new Expression.UnrecognizedExpression(ctx.getStart(), invokeArgs);
+    }
+  }
+
+  private void infer(EfMethod.Id trueId, EfType declared, EfType actual, Map<EfType.GenericType, EfType> inferredGenerics) {
+    // TODO need to improve this!
+    if(declared instanceof EfType.GenericType) {
+      EfType.GenericType generic = (EfType.GenericType) declared;
+      if (trueId.equals(generic.getOwner())) {
+        inferredGenerics.put(generic, actual);
+      }
     }
   }
 

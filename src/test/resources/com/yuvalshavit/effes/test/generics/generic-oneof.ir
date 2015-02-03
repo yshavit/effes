@@ -1,1 +1,10 @@
-ir ir ir
+def One[T]::describeMe () -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      InstanceArg
+        target:
+          VarExpression
+            arg: $this$
+            pos: 0
+        arg: value (pos=0)

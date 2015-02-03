@@ -231,7 +231,7 @@ public abstract class Expression extends Node {
 
     @Override
     public String toString() {
-      return String.format("(%s) %s", target, arg);
+      return String.format("%s.%s", target, arg);
     }
 
     @Override

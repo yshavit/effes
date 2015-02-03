@@ -15,11 +15,6 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
   }
 
   @Override
-  public ExecutableMethod printT() {
-    return print();
-  }
-
-  @Override
   public ExecutableMethod print() {
     return method(stack -> {
       out.println("Your argument was: " + stack.peekArg(0));

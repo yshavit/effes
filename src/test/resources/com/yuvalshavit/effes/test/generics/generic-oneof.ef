@@ -1,7 +1,7 @@
 type Boolean = True | False
 
 type One[T] (value: T):
-  describeMe: printT value
+  describeMe: print value
   
 main:
   o = One[Boolean](True)
