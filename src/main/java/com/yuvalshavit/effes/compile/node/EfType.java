@@ -162,9 +162,9 @@ public abstract class EfType {
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
       reified.args = args
-              .stream()
-              .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), a.getType().reify(reificationFunc)))
-              .collect(Collectors.toList());
+        .stream()
+        .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), a.getType().reify(reificationFunc)))
+        .collect(Collectors.toList());
       reified.genericParams = genericParams;
       if (reified.reification != null) {
         throw new UnsupportedOperationException("TODO is this right?");
