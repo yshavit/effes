@@ -365,6 +365,10 @@ public final class ExpressionCompiler {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
     }
+    matchType = matchType.reify(g -> {
+      errs.add(tok.getSymbol(), "can't have generic types in case statements");
+      return EfType.UNKNOWN;
+    });
 
     List<Pair<Token, String>> bindings
       = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
