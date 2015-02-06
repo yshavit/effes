@@ -118,37 +118,6 @@ public abstract class EfType {
       this.genericForm = this;
     }
 
-    /**
-     * @deprecated See ExpressionCompiler's handling of ctors to see how I think this should be handled instead
-     */
-    @Deprecated
-    public SimpleType reify(List<EfType> genericParams, CompileErrors errs, Token token) {
-      int nExpectedParams = genericParams.size();
-      if (genericParams.size() != nExpectedParams) {
-        String plural = nExpectedParams == 1
-          ? ""
-          : "s";
-        String msg = String.format("expected %s generic parameter%s but found %s",
-          nExpectedParams,
-          plural,
-          genericParams.size());
-        errs.add(token, msg);
-        if (genericParams.size() > nExpectedParams) {
-          genericParams = genericParams.subList(0, nExpectedParams);
-        } else {
-          genericParams = new ArrayList<>(nExpectedParams);
-          while (genericParams.size() < nExpectedParams) {
-            genericParams.add(EfType.UNKNOWN);
-          }
-        }
-      }
-      SimpleType r = new SimpleType(name);
-      r.genericParams = this.genericParams;
-      r.reification = ImmutableList.copyOf(genericParams);
-      r.genericForm = genericForm;
-      return r;
-    }
-    
     public boolean isReified() {
       return reification != null;
     }
@@ -160,6 +129,7 @@ public abstract class EfType {
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
+      if (true) throw new UnsupportedOperationException("todo"); // TODO I really do need to type reified and non separately!
       reified.args = genericForm.args
         .stream()
         .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), reifyCtorArg(a, reificationFunc)))
