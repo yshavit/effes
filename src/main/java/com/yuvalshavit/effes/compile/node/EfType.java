@@ -8,7 +8,6 @@ import com.yuvalshavit.util.Dispatcher;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,8 +20,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.antlr.v4.runtime.Token;
 
 public abstract class EfType {
 
@@ -107,7 +104,7 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
-    private List<EfVar> args;
+    private List<EfVar> ctorArgs;
     private List<GenericType> genericParams;
     private List<EfType> reification;
     private SimpleType genericForm;
@@ -129,7 +126,7 @@ public abstract class EfType {
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
-      reified.args = genericForm.args
+      reified.ctorArgs = genericForm.ctorArgs
         .stream()
         .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), reifyCtorArg(a, reificationFunc)))
         .collect(Collectors.toList());
@@ -147,15 +144,15 @@ public abstract class EfType {
     }
 
     @Nonnull
-    public List<EfVar> getArgs() {
-      return args != null
-        ? args
+    public List<EfVar> getCtorArgs() {
+      return ctorArgs != null
+        ? ctorArgs
         : ImmutableList.of();
     }
 
     @Nullable
     public EfVar getArgByName(String name) {
-      for (EfVar arg : getArgs()) {
+      for (EfVar arg : getCtorArgs()) {
         if (arg.getName().equals(name)) {
           return arg;
         }
@@ -168,17 +165,17 @@ public abstract class EfType {
       return Collections.singleton(this);
     }
 
-    public void setArgs(List<EfVar> args) {
-      if (this.args != null) {
-        throw new IllegalStateException("args already set: " + this.args);
+    public void setCtorArgs(List<EfVar> ctorArgs) {
+      if (this.ctorArgs != null) {
+        throw new IllegalStateException("args already set: " + this.ctorArgs);
       }
-      for (int pos = 0; pos < args.size(); ++pos) {
-        EfVar arg = args.get(pos);
+      for (int pos = 0; pos < ctorArgs.size(); ++pos) {
+        EfVar arg = ctorArgs.get(pos);
         if (pos != arg.getArgPosition() || !arg.isArg()) {
-          throw new IllegalArgumentException("invalid args list: " + args);
+          throw new IllegalArgumentException("invalid args list: " + ctorArgs);
         }
       }
-      this.args = ImmutableList.copyOf(args);
+      this.ctorArgs = ImmutableList.copyOf(ctorArgs);
     }
 
     public void setGenericParams(List<String> genericParams) {

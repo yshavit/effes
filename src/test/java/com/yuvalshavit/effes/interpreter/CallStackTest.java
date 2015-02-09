@@ -366,7 +366,7 @@ public final class CallStackTest {
   @Test
   public void simpleCtorWithArgs() {
     EfType.SimpleType argedType = new EfType.SimpleType("ArgsTest");
-    argedType.setArgs(ImmutableList.of(
+    argedType.setCtorArgs(ImmutableList.of(
       EfVar.arg("first", 0, stringType),
       EfVar.arg("second", 1, stringType)
     ));

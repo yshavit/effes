@@ -11,9 +11,9 @@ public class EfValue {
   private final List<EfValue> state;
 
   public static EfValue of(EfType.SimpleType type, List<EfValue> state) {
-    if (state.size() != type.getArgs().size()) {
+    if (state.size() != type.getCtorArgs().size()) {
       throw new IllegalArgumentException(String.format("%s has %d arg(s), but %d given: %s",
-        type, type.getArgs().size(), state.size(), state ));
+        type, type.getCtorArgs().size(), state.size(), state ));
     }
     // TODO also check types against expected
     return new EfValue(type, state);
@@ -38,15 +38,15 @@ public class EfValue {
 
   @Override
   public String toString() {
-    if (type.getArgs().isEmpty()) {
+    if (type.getCtorArgs().isEmpty()) {
       return type.getName();
     }
     StringBuilder sb = new StringBuilder(type.getName()).append('(');
-    for (int i = 0; i < type.getArgs().size(); ++i) {
-      EfVar efVar = type.getArgs().get(i);
+    for (int i = 0; i < type.getCtorArgs().size(); ++i) {
+      EfVar efVar = type.getCtorArgs().get(i);
       EfValue arg = state.get(i);
       // "name: SomeValue", where SomeValue is paren'ed iff it has args
-      boolean parens = ! arg.getType().getArgs().isEmpty();
+      boolean parens = ! arg.getType().getCtorArgs().isEmpty();
       if (parens) {
         sb.append('(');
       }
@@ -54,7 +54,7 @@ public class EfValue {
       if (parens) {
         sb.append(')');
       }
-      if (i + 1 < type.getArgs().size()) {
+      if (i + 1 < type.getCtorArgs().size()) {
         sb.append(", ");
       }
     }

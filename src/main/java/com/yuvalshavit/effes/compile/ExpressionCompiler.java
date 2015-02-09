@@ -389,7 +389,7 @@ public final class ExpressionCompiler {
     }
     EfType.SimpleType matchType = casePattern.matchType();
     List<Pair<Token, String>> bindingTokens = casePattern.bindings();
-    List<EfVar> matchtypeArgs = matchType.getArgs();
+    List<EfVar> matchtypeArgs = matchType.getCtorArgs();
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
