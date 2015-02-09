@@ -7,8 +7,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
