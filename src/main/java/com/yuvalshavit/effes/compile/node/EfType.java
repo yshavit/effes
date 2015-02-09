@@ -129,7 +129,6 @@ public abstract class EfType {
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
-      if (true) throw new UnsupportedOperationException("todo"); // TODO I really do need to type reified and non separately!
       reified.args = genericForm.args
         .stream()
         .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), reifyCtorArg(a, reificationFunc)))

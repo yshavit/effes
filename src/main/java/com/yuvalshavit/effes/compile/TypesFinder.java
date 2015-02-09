@@ -190,20 +190,6 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     }
   }
 
-  public static List<String> buildGenericsParamsList(EffesParser.GenericsDeclrContext ctx, CompileErrors errs) {
-    List<String> results = new ArrayList<>();
-    Set<String> paramsSet = new HashSet<>(ctx.GENERIC_NAME().size());
-    ctx.GENERIC_NAME().stream().map(TerminalNode::getSymbol).forEachOrdered(tok -> {
-      String paramName = tok.getText();
-      if (paramsSet.add(paramName)) {
-        results.add(paramName);
-      } else {
-        errs.add(tok, "duplicate generic parameter '" + paramName + "'");
-      }
-    });
-    return results;
-  }
-
   private class FindOpenTypes extends EffesBaseListener {
 
     private final Map<String, Token> openTypeDeclrs = new HashMap<>();
