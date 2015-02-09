@@ -111,8 +111,8 @@ public final class CallStack {
   }
 
   public void push(EfType.SimpleType type) {
-    List<EfValue> argValues = new ArrayList<>(type.getArgs().size());
-    type.getArgs().forEach(a -> argValues.add(pop()));
+    List<EfValue> argValues = new ArrayList<>(type.getCtorArgs().size());
+    type.getCtorArgs().forEach(a -> argValues.add(pop()));
     push(EfValue.of(type, argValues));
   }
   

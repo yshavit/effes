@@ -174,7 +174,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       if (type != null) {
-        type.setArgs(argsBuilder);
+        type.setCtorArgs(argsBuilder);
       }
       argsBuilder.clear();
       context = null;

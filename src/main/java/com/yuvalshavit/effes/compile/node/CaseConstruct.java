@@ -56,7 +56,7 @@ public class CaseConstruct<N extends Node> {
         matchAgainst.token(),
         "expression alternative is never matched: " + t));
       patterns.forEach(alt -> {
-        int expected = alt.getType().getArgs().size();
+        int expected = alt.getType().getCtorArgs().size();
         int actual = alt.getBindings().size();
         if (expected != actual) {
           String plural = expected == 1 ? "" : "s";

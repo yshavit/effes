@@ -62,7 +62,7 @@ public final class TypesFinderTest {
     EfType.SimpleType two = registry.getSimpleType("Two");
     assertNotNull(two);
 
-    assertEquals(two.getArgs(), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
+    assertEquals(two.getCtorArgs(), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
     assertEquals(two.toString(), "Two");
   }
 
@@ -83,7 +83,7 @@ public final class TypesFinderTest {
     assertNotNull(pet);
 
     EfType catOrdog = EfType.disjunction(cat, dog);
-    assertEquals(pet.getArgs(), Arrays.asList(EfVar.arg("species", 0, catOrdog)));
+    assertEquals(pet.getCtorArgs(), Arrays.asList(EfVar.arg("species", 0, catOrdog)));
     assertEquals(pet.toString(), "Pet");
   }
 
@@ -99,7 +99,7 @@ public final class TypesFinderTest {
     EfType.SimpleType infinity = registry.getSimpleType("Infinity");
     assertNotNull(infinity);
 
-    assertEquals(infinity.getArgs(), Arrays.asList(EfVar.arg("forever", 0, infinity)));
+    assertEquals(infinity.getCtorArgs(), Arrays.asList(EfVar.arg("forever", 0, infinity)));
   }
 
   @Test
@@ -119,7 +119,7 @@ public final class TypesFinderTest {
     EfType.SimpleType elem = registry.getSimpleType("Elem");
     EfType.SimpleType empty = registry.getSimpleType("Empty");
     EfType tailType = EfType.disjunction(cons, empty);
-    assertEquals(cons.getArgs(), Arrays.asList(EfVar.arg("head", 0, elem), EfVar.arg("tail", 1, tailType)));
+    assertEquals(cons.getCtorArgs(), Arrays.asList(EfVar.arg("head", 0, elem), EfVar.arg("tail", 1, tailType)));
     assertEquals(cons.toString(), "Cons");
   }
 

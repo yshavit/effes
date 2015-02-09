@@ -173,17 +173,17 @@ public abstract class Expression extends Node {
       if (simpleType != null) {
         // if it's null, the call site that created this object should lodge the error; it has the missing type's name
         Function<EfType.GenericType, EfType> reification = simpleType.getReification();
-        int expected = simpleType.getArgs().size();
+        int expected = simpleType.getCtorArgs().size();
         int actual = getArgs().size();
         if (expected != actual) {
           String plural = expected == 1 ? "" : "s";
           errs.add(token(), String.format("expected %d argument%s to %s, but found %d",
             expected, plural, simpleType, actual));
         }
-        for (int i = 0, len = Math.min(simpleType.getArgs().size(), args.size()); i < len; ++i) {
+        for (int i = 0, len = Math.min(simpleType.getCtorArgs().size(), args.size()); i < len; ++i) {
           Expression actualArg = args.get(i);
           EfType actualType = actualArg.resultType();
-          EfType expectedType = simpleType.getArgs().get(i).getType();
+          EfType expectedType = simpleType.getCtorArgs().get(i).getType();
           expectedType = expectedType.reify(reification);
           if (!expectedType.contains(actualType)) {
             errs.add(actualArg.token(), String.format("expected type %s but found %s", expectedType, actualType));
