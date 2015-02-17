@@ -49,6 +49,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
         boolean genericArgsPresent = params.OPEN_BRACKET() != null;
         if (type instanceof EfType.SimpleType) {
+          if (genericArgsPresent) throw new UnsupportedOperationException("TODO"); // TODO nested generics? alias types?
           type = type.reify(g -> { throw new UnsupportedOperationException("todo"); }); // TODO
         } else if (genericArgsPresent) {
           throw new UnsupportedOperationException("alias type with generic"); // TODO
