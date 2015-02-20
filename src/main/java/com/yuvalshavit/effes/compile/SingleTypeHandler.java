@@ -23,7 +23,7 @@ abstract class SingleTypeHandler<T> implements Function<EffesParser.SingleTypeCo
   private final CompileErrors errs;
   private final T onErr;
 
-  public SingleTypeHandler(CompileErrors errs, T onErr) {
+  protected SingleTypeHandler(CompileErrors errs, T onErr) {
     this.errs = errs;
     this.onErr = onErr;
   }
