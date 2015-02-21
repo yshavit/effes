@@ -1,0 +1,5 @@
+type One[T] (value: T)
+
+[T] saySomething(value: One[T]) -> Void:
+  One[T] copy = One(value)
+  print copy
