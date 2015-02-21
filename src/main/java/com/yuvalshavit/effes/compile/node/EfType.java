@@ -214,7 +214,7 @@ public abstract class EfType {
 
       SimpleType that = (SimpleType) o;
 
-      return genericForm.equals(that.genericForm)
+      return (genericForm == that.genericForm)
         && (isReified() ? reification.equals(that.reification) : that.reification == null);
     }
 
