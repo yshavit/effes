@@ -1,1 +1,1 @@
-should fail
+missing generic parameters for One[T] (at line 3, column 14: One)

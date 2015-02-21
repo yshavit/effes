@@ -72,11 +72,16 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         if (type instanceof EfType.SimpleType) {
           EfType.SimpleType simpleType = (EfType.SimpleType) type;
           if (!genericArgsPresent) {
-            throw new UnsupportedOperationException("TODO: generic inference"); // TODO
+            if (simpleType.getGenericsDeclr().isEmpty()) {
+              type = type.reify(t -> t);
+            } else {
+              List<String> expectedGenericNames = simpleType.getGenericsDeclr().stream().map(EfType.GenericType::getName).collect(Collectors.toList());
+              errs.add(ctx.getStop(), "missing generic parameters for " + simpleType.getName() + expectedGenericNames);
+              type = EfType.UNKNOWN;
+            }
           } else {
             type = type.reify(getReification(params.getStart(), simpleType, params.type()));
           }
-          type = type.reify(g -> { throw new UnsupportedOperationException("todo"); }); // TODO
         } else if (genericArgsPresent) {
           throw new UnsupportedOperationException("alias type with generic?"); // TODO
         }
