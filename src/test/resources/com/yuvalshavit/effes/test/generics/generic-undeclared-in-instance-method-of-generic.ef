@@ -1,0 +1,2 @@
+type Hello[T]:
+  sayOne (one: E) -> Void: return Void
