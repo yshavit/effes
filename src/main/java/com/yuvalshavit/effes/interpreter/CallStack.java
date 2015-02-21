@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,9 +111,11 @@ public final class CallStack {
     states.set(fip + pos + 1, pop());
   }
 
-  public void push(EfType.SimpleType type) {
-    List<EfValue> argValues = new ArrayList<>(type.getCtorArgs().size());
-    type.getCtorArgs().forEach(a -> argValues.add(pop()));
+  public void push(EfType.SimpleType type, int nCtorArgs) {
+    List<EfValue> argValues = new ArrayList<>(nCtorArgs);
+    for (int i = 0; i < nCtorArgs; i++) {
+      argValues.add(pop());
+    }
     push(EfValue.of(type, argValues));
   }
   

@@ -21,17 +21,20 @@ public final class ExpressionCompiler {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final Scopes<EfVar, Token> vars;
+  private final CtorRegistry ctors;
   private EfType.SimpleType declaringType;
 
   public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
                             MethodsRegistry<?> builtInMethods,
                             TypeRegistry typeRegistry,
+                            CtorRegistry ctors,
                             CompileErrors errs,
                             Scopes<EfVar, Token> vars)
   {
     this.methodsRegistry = methodsRegistry;
     this.builtInMethods = builtInMethods;
     this.typeRegistry = typeRegistry;
+    this.ctors = ctors;
     this.errs = errs;
     this.vars = vars;
   }
@@ -73,7 +76,7 @@ public final class ExpressionCompiler {
       TerminalNode varNode = methodInvoke.methodName().VAR_NAME();
       String varName = varNode.getText();
       if (declaringType != null) {
-        EfVar arg = declaringType.getArgByName(varName);
+        EfVar arg = ctors.getArgByName(declaringType, varName, EfType.UNSUPPORTED_REIFICATION);
         if (arg != null) {
           return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
         }
@@ -164,7 +167,7 @@ public final class ExpressionCompiler {
           return new Expression.VarExpression(ctx.getStart(), var);
         }
         else if (target != null) {
-          EfVar arg = lookOn.getArgByName(methodName);
+          EfVar arg = ctors.getArgByName(lookOn, methodName, EfType.UNSUPPORTED_REIFICATION);
           if (arg == null) {
             errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
           } else {
@@ -274,9 +277,11 @@ public final class ExpressionCompiler {
     String typeName = ctx.TYPE_NAME().getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
     List<Expression> args;
+    Function<EfType.GenericType,EfType> reification;
     if (type == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
       args = ImmutableList.of();
+      reification = t -> t;
     } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
 
@@ -294,15 +299,16 @@ public final class ExpressionCompiler {
           typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
         errs.add(ctx.singleTypeParameters().getStart(), msg);
       }
-      type = type.reify(g -> {
+      reification = g -> {
         int idx = typeGenerics.indexOf(g);
         if (idx < 0) {
-          throw new IllegalArgumentException("TODO need a better error message");
+          throw new IllegalArgumentException("TODO need a better error message"); // TODO
         }
         return reificationParams.get(idx);
-      });
+      };
+      type = type.reify(reification);
     }
-    return new Expression.CtorInvoke(ctx.getStart(), type, args);
+    return new Expression.CtorInvoke(ctx.getStart(), type, ctors.get(type, reification), args);
   }
 
   private Expression varExpr(EfVar var, TerminalNode name) {
@@ -389,7 +395,7 @@ public final class ExpressionCompiler {
     }
     EfType.SimpleType matchType = casePattern.matchType();
     List<Pair<Token, String>> bindingTokens = casePattern.bindings();
-    List<EfVar> matchtypeArgs = matchType.getCtorArgs();
+    List<EfVar> matchtypeArgs = ctors.get(matchType, EfType.UNSUPPORTED_REIFICATION);
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
@@ -411,7 +417,7 @@ public final class ExpressionCompiler {
     if (ifMatches == null) {
       errs.add(casePattern.token(), "unrecognized alternative for pattern " + matchType);
     }
-    return new CaseConstruct.Alternative<>(matchType, bindingArgs, ifMatches);
+    return new CaseConstruct.Alternative<>(matchType, matchtypeArgs, bindingArgs, ifMatches);
   }
 
   public static class CasePattern {

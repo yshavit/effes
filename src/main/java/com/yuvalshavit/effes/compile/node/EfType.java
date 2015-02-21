@@ -5,9 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.util.Dispatcher;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +19,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class EfType {
+  
+  @Deprecated // TODO remove all call sites!
+  public static final Function<GenericType, EfType> UNSUPPORTED_REIFICATION = g -> { throw new UnsupportedOperationException(); };
 
   public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
   public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
@@ -104,7 +104,6 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
-    private List<EfVar> ctorArgs;
     private List<GenericType> genericParams;
     private List<EfType> reification;
     private SimpleType genericForm;
@@ -126,10 +125,6 @@ public abstract class EfType {
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
       SimpleType reified = new SimpleType(name);
-      reified.ctorArgs = genericForm.ctorArgs
-        .stream()
-        .map(a -> EfVar.create(a.isArg(), a.getName(), a.getArgPosition(), reifyCtorArg(a, reificationFunc)))
-        .collect(Collectors.toList());
       reified.genericParams = genericParams;
       if (reified.reification != null) {
         throw new UnsupportedOperationException("TODO is this right?");
@@ -139,43 +134,9 @@ public abstract class EfType {
       return reified;
     }
 
-    private static EfType reifyCtorArg(EfVar arg, Function<GenericType, EfType> reification) {
-      return arg.getType() == null ? null : arg.getType().reify(reification);
-    }
-
-    @Nonnull
-    public List<EfVar> getCtorArgs() {
-      return ctorArgs != null
-        ? ctorArgs
-        : ImmutableList.of();
-    }
-
-    @Nullable
-    public EfVar getArgByName(String name) {
-      for (EfVar arg : getCtorArgs()) {
-        if (arg.getName().equals(name)) {
-          return arg;
-        }
-      }
-      return null;
-    }
-
     @Override
     public Collection<SimpleType> simpleTypes() {
       return Collections.singleton(this);
-    }
-
-    public void setCtorArgs(List<EfVar> ctorArgs) {
-      if (this.ctorArgs != null) {
-        throw new IllegalStateException("args already set: " + this.ctorArgs);
-      }
-      for (int pos = 0; pos < ctorArgs.size(); ++pos) {
-        EfVar arg = ctorArgs.get(pos);
-        if (pos != arg.getArgPosition() || !arg.isArg()) {
-          throw new IllegalArgumentException("invalid args list: " + ctorArgs);
-        }
-      }
-      this.ctorArgs = ImmutableList.copyOf(ctorArgs);
     }
 
     public void setGenericParams(List<String> genericParams) {
@@ -211,8 +172,10 @@ public abstract class EfType {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
         return name + genericParams.stream().map(GenericType::getName).collect(Collectors.toList());
-      } else {
+      } else if (isReified()) {
         return name;
+      } else {
+        return name + "*";
       }
     }
 

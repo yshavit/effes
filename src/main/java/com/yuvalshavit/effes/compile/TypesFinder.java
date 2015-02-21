@@ -28,10 +28,12 @@ import java.util.stream.Collectors;
 public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext> {
 
   private final TypeRegistry registry;
+  private final CtorRegistry ctors;
   private final CompileErrors errs;
 
-  public TypesFinder(TypeRegistry registry, CompileErrors errs) {
+  public TypesFinder(TypeRegistry registry, CtorRegistry ctors, CompileErrors errs) {
     this.registry = registry;
+    this.ctors = ctors;
     this.errs = errs;
   }
 
@@ -174,7 +176,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       if (type != null) {
-        type.setCtorArgs(argsBuilder);
+        ctors.setCtorArgs(type, argsBuilder);
       }
       argsBuilder.clear();
       context = null;
