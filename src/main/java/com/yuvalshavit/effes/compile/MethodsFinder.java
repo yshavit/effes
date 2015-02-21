@@ -126,6 +126,8 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
         // method only gets called when the listener sees a type declaration!
         errs.add(ctx.TYPE_NAME().getSymbol(), String.format("unrecognized type '%s' (this is likely a compiler bug)",
           ctx.TYPE_NAME().getText()));
+      } else {
+        declaringType = declaringType.reify(t -> t);
       }
     }
 

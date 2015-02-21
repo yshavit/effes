@@ -15,7 +15,7 @@ public abstract class Expression extends Node {
   }
 
   public static Expression thisExpression(Token token, EfType.SimpleType declaringType) {
-    EfVar arg0 = EfVar.arg("$this", 0, declaringType);
+    EfVar arg0 = EfVar.arg("$this", 0, declaringType.reify(t -> t));
     return new VarExpression(token, arg0);
   }
 

@@ -29,7 +29,7 @@ public class TypeResolver {
   }
 
   @Nullable
-  public EfType.SimpleType getSimpleType(String name) {
+  public EfType.SimpleType getSimpleType(String name) { // TODO should this take a reification function?
     return typeRegistry.getSimpleType(name);
   }
   
