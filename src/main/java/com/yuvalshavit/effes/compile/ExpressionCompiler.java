@@ -277,11 +277,11 @@ public final class ExpressionCompiler {
     String typeName = ctx.TYPE_NAME().getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
     List<Expression> args;
-    Function<EfType.GenericType,EfType> reification;
+    List<EfVar> ctorArgs;
     if (type == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
       args = ImmutableList.of();
-      reification = t -> t;
+      ctorArgs = ImmutableList.of();
     } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
 
@@ -299,7 +299,7 @@ public final class ExpressionCompiler {
           typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
         errs.add(ctx.singleTypeParameters().getStart(), msg);
       }
-      reification = g -> {
+      Function<EfType.GenericType,EfType> reification = g -> {
         int idx = typeGenerics.indexOf(g);
         if (idx < 0) {
           throw new IllegalArgumentException("TODO need a better error message"); // TODO
@@ -307,8 +307,9 @@ public final class ExpressionCompiler {
         return reificationParams.get(idx);
       };
       type = type.reify(reification);
+      ctorArgs = ctors.get(type, reification);
     }
-    return new Expression.CtorInvoke(ctx.getStart(), type, ctors.get(type, reification), args);
+    return new Expression.CtorInvoke(ctx.getStart(), type, ctorArgs, args);
   }
 
   private Expression varExpr(EfVar var, TerminalNode name) {
