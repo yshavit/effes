@@ -3,6 +3,8 @@ package com.yuvalshavit.effes.compile;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.parser.EffesParser;
+
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
@@ -36,6 +38,22 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     return typeRegistry.getSimpleType(name);
   }
   
+  public Function<EfType.GenericType,EfType> getReification(Token start, EfType.SimpleType type, List<EffesParser.TypeContext> declaredGenerics) {
+    List<EfType> reificationParams = declaredGenerics.stream().map(this).collect(Collectors.toList());
+    List<EfType.GenericType> typeGenerics = type.getGenericsDeclr();
+    if (reificationParams.size() != typeGenerics.size()) {
+      String msg = String.format("expected %d type parameter%s but saw %d", typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
+      errs.add(start, msg);
+    }
+    return g -> {
+      int idx = typeGenerics.indexOf(g);
+      if (idx < 0) {
+        throw new IllegalArgumentException("TODO need a better error message"); // TODO
+      }
+      return reificationParams.get(idx);
+    };
+  }
+  
   class SingleTypeResolver extends SingleTypeHandler<EfType> {
     public SingleTypeResolver() {
       super(errs, EfType.UNKNOWN);
@@ -56,14 +74,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
           if (!genericArgsPresent) {
             throw new UnsupportedOperationException("TODO: generic inference"); // TODO
           } else {
-            // TODO there's similar code somewhere -- method lookup?
-            List<EfType> paramTypes = params.type().stream().map(TypeResolver.this).collect(Collectors.toList());
-            List<EfType.GenericType> declaredGenerics = simpleType.getGenericsDeclr();
-            int nExpected = declaredGenerics.size();
-            if (nExpected != paramTypes.size()) {
-              String msg = String.format("expected %d parameter%s but found %d", nExpected, nExpected == 1 ? "" : "s", paramTypes.size());
-              errs.add(params.getStart(), msg);
-            }
+            type = type.reify(getReification(params.getStart(), simpleType, params.type()));
           }
           type = type.reify(g -> { throw new UnsupportedOperationException("todo"); }); // TODO
         } else if (genericArgsPresent) {
