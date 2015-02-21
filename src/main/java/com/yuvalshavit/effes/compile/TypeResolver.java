@@ -7,9 +7,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
 
+import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TypeResolver {
+public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final EfType.SimpleType context;
@@ -22,6 +24,7 @@ public class TypeResolver {
     resolver = new SingleTypeResolver();
   }
 
+  @Override
   public EfType apply(EffesParser.TypeContext typeContext) {
     return typeContext != null
       ? EfType.disjunction(typeContext.singleType().stream().map(resolver).collect(Collectors.toList()))
@@ -49,12 +52,22 @@ public class TypeResolver {
         EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
         boolean genericArgsPresent = params.OPEN_BRACKET() != null;
         if (type instanceof EfType.SimpleType) {
-          if (genericArgsPresent) {
-            throw new UnsupportedOperationException("TODO"); // TODO nested generics? alias types?
+          EfType.SimpleType simpleType = (EfType.SimpleType) type;
+          if (!genericArgsPresent) {
+            throw new UnsupportedOperationException("TODO: generic inference"); // TODO
+          } else {
+            // TODO there's similar code somewhere -- method lookup?
+            List<EfType> paramTypes = params.type().stream().map(TypeResolver.this).collect(Collectors.toList());
+            List<EfType.GenericType> declaredGenerics = simpleType.getGenericsDeclr();
+            int nExpected = declaredGenerics.size();
+            if (nExpected != paramTypes.size()) {
+              String msg = String.format("expected %d parameter%s but found %d", nExpected, nExpected == 1 ? "" : "s", paramTypes.size());
+              errs.add(params.getStart(), msg);
+            }
           }
           type = type.reify(g -> { throw new UnsupportedOperationException("todo"); }); // TODO
         } else if (genericArgsPresent) {
-          throw new UnsupportedOperationException("alias type with generic"); // TODO
+          throw new UnsupportedOperationException("alias type with generic?"); // TODO
         }
       }
       return type;
