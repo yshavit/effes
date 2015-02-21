@@ -152,9 +152,14 @@ public final class EndToEndTest {
 
   private String readIfExists(String fileName) throws IOException {
     URL url = urls.get(fileName);
-    return url != null
-      ? Resources.toString(url, Charsets.UTF_8)
-      : "";
+    if (url == null) {
+      return "";
+    }
+    String s = Resources.toString(url, Charsets.UTF_8);
+    if (s.endsWith("\n")) {
+      s = s.substring(0, s.length() - 1);
+    }
+    return s;
   }
 
   private static class NodeStateToString implements NodeStateVisitor {
