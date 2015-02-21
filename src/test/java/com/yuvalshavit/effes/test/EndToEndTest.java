@@ -147,19 +147,21 @@ public final class EndToEndTest {
         listener.visitChild(method.getBody());
       }
     });
-    return sb.toString();
+    return stripTrailingNewline(sb.toString());
   }
 
   private String readIfExists(String fileName) throws IOException {
     URL url = urls.get(fileName);
-    if (url == null) {
-      return "";
+    return url == null
+      ? ""
+      : stripTrailingNewline(Resources.toString(url, Charsets.UTF_8));
+  }
+
+  private static String stripTrailingNewline(String string) {
+    if (string.endsWith("\n")) {
+      string = string.substring(0, string.length() - 1);
     }
-    String s = Resources.toString(url, Charsets.UTF_8);
-    if (s.endsWith("\n")) {
-      s = s.substring(0, s.length() - 1);
-    }
-    return s;
+    return string;
   }
 
   private static class NodeStateToString implements NodeStateVisitor {
