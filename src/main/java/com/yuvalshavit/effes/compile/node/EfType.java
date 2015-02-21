@@ -172,10 +172,8 @@ public abstract class EfType {
         return name + reification;
       } else if (genericParams != null && !genericParams.isEmpty()) {
         return name + genericParams.stream().map(GenericType::getName).collect(Collectors.toList());
-      } else if (isReified()) {
-        return name;
       } else {
-        return name + "*";
+        return name;
       }
     }
 

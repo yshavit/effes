@@ -66,7 +66,7 @@ public final class ExpressionCompiler {
 
   private Expression declaringObject(Token token) {
     assert declaringType != null;
-    return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType));
+    return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType.reify(t -> t)));
   }
 
   private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {
