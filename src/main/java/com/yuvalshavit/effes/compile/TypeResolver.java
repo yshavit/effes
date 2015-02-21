@@ -48,7 +48,11 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     return g -> {
       int idx = typeGenerics.indexOf(g);
       if (idx < 0) {
-        throw new IllegalArgumentException("TODO need a better error message"); // TODO
+        throw new IllegalArgumentException("TODO need a better error message"); // TODO can this even happen?
+      }
+      if (idx >= reificationParams.size()) {
+        errs.add(start, "couldn't find binding for " + g);
+        return EfType.UNKNOWN;
       }
       return reificationParams.get(idx);
     };
