@@ -56,7 +56,7 @@ public class CaseConstruct<N extends Node> {
         matchAgainst.token(),
         "expression alternative is never matched: " + t));
       patterns.forEach(alt -> {
-        int expected = alt.getType().getCtorArgs().size();
+        int expected = alt.getCtorArgs().size();
         int actual = alt.getBindings().size();
         if (expected != actual) {
           String plural = expected == 1 ? "" : "s";
@@ -98,11 +98,13 @@ public class CaseConstruct<N extends Node> {
 
   public static class Alternative<N extends Node> {
     private final EfType.SimpleType type;
+    private final List<EfVar> ctorArgs;
     private final N ifMatched;
     private final List<EfVar> bindings;
 
-    public Alternative(EfType.SimpleType type, List<EfVar> bindings, N ifMatched) {
+    public Alternative(EfType.SimpleType type, List<EfVar> ctorArgs, List<EfVar> bindings, N ifMatched) {
       this.type = type;
+      this.ctorArgs = ctorArgs;
       this.ifMatched = ifMatched;
       this.bindings = ImmutableList.copyOf(bindings);
     }
@@ -113,6 +115,10 @@ public class CaseConstruct<N extends Node> {
 
     public EfType.SimpleType getType() {
       return type;
+    }
+
+    public List<EfVar> getCtorArgs() {
+      return ctorArgs;
     }
 
     public List<EfVar> getBindings() {

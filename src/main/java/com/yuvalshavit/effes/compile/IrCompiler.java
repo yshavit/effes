@@ -22,15 +22,17 @@ public final class IrCompiler<E> {
                     CompileErrors errs)
   {
     this.errs = errs;
-    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), errs);
+    CtorRegistry ctors = new CtorRegistry();
+    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), ctors, errs);
     builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
-    compiledMethods = compileToIntermediate(source, typeRegistry, builtInMethods, errs);
+    compiledMethods = compileToIntermediate(source, typeRegistry, ctors, builtInMethods, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
                                               TypeRegistry typeRegistry,
+                                              CtorRegistry ctors,
                                               CompileErrors errs) {
-    new TypesFinder(typeRegistry, errs).accept(source);
+    new TypesFinder(typeRegistry, ctors, errs).accept(source);
     return typeRegistry;
   }
 
@@ -55,17 +57,18 @@ public final class IrCompiler<E> {
 
 
   private static MethodsRegistry<Block> compileToIntermediate(EffesParser.CompilationUnitContext source,
-                                                              TypeRegistry typeRegistry,
-                                                              MethodsRegistry<?> builtinsRegistry,
-                                                              CompileErrors errs)
+    TypeRegistry typeRegistry,
+    CtorRegistry ctors,
+    MethodsRegistry<?> builtinsRegistry,
+    CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
-    new MethodsFinder(typeRegistry, unparsedMethods, errs).accept(source);
+    new MethodsFinder(typeRegistry, unparsedMethods, ctors, errs).accept(source);
 
     Scopes<EfVar, Token> vars = new Scopes<>(
       EfVar::getName,
       (name, token) -> errs.add(token, String.format("duplicate variable name '%s'", name)));
-    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, builtinsRegistry, typeRegistry, errs, vars);
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, builtinsRegistry, typeRegistry, ctors, errs, vars);
     StatementCompiler statementCompiler = new StatementCompiler(expressionCompiler, vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 

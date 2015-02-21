@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 import org.testng.annotations.Test;
 
 import java.util.NoSuchElementException;
@@ -366,17 +365,13 @@ public final class CallStackTest {
   @Test
   public void simpleCtorWithArgs() {
     EfType.SimpleType argedType = new EfType.SimpleType("ArgsTest");
-    argedType.setCtorArgs(ImmutableList.of(
-      EfVar.arg("first", 0, stringType),
-      EfVar.arg("second", 1, stringType)
-    ));
 
     CallStack stack = new CallStack();
     Object snapshot = stack.snapshot();
 
     push(stack, "second value");
     push(stack, "first value");
-    stack.push(argedType);
+    stack.push(argedType, 2);
 
     EfValue value = stack.pop();
     assertEquals(value.getType(), argedType);

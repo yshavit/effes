@@ -30,7 +30,7 @@ public final class TypesFinderTest {
       "type True",
       "type False");
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, null).accept(parser.compilationUnit());
+    new TypesFinder(registry, new CtorRegistry(), null).accept(parser.compilationUnit());
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
   }
 
@@ -42,7 +42,7 @@ public final class TypesFinderTest {
     );
     TUtils.expectErrors(errs -> {
       TypeRegistry registry = new TypeRegistry(errs);
-      new TypesFinder(registry, null).accept(parser.compilationUnit());
+      new TypesFinder(registry, new CtorRegistry(), null).accept(parser.compilationUnit());
     });
   }
 
@@ -54,7 +54,8 @@ public final class TypesFinderTest {
       "type Two(only: One, okay: Another)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, null).accept(parser.compilationUnit());
+    CtorRegistry ctors = new CtorRegistry();
+    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("One", "Two", "Another"));
     EfType.SimpleType one = registry.getSimpleType("One");
@@ -62,7 +63,7 @@ public final class TypesFinderTest {
     EfType.SimpleType two = registry.getSimpleType("Two");
     assertNotNull(two);
 
-    assertEquals(two.getCtorArgs(), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
+    assertEquals(ctors.get(two, t -> t), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
     assertEquals(two.toString(), "Two");
   }
 
@@ -74,7 +75,8 @@ public final class TypesFinderTest {
       "type Pet(species: Cat | Dog)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, null).accept(parser.compilationUnit());
+    CtorRegistry ctors = new CtorRegistry();
+    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Cat", "Dog", "Pet"));
     EfType.SimpleType cat = registry.getSimpleType("Cat");
@@ -83,7 +85,7 @@ public final class TypesFinderTest {
     assertNotNull(pet);
 
     EfType catOrdog = EfType.disjunction(cat, dog);
-    assertEquals(pet.getCtorArgs(), Arrays.asList(EfVar.arg("species", 0, catOrdog)));
+    assertEquals(ctors.get(pet, t -> t), Arrays.asList(EfVar.arg("species", 0, catOrdog)));
     assertEquals(pet.toString(), "Pet");
   }
 
@@ -93,13 +95,14 @@ public final class TypesFinderTest {
       "type Infinity(forever: Infinity)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, null).accept(parser.compilationUnit());
+    CtorRegistry ctors = new CtorRegistry();
+    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Infinity"));
     EfType.SimpleType infinity = registry.getSimpleType("Infinity");
     assertNotNull(infinity);
 
-    assertEquals(infinity.getCtorArgs(), Arrays.asList(EfVar.arg("forever", 0, infinity)));
+    assertEquals(ctors.get(infinity, t -> t), Arrays.asList(EfVar.arg("forever", 0, infinity)));
   }
 
   @Test
@@ -110,7 +113,8 @@ public final class TypesFinderTest {
       "type Cons(head: Elem, tail: Cons | Empty)"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, null).accept(parser.compilationUnit());
+    CtorRegistry ctors = new CtorRegistry();
+    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Elem", "Empty", "Cons"));
     EfType.SimpleType cons = registry.getSimpleType("Cons");
@@ -119,7 +123,7 @@ public final class TypesFinderTest {
     EfType.SimpleType elem = registry.getSimpleType("Elem");
     EfType.SimpleType empty = registry.getSimpleType("Empty");
     EfType tailType = EfType.disjunction(cons, empty);
-    assertEquals(cons.getCtorArgs(), Arrays.asList(EfVar.arg("head", 0, elem), EfVar.arg("tail", 1, tailType)));
+    assertEquals(ctors.get(cons, t -> t), Arrays.asList(EfVar.arg("head", 0, elem), EfVar.arg("tail", 1, tailType)));
     assertEquals(cons.toString(), "Cons");
   }
 
@@ -247,7 +251,7 @@ public final class TypesFinderTest {
   private static TypeRegistry findTypes(CompileErrors errs, String... source) {
     EffesParser parser = ParserUtils.createParser(source);
     TypeRegistry registry = new TypeRegistry(errs);
-    TypesFinder typesFinder = new TypesFinder(registry, errs) {
+    TypesFinder typesFinder = new TypesFinder(registry, new CtorRegistry(), errs) {
       @Override
       <K extends Comparable<? super K>, V> Map<K, V> createMap() {
         return new TreeMap<>();

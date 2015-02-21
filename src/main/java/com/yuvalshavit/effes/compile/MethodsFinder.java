@@ -22,12 +22,15 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
   private final CompileErrors errs;
   private final TypeRegistry typeRegistry;
+  private final CtorRegistry ctors;
 
   public MethodsFinder(TypeRegistry typeRegistry,
                        MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
+                       CtorRegistry ctors,
                        CompileErrors errs) {
     this.typeRegistry = typeRegistry;
     this.methodsRegistry = methodsRegistry;
+    this.ctors = ctors;
     this.errs = errs;
   }
 
@@ -147,7 +150,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-      if (declaringType != null && declaringType.getArgByName(name) != null) {
+      if (declaringType != null && ctors.getArgByName(declaringType, name, t -> t) != null) {
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
 

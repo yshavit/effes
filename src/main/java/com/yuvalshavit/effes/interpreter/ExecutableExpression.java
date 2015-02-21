@@ -87,7 +87,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       args.forEach(a -> a.execute(stack));
-      stack.push(ctorType);
+      stack.push(ctorType, args.size());
     }
   }
 
@@ -132,7 +132,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     public static void invoke(ExecutableMethod body, List<ExecutableExpression> args, CallStack stack, boolean hasRv) {
       stack.openFrame(args, hasRv);
       for (int nVars = body.nVars(); nVars > 0; --nVars) {
-        stack.push((EfValue)null);
+        stack.push(null);
       }
       body.execute(stack);
       stack.closeFrame();

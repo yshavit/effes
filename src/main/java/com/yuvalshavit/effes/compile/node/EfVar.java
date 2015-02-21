@@ -1,5 +1,7 @@
 package com.yuvalshavit.effes.compile.node;
 
+import java.util.function.Function;
+
 import com.google.common.base.Preconditions;
 
 public final class EfVar {
@@ -54,6 +56,10 @@ public final class EfVar {
 
   public EfVar cast(EfType castType) {
     return new EfVar(name, argPosition, castType, isArg);
+  }
+  
+  public EfVar reify(Function<EfType.GenericType, EfType> reification) {
+    return new EfVar(name, argPosition, type.reify(reification), isArg);
   }
 
   @Override

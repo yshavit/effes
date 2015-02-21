@@ -18,7 +18,7 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
   public ExecutableMethod print() {
     return method(stack -> {
       out.println("Your argument was: " + stack.peekArg(0));
-      stack.push(typeRegistry.getSimpleType("Void"));
+      stack.push(typeRegistry.getSimpleType("Void"), 0); // TODO need some mechanism to ensure that Void has no args!
       stack.popToRv();
     });
   }

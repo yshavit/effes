@@ -6,6 +6,9 @@ import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.MethodId;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.ThrowsExceptionClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -68,6 +71,7 @@ public final class MethodsFinderTest {
                                   MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
                                   EffesParser parser,
                                   CompileErrors errs) {
-    new MethodsFinder(types, methodsRegistry, errs).accept(parser.compilationUnit());
+    CtorRegistry ctors = Mockito.mock(CtorRegistry.class, new ThrowsExceptionClass(AssertionError.class));
+    new MethodsFinder(types, methodsRegistry, ctors, errs).accept(parser.compilationUnit());
   }
 }

@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 
 import java.util.List;
 
@@ -11,10 +10,11 @@ public class EfValue {
   private final List<EfValue> state;
 
   public static EfValue of(EfType.SimpleType type, List<EfValue> state) {
-    if (state.size() != type.getCtorArgs().size()) {
-      throw new IllegalArgumentException(String.format("%s has %d arg(s), but %d given: %s",
-        type, type.getCtorArgs().size(), state.size(), state ));
-    }
+    // TODO somehow check state.size() against expected size of ctor?
+//    if (state.size() != type.getCtorArgs().size()) {
+//      throw new IllegalArgumentException(String.format("%s has %d arg(s), but %d given: %s",
+//        type, type.getCtorArgs().size(), state.size(), state ));
+//    }
     // TODO also check types against expected
     return new EfValue(type, state);
   }
@@ -38,23 +38,21 @@ public class EfValue {
 
   @Override
   public String toString() {
-    if (type.getCtorArgs().isEmpty()) {
+    if (state.isEmpty()) {
       return type.getName();
     }
     StringBuilder sb = new StringBuilder(type.getName()).append('(');
-    for (int i = 0; i < type.getCtorArgs().size(); ++i) {
-      EfVar efVar = type.getCtorArgs().get(i);
+    for (int i = 0; i < state.size(); ++i) {
       EfValue arg = state.get(i);
       // "name: SomeValue", where SomeValue is paren'ed iff it has args
-      boolean parens = ! arg.getType().getCtorArgs().isEmpty();
+      boolean parens = ! arg.getState().isEmpty();
       if (parens) {
         sb.append('(');
       }
-      sb.append(efVar.getName()).append(": ").append(arg);
       if (parens) {
         sb.append(')');
       }
-      if (i + 1 < type.getCtorArgs().size()) {
+      if (i + 1 < state.size()) {
         sb.append(", ");
       }
     }
