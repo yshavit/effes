@@ -1,0 +1,5 @@
+type One[T] (value: T)
+
+describeOnce(what: Boolean) -> Void:
+  One[Boolean] oneB = One(what)
+  print oneB
