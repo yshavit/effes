@@ -1,7 +1,7 @@
 type Nothing
 type One[T] (value: T)
 
-alias Maybe[T] = One[T] | Nothing
+type Maybe[T] = One[T] | Nothing
 
 present[T] (n: Maybe[T]) -> Boolean: return case n of
   One(x): True
