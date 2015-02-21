@@ -290,24 +290,30 @@ public final class ExpressionCompiler {
       }
       TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, null); // TODO move to ctor, hook up to current type context
 
-      List<EfType> reificationParams = ctorGenericParams.stream().map(typeResolver::apply).collect(Collectors.toList());
-      List<EfType.GenericType> typeGenerics = type.getGenericsDeclr();
-      if (reificationParams.size() != typeGenerics.size()) {
-        String msg = String.format("expected %d type parameter%s but saw %d",
-          typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
-        errs.add(ctx.singleTypeParameters().getStart(), msg);
-      }
-      Function<EfType.GenericType,EfType> reification = g -> {
-        int idx = typeGenerics.indexOf(g);
-        if (idx < 0) {
-          throw new IllegalArgumentException("TODO need a better error message"); // TODO
-        }
-        return reificationParams.get(idx);
-      };
+      Token start = ctx.singleTypeParameters().getStart();
+      Function<EfType.GenericType,EfType> reification = getGenericTypeEfTypeFunction(type, ctorGenericParams, typeResolver, start);
       type = type.reify(reification);
       ctorArgs = ctors.get(type, reification);
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, ctorArgs, args);
+  }
+
+  private Function<EfType.GenericType,EfType> getGenericTypeEfTypeFunction(EfType.SimpleType type, List<EffesParser.TypeContext> ctorGenericParams,
+    TypeResolver typeResolver, Token start) {
+    List<EfType> reificationParams = ctorGenericParams.stream().map(typeResolver::apply).collect(Collectors.toList());
+    List<EfType.GenericType> typeGenerics = type.getGenericsDeclr();
+    if (reificationParams.size() != typeGenerics.size()) {
+      String msg = String.format("expected %d type parameter%s but saw %d",
+        typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
+      errs.add(start, msg);
+    }
+    return g -> {
+      int idx = typeGenerics.indexOf(g);
+      if (idx < 0) {
+        throw new IllegalArgumentException("TODO need a better error message"); // TODO
+      }
+      return reificationParams.get(idx);
+    };
   }
 
   private Expression varExpr(EfVar var, TerminalNode name) {
