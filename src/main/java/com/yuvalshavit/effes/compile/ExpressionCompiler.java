@@ -76,7 +76,7 @@ public final class ExpressionCompiler {
       TerminalNode varNode = methodInvoke.methodName().VAR_NAME();
       String varName = varNode.getText();
       if (declaringType != null) {
-        EfVar arg = ctors.getArgByName(declaringType, varName, EfType.UNSUPPORTED_REIFICATION);
+        EfVar arg = ctors.getArgByName(declaringType, varName, t -> t);
         if (arg != null) {
           return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
         }
@@ -167,7 +167,7 @@ public final class ExpressionCompiler {
           return new Expression.VarExpression(ctx.getStart(), var);
         }
         else if (target != null) {
-          EfVar arg = ctors.getArgByName(lookOn, methodName, EfType.UNSUPPORTED_REIFICATION);
+          EfVar arg = ctors.getArgByName(lookOn, methodName, lookOn.getReification());
           if (arg == null) {
             errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
           } else {

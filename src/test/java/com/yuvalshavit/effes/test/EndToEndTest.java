@@ -129,7 +129,7 @@ public final class EndToEndTest {
       out.println(result);
       out.flush();
       out.close();
-      outStr = baos.toString("utf-8");
+      outStr = stripTrailingNewline(baos.toString("utf-8"));
     }
 
     assertEquals(Joiner.on('\n').join(interpreter.getErrors().getErrors()), readIfExists(errFileName));

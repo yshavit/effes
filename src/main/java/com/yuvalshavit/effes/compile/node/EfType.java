@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 public abstract class EfType {
   
   @Deprecated // TODO remove all call sites!
-  public static final Function<GenericType, EfType> UNSUPPORTED_REIFICATION = g -> { throw new UnsupportedOperationException(); };
+  public static final Function<GenericType, EfType> UNSUPPORTED_REIFICATION = g -> { 
+    throw new UnsupportedOperationException(); };
 
   public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
   public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
