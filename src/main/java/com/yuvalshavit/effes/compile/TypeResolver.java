@@ -96,6 +96,12 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     @Override
     protected EfType lookupGenericType(EffesParser.SingleGenericTypeContext ctx) {
       String genericName = ctx.GENERIC_NAME().getText();
+      if (context == null) {
+        // global method
+        // TODO generics on methods!
+        errs.add(ctx.getStart(), "undeclared generic type " + genericName);
+        return EfType.UNKNOWN;
+      }
       return new EfType.GenericType(genericName, context);
     }
   }

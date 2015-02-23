@@ -94,6 +94,9 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
         String name = ctx.name.getText();
         Set<String> targetNames = new HashSet<>();
         List<Token> targetTokens = new ArrayList<>();
+        if (!ctx.genericsDeclr().GENERIC_NAME().isEmpty()) {
+          errs.add(ctx.genericsDeclr().getStart(), "generics not supported on alias types");
+        }
         ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
           .onDataType(targetCtx -> {
             if (targetCtx.singleTypeParameters().OPEN_BRACKET() != null) {
@@ -107,7 +110,7 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
               targetTokens.add(tok);
             }
           })
-          .onGeneric(targetCtx -> errs.add(targetCtx.getStart(), "generics aren't allowed for open types"))
+          .onGeneric(targetCtx -> errs.add(targetCtx.getStart(), "alias type alternatives can't be generic types"))
         );
         aliases.put(name, new Pair<>(ctx.name, targetTokens));
       }

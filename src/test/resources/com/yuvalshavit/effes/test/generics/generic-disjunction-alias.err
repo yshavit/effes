@@ -1,0 +1,2 @@
+generics not supported on alias types (at line 4, column 11: [)
+generics aren't allowed for open types (at line 4, column 20: [)
