@@ -1,5 +1,14 @@
+type Nothing
+
 type Node[T](head: T, tail: Node[T] | Nothing)
 
 type ListOfNodes[T](nodes: Node[T])
 
-do some stuff with all that
+type Boolean = True | False
+
+main:
+  n0 = Node[Boolean](True, Nothing)
+  n1 = Node[Boolean](True, n0)
+  n2 = Node[Boolean](True, n1)
+  ln = ListOfNodes[Boolean](n2)
+  print ln
