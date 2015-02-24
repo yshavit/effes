@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,14 +28,10 @@ public final class TypeRegistry {
     }
   }
 
-  @Nullable
-  public EfType.SimpleType registerType(Token token, String name) {
+  public void registerType(Token token, String name, List<String> params) {
     if (nameIsAvailable(token, name)) {
-      EfType.SimpleType r = new EfType.SimpleType(name);
+      EfType.SimpleType r = new EfType.SimpleType(name, params);
       simpleTypes.put(name, r);
-      return r;
-    } else {
-      return null;
     }
   }
 
@@ -46,6 +43,14 @@ public final class TypeRegistry {
   @Nullable
   public EfType.SimpleType getSimpleType(String name) {
     return simpleTypes.get(name);
+  }
+
+  @Nullable
+  public List<EfType.GenericType> getSimpleTypeParams(String name) {
+    EfType.SimpleType simpleType = getSimpleType(name);
+    return simpleType == null
+      ? null
+      : simpleType.getGenericsDeclr();
   }
 
   @Nullable

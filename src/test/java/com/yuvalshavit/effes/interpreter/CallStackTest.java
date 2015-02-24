@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.EfType;
 import org.testng.annotations.Test;
 
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
@@ -364,7 +365,7 @@ public final class CallStackTest {
 
   @Test
   public void simpleCtorWithArgs() {
-    EfType.SimpleType argedType = new EfType.SimpleType("ArgsTest");
+    EfType.SimpleType argedType = new EfType.SimpleType("ArgsTest", Collections.emptyList());
 
     CallStack stack = new CallStack();
     Object snapshot = stack.snapshot();
@@ -470,5 +471,5 @@ public final class CallStackTest {
     return ((EfValue.EfStringValue)peek).getString();
   }
 
-  private static final EfType.SimpleType stringType = new EfType.SimpleType("Tt");
+  private static final EfType.SimpleType stringType = new EfType.SimpleType("Tt", Collections.emptyList());
 }

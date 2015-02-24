@@ -273,16 +273,17 @@ public final class ExpressionCompiler {
 
   private Expression ctorInvoke(EffesParser.CtorInvokeContext ctx) {
     String typeName = ctx.TYPE_NAME().getText();
-    EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
-    List<Expression> args;
-    List<EfVar> ctorArgs;
-    if (type == null) {
+    List<EfType.GenericType> typeParams = typeRegistry.getSimpleTypeParams(typeName);
+    final EfType.SimpleType type;
+    final List<Expression> args;
+    final List<EfVar> ctorArgs;
+    if (typeParams == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
+      type = null;
       args = ImmutableList.of();
       ctorArgs = ImmutableList.of();
     } else {
       args = ctx.expr().stream().map(this::apply).collect(Collectors.toList());
-
 
       List<EffesParser.TypeContext> ctorGenericParams = ctx.singleTypeParameters().type();
       if (ctorGenericParams == null) {
@@ -291,8 +292,8 @@ public final class ExpressionCompiler {
       TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, null); // TODO move to ctor, hook up to current type context
 
       Token start = ctx.singleTypeParameters().getStart();
-      Function<EfType.GenericType,EfType> reification = typeResolver.getReification(start, type, ctorGenericParams);
-      type = type.reify(reification);
+      Function<EfType.GenericType,EfType> reification = typeResolver.getReification(start, typeParams, ctorGenericParams);
+      type = typeResolver.getSimpleType(typeName, reification);
       ctorArgs = ctors.get(type, reification);
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, ctorArgs, args);

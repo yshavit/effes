@@ -161,7 +161,6 @@ public abstract class Expression extends Node {
     public CtorInvoke(Token token, @Nullable EfType.SimpleType type, List<EfVar> ctorArgs, List<Expression> args) {
       super(token, type);
       this.ctorArgs = ctorArgs;
-      assert type == null || type.isReified() : type;
       simpleType = type;
       this.args = ImmutableList.copyOf(args);
     }

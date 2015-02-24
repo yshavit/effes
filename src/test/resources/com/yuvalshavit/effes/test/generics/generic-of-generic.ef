@@ -8,7 +8,7 @@ type Boolean = True | False
 
 main:
   n0 = Node[Boolean](True, Nothing)
-  n1 = Node[Boolean](True, n0)
+  n1 = Node[Boolean](False, n0)
   n2 = Node[Boolean](True, n1)
   ln = ListOfNodes[Boolean](n2)
   print ln
