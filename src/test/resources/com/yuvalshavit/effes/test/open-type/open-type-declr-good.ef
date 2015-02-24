@@ -10,6 +10,6 @@ type Dog:
   isHappy (fed: True | False | Void) -> True: return True -- note contravariant args, covariant return type
 
 main:
-  print (Cat: isHappy True)
-  print (Cat: isHappy False)
-  print (Dog: isHappy Void)
+  print Cat.isHappy True
+  print Cat.isHappy False
+  print Dog.isHappy Void

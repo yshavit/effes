@@ -2,4 +2,4 @@ type Dog:
   isCute: print True
 
 main:
-  Dog: isCute
+  Dog.isCute

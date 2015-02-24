@@ -4,4 +4,4 @@ type HiSayer:
   salute: sayHi
 
 main:
-  HiSayer: salute
+  HiSayer.salute

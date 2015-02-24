@@ -1,4 +1,4 @@
 type BoolWrap(value: True | False)
 
 unwrap (wrapped: BoolWrap) -> True | False:
-  return wrapped: someUnknownArg
+  return wrapped.someUnknownArg

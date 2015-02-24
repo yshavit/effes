@@ -1,2 +1,2 @@
-no such method or variable: 'someUnknownArg' (at line 4, column 19: someUnknownArg)
+no such method or variable: 'someUnknownArg' (at line 4, column 18: someUnknownArg)
 expected result type False | True but found unknown type (at line 4, column 10: wrapped)
