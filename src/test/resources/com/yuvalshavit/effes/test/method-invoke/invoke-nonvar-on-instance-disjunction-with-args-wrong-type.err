@@ -1,1 +1,1 @@
-mismatched types for 'ATrue::mapped': expected True but found Void (at line 10, column 31: Void)
+mismatched types for 'ATrue::mapped': expected True but found Void (at line 10, column 25: Void)

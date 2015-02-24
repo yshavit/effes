@@ -151,7 +151,7 @@ public abstract class Statement extends Node {
 
     @Override
     public void state(NodeStateVisitor out) {
-      throw new UnsupportedOperationException(); // TODO
+      // none
     }
   }
 }

@@ -2,7 +2,7 @@ type Dog:
   isCute -> True: return True
 
 isDogCute (d: Dog) -> True | False:
-  return d: isCute
+  return d.isCute
 
 main:
   print (isDogCute Dog)

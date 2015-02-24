@@ -1,7 +1,7 @@
 type BoolWrap(value: True | False)
 
 unwrap (wrapped: BoolWrap) -> True | False:
-  return wrapped: value
+  return wrapped.value
 
 main:
   w1 = BoolWrap(True)

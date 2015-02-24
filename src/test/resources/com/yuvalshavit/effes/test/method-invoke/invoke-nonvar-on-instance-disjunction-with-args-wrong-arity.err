@@ -1,1 +1,1 @@
-for method ATrue::mapped, expected 0 arguments but found 1 (at line 10, column 24: mapped)
+for method ATrue::mapped, expected 0 arguments but found 1 (at line 10, column 18: mapped)

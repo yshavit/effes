@@ -12,10 +12,10 @@ type Cat:
   isHappy (fed: Bool) -> Bool: return fed         -- This is not true! My cats are often happy, even when not eating.
 
 feedThenCheck (pet: Pet), (whenFed: Bool) -> Bool:
-  return pet: isHappy whenFed
+  return pet.isHappy whenFed
 
 main:
-  print (feedThenCheck Dog [True])
-  print (feedThenCheck Dog [False])
-  print (feedThenCheck Cat [True])
-  print (feedThenCheck Cat [False])
+  print feedThenCheck(Dog, True)
+  print feedThenCheck(Dog, False)
+  print feedThenCheck(Cat, True)
+  print feedThenCheck(Cat, False)

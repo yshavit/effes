@@ -5,5 +5,5 @@ type One[T] (value: T):
   
 main:
   o = One[Boolean](True)
-  o: describeMe
-  print (o: value)
+  o.describeMe
+  print (o.value)

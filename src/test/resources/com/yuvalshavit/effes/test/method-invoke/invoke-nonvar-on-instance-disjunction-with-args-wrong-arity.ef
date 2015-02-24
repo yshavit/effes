@@ -7,7 +7,7 @@ type AFalse:
 type AWrap(value: ATrue | AFalse)
 
 unwrap (b: AWrap) -> True | False:
-  return ((b: value) : mapped Void)
+  return b.value.mapped Void
 
 main:
   print (unwrap AWrap(ATrue))

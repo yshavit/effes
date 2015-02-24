@@ -3,4 +3,4 @@ type Dog:
   woof: bark
 
 main:
-  Dog: woof
+  Dog.woof

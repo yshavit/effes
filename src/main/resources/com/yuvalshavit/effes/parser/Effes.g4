@@ -100,7 +100,7 @@ inlinableBlock: stat
 
 stat: RETURN exprLine                                                           # ReturnStat
     | methodInvoke NL                                                           # MethodInvokeStat
-    | expr COLON methodInvoke NL                                                # InstanceMethodInvokeStat
+    | expr DOT methodInvoke NL                                                  # InstanceMethodInvokeStat
     | VAR_NAME EQ exprLine                                                      # AssignStat
     | CASE expr OF INDENT caseStatAlternative+ DEDENT                           # CaseStat
     ;
@@ -115,13 +115,18 @@ caseStatAlternative: casePattern COLON inlinableBlock;
 
 expr: OPEN_PAREN expr CLOSE_PAREN                                               # ParenExpr
     | methodInvoke                                                              # MethodInvokeOrVarExpr
-    | expr COLON methodInvoke                                                   # InstanceMethodInvokeOrVarExpr
+    | expr DOT methodInvoke                                                     # InstanceMethodInvokeOrVarExpr
     | TYPE_NAME singleTypeParameters ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?  # CtorInvoke
     ;
 
 methodInvoke: methodName singleTypeParameters methodInvokeArgs;
 
-methodInvokeArgs: (expr (OPEN_BRACKET expr (COMMA expr)* CLOSE_BRACKET)?)?;
+methodInvokeArgs: expr
+                | OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN
+                | /* nothing */
+                ;
+//(expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
+//methodInvokeArgs: (expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
 
 caseAlternative: casePattern COLON exprBlock;
 
@@ -133,6 +138,7 @@ exprBlock: expr NL;
 
 TYPE: 'type';
 COLON: ':';
+DOT: '.';
 EQ: '=';
 ARROW: '->';
 PATTERN: '@pattern';
@@ -159,7 +165,6 @@ DOLLAR: '$';
 DUBSLASH: '\\\\';
 AT: '@';
 QUESTION: '?';
-LCOMPOSE: '</';
 
 INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?

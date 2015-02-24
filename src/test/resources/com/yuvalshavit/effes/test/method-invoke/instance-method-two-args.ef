@@ -4,7 +4,7 @@ type Foo(bool: True | False):
 
 pushFooTrue:
   foo = Foo(True)
-  r = foo: push Void [False]
+  r = foo.push(Void, False)
   print r
 
 main:
