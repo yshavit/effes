@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.interpreter;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.EfType;
 
@@ -42,20 +43,7 @@ public class EfValue {
       return type.getName();
     }
     StringBuilder sb = new StringBuilder(type.getName()).append('(');
-    for (int i = 0; i < state.size(); ++i) {
-      EfValue arg = state.get(i);
-      // "name: SomeValue", where SomeValue is paren'ed iff it has args
-      boolean parens = ! arg.getState().isEmpty();
-      if (parens) {
-        sb.append('(');
-      }
-      if (parens) {
-        sb.append(')');
-      }
-      if (i + 1 < state.size()) {
-        sb.append(", ");
-      }
-    }
+    Joiner.on(", ").appendTo(sb, state);
     sb.append(')');
     return sb.toString();
   }

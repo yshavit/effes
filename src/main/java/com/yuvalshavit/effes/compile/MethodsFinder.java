@@ -120,7 +120,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       enterCheck();
-      declaringType = new TypeResolver(typeRegistry, errs, null).getSimpleType(ctx.TYPE_NAME().getText());
+      declaringType = new TypeResolver(typeRegistry, errs, null).getSimpleType(ctx.TYPE_NAME().getText(), EfType.KEEP_GENERIC);
       if (declaringType == null) {
         // This shouldn't happen, since the typeResolver should have already picked up all declared types, and this
         // method only gets called when the listener sees a type declaration!
@@ -193,7 +193,8 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;
-        EfType.SimpleType openSimple = new EfType.SimpleType(declaringOpenType);
+        assert false : "TODO is Collections.emptyList right?"; // TODO
+        EfType.SimpleType openSimple = new EfType.SimpleType(declaringOpenType, Collections.emptyList());
         methodId = MethodId.of(openSimple, name);
         methodsInfo.openMethods.registerMethod(methodId, method);
       } else {

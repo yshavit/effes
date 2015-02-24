@@ -7,15 +7,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.yuvalshavit.effes.compile.node.EfType.disjunction;
 import static org.testng.Assert.assertEquals;
 
 public final class EfTypeTest {
 
-  final EfType simpleA = new EfType.SimpleType("Alpha");
-  final EfType simpleB = new EfType.SimpleType("Bravo");
-  final EfType simpleC = new EfType.SimpleType("Charlie");
-  final EfType simpleD = new EfType.SimpleType("Delta");
+  final EfType simpleA = new EfType.SimpleType("Alpha", Collections.emptyList());
+  final EfType simpleB = new EfType.SimpleType("Bravo", Collections.emptyList());
+  final EfType simpleC = new EfType.SimpleType("Charlie", Collections.emptyList());
+  final EfType simpleD = new EfType.SimpleType("Delta", Collections.emptyList());
 
   @Test
   public void simpleOrdering() {

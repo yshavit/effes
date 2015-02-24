@@ -17,6 +17,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,11 +65,11 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       TerminalNode typeName = ctx.TYPE_NAME();
-      EfType.SimpleType registeredType = registry.registerType(typeName.getSymbol(), typeName.getText());
 
       List<TerminalNode> generics = ctx.genericsDeclr().GENERIC_NAME();
+      List<String> genericNames;
       if (generics != null) {
-        List<String> genericNames = new ArrayList<>(generics.size());
+        genericNames = new ArrayList<>(generics.size());
         Set<String> uniqueGenericNames = new HashSet<>(generics.size());
         
         generics.stream().forEach(genericNode -> {
@@ -80,10 +81,10 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
             errs.add(genericNode.getSymbol(), "duplicate generic name");
           }
         });
-        if (registeredType != null) {
-          registeredType.setGenericParams(genericNames);
-        }
+      } else {
+        genericNames = Collections.emptyList();
       }
+      registry.registerType(typeName.getSymbol(), typeName.getText(), genericNames);
     }
 
     @Override

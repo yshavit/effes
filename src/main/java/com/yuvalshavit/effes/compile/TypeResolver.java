@@ -34,13 +34,15 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   }
 
   @Nullable
-  public EfType.SimpleType getSimpleType(String name) { // TODO should this take a reification function?
-    return typeRegistry.getSimpleType(name);
+  public EfType.SimpleType getSimpleType(String name, Function<EfType.GenericType, EfType> reification) {
+    EfType.SimpleType lookup = typeRegistry.getSimpleType(name);
+    return lookup == null
+      ? null
+      : lookup.reify(reification);
   }
   
-  public Function<EfType.GenericType,EfType> getReification(Token start, EfType.SimpleType type, List<EffesParser.TypeContext> declaredGenerics) {
+  public Function<EfType.GenericType,EfType> getReification(Token start, List<EfType.GenericType> typeGenerics, List<EffesParser.TypeContext> declaredGenerics) {
     List<EfType> reificationParams = declaredGenerics.stream().map(this).collect(Collectors.toList());
-    List<EfType.GenericType> typeGenerics = type.getGenericsDeclr();
     if (reificationParams.size() != typeGenerics.size()) {
       String msg = String.format("expected %d type parameter%s but saw %d", typeGenerics.size(), typeGenerics.size() == 1 ? "" : "s", reificationParams.size());
       errs.add(start, msg);
@@ -76,7 +78,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         if (type instanceof EfType.SimpleType) {
           EfType.SimpleType simpleType = (EfType.SimpleType) type;
           if (!genericArgsPresent) {
-            if (simpleType.getGenericsDeclr().isEmpty()) {
+            if (simpleType.getParams().isEmpty()) {
               type = type.reify(t -> t);
             } else {
               List<String> expectedGenericNames = simpleType.getGenericsDeclr().stream().map(EfType.GenericType::getName).collect(Collectors.toList());
@@ -84,7 +86,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
               type = EfType.UNKNOWN;
             }
           } else {
-            type = type.reify(getReification(params.getStart(), simpleType, params.type()));
+            type = type.reify(getReification(params.getStart(), simpleType.getGenericsDeclr(), params.type()));
           }
         } else if (genericArgsPresent) {
           throw new UnsupportedOperationException("alias type with generic?"); // TODO

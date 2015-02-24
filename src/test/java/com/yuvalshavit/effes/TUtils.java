@@ -3,6 +3,7 @@ package com.yuvalshavit.effes;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import static org.testng.Assert.assertFalse;
@@ -14,7 +15,7 @@ public final class TUtils {
   public static TypeRegistry typeRegistry(String... types) {
     TypeRegistry registry = new TypeRegistry(new CompileErrors());
     for (String type : types) {
-      registry.registerType(null, type);
+      registry.registerType(null, type, Collections.emptyList());
     }
     return registry;
   }

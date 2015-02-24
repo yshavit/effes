@@ -8,7 +8,6 @@ import com.yuvalshavit.util.Dispatcher;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -19,11 +18,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class EfType {
-  
+
   @Deprecated // TODO remove all call sites!
   public static final Function<GenericType, EfType> UNSUPPORTED_REIFICATION = g -> { 
     throw new UnsupportedOperationException(); };
-
+  public static final Function<GenericType,EfType> KEEP_GENERIC = t -> t;
+  
   public static final EfType UNKNOWN = new UnknownType(UnknownType.Variant.UNKNOWN);
   public static final EfType VOID = new UnknownType(UnknownType.Variant.VOID);
   public static final Comparator<EfType> comparator = new EfTypeComparator();
@@ -105,34 +105,33 @@ public abstract class EfType {
 
   public static final class SimpleType extends EfType {
     private final String name;
-    private List<GenericType> genericParams;
-    private List<EfType> reification;
-    private SimpleType genericForm;
+    private final List<EfType> params;
+    private final SimpleType genericForm;
 
-    public SimpleType(String name) {
-      assert name != null;
+    public SimpleType(String name, List<String> params) {
       this.name = name;
+      this.params = ImmutableList.copyOf(params.stream().map(s -> new GenericType(s, this)).collect(Collectors.toList()));
       this.genericForm = this;
     }
 
-    public boolean isReified() {
-      return reification != null;
+    private SimpleType(String name, List<EfType> params, SimpleType genericForm) {
+      this.name = Preconditions.checkNotNull(name);
+      this.params = Preconditions.checkNotNull(params);
+      this.genericForm = Preconditions.checkNotNull(genericForm);
     }
     
     public String getName() {
       return name;
     }
 
+    public List<EfType> getParams() {
+      return params;
+    }
+
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
-      SimpleType reified = new SimpleType(name);
-      reified.genericParams = genericParams;
-      if (reified.reification != null) {
-        throw new UnsupportedOperationException("TODO is this right?");
-      }
-      reified.reification = this.genericParams.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList());
-      reified.genericForm = genericForm;
-      return reified;
+      List<EfType> reifiedParams = ImmutableList.copyOf(params.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList()));
+      return new SimpleType(name, reifiedParams, genericForm);
     }
 
     @Override
@@ -140,63 +139,51 @@ public abstract class EfType {
       return Collections.singleton(this);
     }
 
-    public void setGenericParams(List<String> genericParams) {
-      if (this.genericParams != null) {
-        throw new IllegalStateException("generic params already set: " + this.genericParams);
-      }
-      Set<String> genericsSet = new HashSet<>(genericParams);
-      if (genericsSet.size() != genericParams.size()) {
-        throw new IllegalArgumentException("illegal generic params: " + genericParams);
-      }
-      this.genericParams = ImmutableList.copyOf(
-        genericParams.stream().map(g -> new GenericType(g, this)).collect(Collectors.toList()));
-    }
-    
     public SimpleType getGeneric() {
       return genericForm;
     }
 
+    public List<GenericType> getGenericsDeclr() {
+      List raw = params;
+      @SuppressWarnings("unchecked")
+      List<GenericType> generic = (List<GenericType>) raw;
+      for (Object elem : raw) {
+        assert elem instanceof GenericType : String.format("not a %s: %s", GenericType.class.getSimpleName(), elem);
+      }
+      return generic;
+    } 
+    
     /**
-     * Returns just the simple type's name and generic parameters &mdash; not its args.
-     *
-     * Printing the args has some problems. If the type's args are somewhat complex, this recursion would get
-     * unwieldy: Foo(hello: World(solarSystem: Star(name: String))), for instance. In the extreme case, for recursive
-     * types we'd have an infinitely long string: Cons(head: E, tail: Empty | Cons(head: E, tail : Empty | Cons...)).
-     *
-     * So we can't print out the arg's types. What about just the names? "Cons(head, tail)" for instance. That'd be
-     * okay, but the half-loaf approach isn't very compelling. Instead, if someone wants to write custom code to print
-     * out something reasonable for a given context, they can (for instance, recursing only one level down).
+     * Returns the simple type's name and parameters.
      */
     @Override
     public String toString() {
-      if (isReified() && !reification.isEmpty()) {
-        return name + reification;
-      } else if (genericParams != null && !genericParams.isEmpty()) {
-        return name + genericParams.stream().map(GenericType::getName).collect(Collectors.toList());
+      // If this is the generic form, we want to print only the names, not the full toString (which would include this object's toString from the GenericName,
+      // and thus cause a stack overflow).
+      if (this == genericForm) {
+        return params.isEmpty()
+          ? name
+          : name + getGenericsDeclr().stream().map(GenericType::getName).collect(Collectors.toList());
       } else {
-        return name;
+        return params.isEmpty()
+          ? name
+          : name + params;
       }
     }
 
     @Override
     public boolean contains(EfType other) {
-      if (!isReified()) {
-        throw new IllegalStateException(bothMustBeReifiedMessage(other));
-      }
       if (other.getClass() != SimpleType.class) {
         return false;
       }
       SimpleType otherSimple = (SimpleType) other;
-      if (!otherSimple.isReified()) {
-        throw new IllegalStateException(bothMustBeReifiedMessage(other));
-      }
       if (!name.equals(otherSimple.name)) {
         return false;
       }
-      assert reification.size() == otherSimple.reification.size() : String.format("%d != %d", reification.size(), otherSimple.reification.size());
-      for (int i = 0, len = reification.size(); i < len; ++i) {
-        EfType myParam = reification.get(i);
-        EfType otherParam = otherSimple.reification.get(i);
+      assert params.size() == otherSimple.params.size() : String.format("%d != %d", params.size(), otherSimple.params.size());
+      for (int i = 0, len = params.size(); i < len; ++i) {
+        EfType myParam = params.get(i);
+        EfType otherParam = otherSimple.params.get(i);
         if (!myParam.equals(otherParam)) {
           return false;
         }
@@ -213,8 +200,7 @@ public abstract class EfType {
 
       SimpleType that = (SimpleType) o;
 
-      return (genericForm == that.genericForm)
-        && (isReified() ? reification.equals(that.reification) : that.reification == null);
+      return (genericForm == that.genericForm) && params.equals(that.params);
     }
 
     @Override
@@ -222,25 +208,15 @@ public abstract class EfType {
       return name.hashCode();
     }
 
-    private String bothMustBeReifiedMessage(EfType other) {
-      return String.format("both types must be reified (when checking if %s contains %s)", this, other);
-    }
-
     public Function<GenericType, EfType> getReification() {
-      if (reification == null) {
-        throw new IllegalStateException("not a reified type: " + this);
-      }
+      List<EfType> genericsDeclr = genericForm.params;
       return g -> {
-        int idx = genericParams.indexOf(g);
+        int idx = genericsDeclr.indexOf(g);
         if (idx < 0) {
           throw new IllegalArgumentException("unrecognized generic " + g); // TODO is this right?
         }
-        return reification.get(idx);
+        return params.get(idx);
       };
-    }
-
-    public List<GenericType> getGenericsDeclr() {
-      return Collections.unmodifiableList(genericParams);
     }
   }
 
