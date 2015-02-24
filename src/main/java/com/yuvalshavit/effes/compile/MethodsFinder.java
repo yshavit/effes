@@ -193,7 +193,7 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;
-        assert false : "TODO is Collections.emptyList right?"; // TODO
+        // TODO emptyList will have to change when open types can be parameterized
         EfType.SimpleType openSimple = new EfType.SimpleType(declaringOpenType, Collections.emptyList());
         methodId = MethodId.of(openSimple, name);
         methodsInfo.openMethods.registerMethod(methodId, method);

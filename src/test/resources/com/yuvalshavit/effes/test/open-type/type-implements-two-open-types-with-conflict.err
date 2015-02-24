@@ -1,10 +1,2 @@
-type FirstOpen ?
-  hello -> True
-
-type SecondOpen ?
-  hello -> False
-
-type Both:
-  is FirstOpen
-  is SecondOpen
-  hello -> True | False: return True
+Both::hello returns False | True but must return False because of SecondOpen::hello (at line 10, column 12: True)
+Both::hello returns False | True but must return True because of FirstOpen::hello (at line 10, column 12: True)
