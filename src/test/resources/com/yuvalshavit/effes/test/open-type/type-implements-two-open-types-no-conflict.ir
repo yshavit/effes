@@ -1,0 +1,4 @@
+def Both::hello () -> True:
+  ReturnStatement
+    CtorInvoke
+      type: True
