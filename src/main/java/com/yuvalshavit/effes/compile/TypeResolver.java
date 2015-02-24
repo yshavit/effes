@@ -104,7 +104,13 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         errs.add(ctx.getStart(), "undeclared generic type " + genericName);
         return EfType.UNKNOWN;
       }
-      return new EfType.GenericType(genericName, context);
+      for (EfType.GenericType generic : context.getGenericsDeclr()) {
+        if (generic.getName().equals(genericName)) {
+          return generic;
+        }
+      }
+      errs.add(ctx.getStart(), String.format("no generic parameter %s defined on %s", genericName, context.getGeneric()));
+      return EfType.UNKNOWN;
     }
   }
 }
