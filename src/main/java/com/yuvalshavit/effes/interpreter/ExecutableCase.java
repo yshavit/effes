@@ -25,7 +25,9 @@ public final class ExecutableCase {
         List<EfValue> poppedState = popped.getState();
         poppedState.forEach(stack::push);
         matcher.ifMatches.execute(stack);
+        EfValue rv = stack.pop();
         poppedState.forEach(s -> stack.pop());
+        stack.push(rv);
         return;
       }
     }
