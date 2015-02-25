@@ -42,8 +42,8 @@ public final class EfTypeTest {
     EfType d1 = EfType.disjunction(simpleA, simpleB, EfType.UNKNOWN);
     EfType d2 = EfType.disjunction(simpleA, simpleC);
     // if we only compared lengths, d2 would be first. But we compare by elements (in order) first, so d1 is first
-    assertEquals(cmp(d1, d2), -2);
-    assertEquals(cmp(d2, d1), 2);
+    assertEquals(cmp(d1, d2), -3);
+    assertEquals(cmp(d2, d1), 3);
     assertEquals(cmp(d1, d1), 0);
     assertEquals(cmp(d2, d2), 0);
   }

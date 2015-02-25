@@ -8,4 +8,4 @@ dataTypeDeclr
       type
         SingleDataType
           TYPE_NAME: Nothing
-          genericsDeclr
+          singleTypeParameters

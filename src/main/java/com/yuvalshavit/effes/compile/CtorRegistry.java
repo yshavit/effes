@@ -46,7 +46,8 @@ public class CtorRegistry {
     Preconditions.checkArgument(type == type.getGeneric(), "can only set ctor args for unreified types");
     Preconditions.checkNotNull(ctorArgs);
     if (argsByType.containsKey(type)) {
-      throw new IllegalStateException(String.format("args already set on %s: %s", type, argsByType.get(type)));
+      // TypesRegistry will complain about the dupe; we don't need to
+      return;
     }
     for (int pos = 0; pos < ctorArgs.size(); ++pos) {
       EfVar arg = ctorArgs.get(pos);

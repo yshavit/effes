@@ -230,15 +230,14 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     public void enterOpenTypeAlternative(@NotNull EffesParser.OpenTypeAlternativeContext ctx) {
       assert currentDataType != null;
 
-      EffesParser.SingleNonGenericContext dataTypeCtx = ctx.singleNonGeneric();
-      TerminalNode openTypeName = dataTypeCtx.TYPE_NAME();
-      if (dataTypeCtx.singleTypeParameters().OPEN_BRACKET() != null) {
-        errs.add(dataTypeCtx.singleTypeParameters().OPEN_BRACKET().getSymbol(), "generics aren't supported for open types");
+      TerminalNode openTypeName = ctx.TYPE_NAME();
+      if (ctx.singleTypeParameters().OPEN_BRACKET() != null) {
+        errs.add(ctx.singleTypeParameters().OPEN_BRACKET().getSymbol(), "generics aren't supported for open types");
       }
       if (openTypeName != null) {
         typeMappings.put(openTypeName.getText(), currentDataType);
       } else {
-        errs.add(dataTypeCtx.getStart(), "expected name of open type");
+        errs.add(ctx.getStart(), "expected name of open type");
       }
     }
 
