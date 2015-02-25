@@ -26,7 +26,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
     public CaseExpression(Expression source, ExecutableExpression matchAgainst, List<ExecutableCase.CaseMatcher> caseMatchers) {
       super(source);
-      this.delegate = new ExecutableCase(matchAgainst, caseMatchers);
+      this.delegate = new ExecutableCase(matchAgainst, caseMatchers, true);
     }
 
     @Override
