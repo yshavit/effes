@@ -9,10 +9,12 @@ public final class ExecutableCase {
 
   private final ExecutableExpression matchAgainst;
   private final List<CaseMatcher> caseMatchers;
+  private final boolean isExpression;
 
-  public ExecutableCase(ExecutableExpression matchAgainst, List<CaseMatcher> caseMatchers) {
+  public ExecutableCase(ExecutableExpression matchAgainst, List<CaseMatcher> caseMatchers, boolean isExpression) {
     this.matchAgainst = matchAgainst;
     this.caseMatchers = ImmutableList.copyOf(caseMatchers);
+    this.isExpression = isExpression;
   }
 
   public void execute(CallStack stack) {
@@ -25,9 +27,13 @@ public final class ExecutableCase {
         List<EfValue> poppedState = popped.getState();
         poppedState.forEach(stack::push);
         matcher.ifMatches.execute(stack);
-        EfValue rv = stack.pop();
+        EfValue rv = isExpression
+          ? stack.pop()
+          : null;
         poppedState.forEach(s -> stack.pop());
-        stack.push(rv);
+        if (isExpression) {
+          stack.push(rv);
+        }
         return;
       }
     }

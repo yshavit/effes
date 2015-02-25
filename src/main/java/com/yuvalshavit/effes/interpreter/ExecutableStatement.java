@@ -39,7 +39,7 @@ public abstract class ExecutableStatement implements ExecutableElement {
 
     public CaseStatement(Statement source, ExecutableExpression matchAgainst, List<ExecutableCase.CaseMatcher> caseMatchers) {
       super(source);
-      this.delegate = new ExecutableCase(matchAgainst, caseMatchers);
+      this.delegate = new ExecutableCase(matchAgainst, caseMatchers, false);
     }
 
     @Override
