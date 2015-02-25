@@ -41,6 +41,15 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
       : lookup.reify(reification);
   }
   
+  @Nullable
+  public EfType.SimpleType getSimpleType(TerminalNode typeName, List<EffesParser.TypeContext> params) {
+    EfType.SimpleType type = typeRegistry.getSimpleType(typeName.getText());
+    if (type == null) {
+      return null;
+    }
+    return type.reify(getReification(typeName.getSymbol(), type.getGenericsDeclr(), params));
+  }
+  
   public Function<EfType.GenericType,EfType> getReification(Token start, List<EfType.GenericType> typeGenerics, List<EffesParser.TypeContext> declaredGenerics) {
     List<EfType> reificationParams = declaredGenerics.stream().map(this).collect(Collectors.toList());
     if (reificationParams.size() != typeGenerics.size()) {

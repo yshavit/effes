@@ -1,0 +1,19 @@
+def describe (in: False | Node[False] | Node[True] | True) -> False | FalseNode | True | TrueNode:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: in
+          pos: 0
+      of Node[True]:
+        CtorInvoke
+          type: TrueNode
+      of Node[False]:
+        CtorInvoke
+          type: FalseNode
+      of True:
+        CtorInvoke
+          type: True
+      of False:
+        CtorInvoke
+          type: False

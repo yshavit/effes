@@ -354,7 +354,8 @@ public final class ExpressionCompiler {
 
   public CasePattern casePattern(EffesParser.CasePatternContext casePattern) {
     TerminalNode tok = casePattern.TYPE_NAME();
-    EfType.SimpleType matchType = typeRegistry.getSimpleType(tok.getText());
+    TypeResolver resolver = new TypeResolver(typeRegistry, errs, declaringType);
+    EfType.SimpleType matchType = resolver.getSimpleType(tok, casePattern.singleTypeParameters().type());
     if (matchType == null) {
       errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
       return null;
@@ -383,7 +384,7 @@ public final class ExpressionCompiler {
     }
     EfType.SimpleType matchType = casePattern.matchType();
     List<Pair<Token, String>> bindingTokens = casePattern.bindings();
-    List<EfVar> matchtypeArgs = ctors.get(matchType, EfType.UNSUPPORTED_REIFICATION);
+    List<EfVar> matchtypeArgs = ctors.get(matchType, EfType.KEEP_GENERIC);
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
