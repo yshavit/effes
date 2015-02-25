@@ -2,3 +2,4 @@ ReturnStat
   SingleLineExpression
     CtorInvoke
       TYPE_NAME: True
+      singleTypeParameters

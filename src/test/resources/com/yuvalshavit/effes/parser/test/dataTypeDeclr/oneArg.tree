@@ -7,7 +7,7 @@ dataTypeDeclr
       type
         SingleDataType
           TYPE_NAME: Zero
-          genericsDeclr
+          singleTypeParameters
         SingleDataType
           TYPE_NAME: Integer
-          genericsDeclr
+          singleTypeParameters

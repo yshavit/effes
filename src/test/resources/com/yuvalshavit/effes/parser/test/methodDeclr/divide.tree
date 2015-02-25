@@ -1,20 +1,20 @@
 methodDeclr
   methodName
     MULT_OPS: /
-  genericsDeclr
   methodArgs
     methodArg
       type
         SingleDataType
           TYPE_NAME: Foo
-          genericsDeclr
+          singleTypeParameters
   methodReturnDeclr
     type
       SingleDataType
         TYPE_NAME: Bar
-        genericsDeclr
+        singleTypeParameters
   inlinableBlock
     ReturnStat
       SingleLineExpression
         CtorInvoke
           TYPE_NAME: Bar
+          singleTypeParameters

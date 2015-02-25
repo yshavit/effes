@@ -73,22 +73,19 @@ dataTypeArgsDeclr: OPEN_PAREN
 dataTypeArgDeclr: VAR_NAME COLON type;
 
 typeMember: methodDeclr                                                         # MethodMember
-          | IS singleNonGeneric NL                                              # OpenTypeAlternative
+          | IS TYPE_NAME singleTypeParameters NL                                # OpenTypeAlternative
           ;
 
 genericsDeclr: (OPEN_BRACKET GENERIC_NAME (COMMA GENERIC_NAME)* CLOSE_BRACKET)?;
 
 // generics and types
 
-
 singleTypeParameters: (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
-singleType: singleNonGeneric                                                    # SingleDataType
+singleType: TYPE_NAME singleTypeParameters                                      # SingleDataType
           | GENERIC_NAME                                                        # SingleGenericType
           ;
           
-singleNonGeneric: TYPE_NAME singleTypeParameters;
-
 type: singleType (PIPE singleType)*
     | OPEN_PAREN singleType (PIPE singleType)* CLOSE_PAREN;  // OPEN_PAREN type CLOSE_PAREN ?
 
@@ -125,8 +122,6 @@ methodInvokeArgs: expr
                 | OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN
                 | /* nothing */
                 ;
-//(expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
-//methodInvokeArgs: (expr (OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN)?)?;
 
 caseAlternative: casePattern COLON exprBlock;
 
