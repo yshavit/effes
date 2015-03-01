@@ -110,6 +110,21 @@ public abstract class ExecutableExpression implements ExecutableElement {
     }
   }
 
+  public static class IntLiteral extends ExecutableExpression {
+    
+    private final long value;
+    
+    public IntLiteral(Expression.IntLiteral source) {
+      super(source);
+      value = source.getValue();
+    }
+    
+    @Override
+    public void execute(CallStack stack) {
+      throw new UnsupportedOperationException("int literal " + value); // TODO
+    }
+  }
+  
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;
     private final Supplier<ExecutableMethod> body;

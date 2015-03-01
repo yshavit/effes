@@ -57,6 +57,7 @@ public final class ExpressionCompiler {
       .put(EffesParser.MethodInvokeOrVarExprContext.class, ExpressionCompiler::methodInvokeOrVar)
       .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
       .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
+      .put(EffesParser.IntLiteralExprContext.class, ExpressionCompiler::intLiteralExpr)
       .build(ExpressionCompiler::error);
 
   private Expression error(EffesParser.ExprContext ctx) {
@@ -67,6 +68,18 @@ public final class ExpressionCompiler {
   private Expression declaringObject(Token token) {
     assert declaringType != null;
     return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType.reify(t -> t)));
+  }
+  
+  private Expression intLiteralExpr(EffesParser.IntLiteralExprContext ctx) {
+    Token tok = ctx.getStart();
+    long v;
+    try {
+      v = Long.valueOf(ctx.getText());
+    } catch (NumberFormatException e) {
+      errs.add(tok, "invalid int literal (must fit in 64-bit signed int)");
+      return new Expression.UnrecognizedExpression(tok);
+    }
+    return new Expression.IntLiteral(tok, v);
   }
 
   private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {

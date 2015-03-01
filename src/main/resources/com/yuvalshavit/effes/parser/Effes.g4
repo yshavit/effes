@@ -114,6 +114,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | methodInvoke                                                              # MethodInvokeOrVarExpr
     | expr DOT methodInvoke                                                     # InstanceMethodInvokeOrVarExpr
     | TYPE_NAME singleTypeParameters ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?  # CtorInvoke
+    | INT                                                                       # IntLiteralExpr
     ;
 
 methodInvoke: methodName singleTypeParameters methodInvokeArgs;
@@ -136,8 +137,6 @@ COLON: ':';
 DOT: '.';
 EQ: '=';
 ARROW: '->';
-PATTERN: '@pattern';
-CREATE: '@create';
 OPEN_PAREN: '(';
 CLOSE_PAREN: ')';
 OPEN_BRACKET: '[';
@@ -158,8 +157,8 @@ WHERE: 'where';
 UNDERSCORE: '_';
 DOLLAR: '$';
 DUBSLASH: '\\\\';
-AT: '@';
 QUESTION: '?';
+BUILTIN: '@builtin';
 
 INT: '0' | [1-9] [0-9]*;
 DECIMAL: INT '.' [0-9]+ DECIMAL_EXPONENT?
