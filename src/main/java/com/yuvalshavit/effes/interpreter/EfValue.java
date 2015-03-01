@@ -11,12 +11,6 @@ public class EfValue {
   private final List<EfValue> state;
 
   public static EfValue of(EfType.SimpleType type, List<EfValue> state) {
-    // TODO somehow check state.size() against expected size of ctor?
-//    if (state.size() != type.getCtorArgs().size()) {
-//      throw new IllegalArgumentException(String.format("%s has %d arg(s), but %d given: %s",
-//        type, type.getCtorArgs().size(), state.size(), state ));
-//    }
-    // TODO also check types against expected
     return new EfValue(type, state);
   }
 
@@ -26,6 +20,7 @@ public class EfValue {
 
   public EfValue(EfType.SimpleType type, List<EfValue> state) {
     this.type = type;
+    // TODO also check types against expected
     this.state = ImmutableList.copyOf(state);
   }
 

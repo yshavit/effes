@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public final class AllDispatchersTest {
   private static final String oncePerDispatcher = "check field usage";
@@ -34,7 +35,9 @@ public final class AllDispatchersTest {
     Dispatcher<?,?,?> dispatcher = (Dispatcher) dispatcherField.get(null);
     assertTrue(dispatcher.baseClass.isAssignableFrom(subclassUnderTest));
     //noinspection SuspiciousMethodCalls
-    assertTrue(dispatcher.dispatches.containsKey(subclassUnderTest), subclassUnderTest.toString());
+    if (!dispatcher.dispatches.containsKey(subclassUnderTest)) {
+      fail(String.format("%s.%s doesn't handle %s", dispatcherField.getDeclaringClass().getName(), dispatcherField.getName(), subclassUnderTest));
+    }
   }
 
   @DataProvider(name = oncePerDispatcher)

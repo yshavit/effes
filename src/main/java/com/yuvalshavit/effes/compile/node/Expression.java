@@ -247,6 +247,41 @@ public abstract class Expression extends Node {
     }
   }
 
+  public static class IntLiteral extends Expression {
+    
+    private final long value;
+    
+    public IntLiteral(Token token, long value) {
+      super(token, efTypeFor(value));
+      this.value = value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // always valid
+    }
+
+    @Override
+    public void state(NodeStateVisitor out) {
+      out.visitScalar(null, value);
+    }
+
+    public long getValue() {
+      return value;
+    }
+
+    private static EfType.SimpleType efTypeFor(long value) {
+      return value == 0
+        ? BuiltinTypes.INT_ZERO.getEfType()
+        : BuiltinTypes.INT_VALUE.getEfType();
+    }
+  }
+  
   public static class MethodInvoke extends Expression {
     private final MethodId methodId;
     private final EfMethod<?> method;
