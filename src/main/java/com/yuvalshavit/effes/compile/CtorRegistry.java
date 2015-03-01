@@ -1,10 +1,3 @@
-/*
- * Copyright © 2015 Sqrrl Data, Inc. All Rights Reserved.
- *
- * You may not use, distribute or modify this code except
- * with the express written authorization of Sqrrl Data,
- * Inc. under the terms of the Sqrrl Enterprise license.
- */
 package com.yuvalshavit.effes.compile;
 
 import java.util.HashMap;
