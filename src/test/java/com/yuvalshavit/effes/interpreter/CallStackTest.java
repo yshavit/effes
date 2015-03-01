@@ -377,8 +377,8 @@ public final class CallStackTest {
     EfValue value = stack.pop();
     assertEquals(value.getType(), argedType);
     assertEquals(value.getState(), ImmutableList.of(
-      EfValue.of(stringType, "first value"),
-      EfValue.of(stringType, "second value")));
+      EfValue.of("first value"),
+      EfValue.of("second value")));
 
     assertEquals(stack.snapshot(), snapshot);
   }
@@ -453,7 +453,7 @@ public final class CallStackTest {
   }
   
   private static void push(CallStack stack, String value) {
-    stack.push(EfValue.of(stringType, value));
+    stack.push(EfValue.of(value));
   }
 
   private static String pop(CallStack stack) {
@@ -470,6 +470,4 @@ public final class CallStackTest {
     EfValue peek = stack.peek();
     return ((EfValue.EfStringValue)peek).getString();
   }
-
-  private static final EfType.SimpleType stringType = new EfType.SimpleType("Tt", Collections.emptyList());
 }
