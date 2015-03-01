@@ -104,7 +104,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     @Override
     public void execute(CallStack stack) {
       target.execute(stack);
-      EfValue targetValue = stack.pop();
+      EfValue.StandardValue targetValue = (EfValue.StandardValue) stack.pop();
       EfValue argValue = targetValue.getState().get(arg.getArgPosition());
       stack.push(argValue);
     }
@@ -121,7 +121,7 @@ public abstract class ExecutableExpression implements ExecutableElement {
     
     @Override
     public void execute(CallStack stack) {
-      throw new UnsupportedOperationException("int literal " + value); // TODO
+      stack.push(EfValue.of(value));
     }
   }
   

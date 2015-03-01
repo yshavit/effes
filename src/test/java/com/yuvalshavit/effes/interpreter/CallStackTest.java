@@ -5,6 +5,7 @@ import com.yuvalshavit.effes.compile.node.EfType;
 import org.testng.annotations.Test;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
@@ -376,7 +377,7 @@ public final class CallStackTest {
 
     EfValue value = stack.pop();
     assertEquals(value.getType(), argedType);
-    assertEquals(value.getState(), ImmutableList.of(
+    assertEquals(getState(value), ImmutableList.of(
       EfValue.of("first value"),
       EfValue.of("second value")));
 
@@ -452,22 +453,28 @@ public final class CallStackTest {
     stack.closeFrame();
   }
   
+  private static List<EfValue> getState(EfValue value) {
+    assertEquals(value.getClass(), EfValue.StandardValue.class);
+    EfValue.StandardValue stdValue = (EfValue.StandardValue) value;
+    return stdValue.getState();
+  }
+  
   private static void push(CallStack stack, String value) {
     stack.push(EfValue.of(value));
   }
 
   private static String pop(CallStack stack) {
     EfValue pop = stack.pop();
-    return ((EfValue.EfStringValue)pop).getString();
+    return ((EfValue.StringValue)pop).getString();
   }
 
   private static String peekArg(CallStack stack, int pos) {
     EfValue peek = stack.peekArg(pos);
-    return ((EfValue.EfStringValue)peek).getString();
+    return ((EfValue.StringValue)peek).getString();
   }
 
   private static String peek(CallStack stack) {
     EfValue peek = stack.peek();
-    return ((EfValue.EfStringValue)peek).getString();
+    return ((EfValue.StringValue)peek).getString();
   }
 }

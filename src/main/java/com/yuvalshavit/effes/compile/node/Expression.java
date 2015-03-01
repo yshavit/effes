@@ -252,7 +252,7 @@ public abstract class Expression extends Node {
     private final long value;
     
     public IntLiteral(Token token, long value) {
-      super(token, efTypeFor(value));
+      super(token, BuiltinTypes.efTypeFor(value));
       this.value = value;
     }
 
@@ -273,12 +273,6 @@ public abstract class Expression extends Node {
 
     public long getValue() {
       return value;
-    }
-
-    private static EfType.SimpleType efTypeFor(long value) {
-      return value == 0
-        ? BuiltinTypes.INT_ZERO.getEfType()
-        : BuiltinTypes.INT_VALUE.getEfType();
     }
   }
   
