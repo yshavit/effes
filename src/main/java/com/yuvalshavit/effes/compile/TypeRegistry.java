@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.yuvalshavit.effes.compile.node.BuiltinTypes;
+import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfType;
 import org.antlr.v4.runtime.Token;
@@ -23,7 +23,7 @@ public final class TypeRegistry {
     this.errs = errs;
   }
 
-  public void registerType(BuiltinTypes builtin) {
+  public void registerType(BuiltinType builtin) {
     EfType.SimpleType efType = builtin.getEfType();
     String typeName = efType.getName();
     if (simpleTypes.containsKey(typeName)) {

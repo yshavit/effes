@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Longs;
-import com.yuvalshavit.effes.compile.node.BuiltinTypes;
+import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
 
 import java.util.Collections;
@@ -106,7 +106,7 @@ public abstract class EfValue {
     private final long value;
     
     private LongValue(long value) {
-      super(BuiltinTypes.efTypeFor(value));
+      super(BuiltinType.efTypeFor(value));
       this.value = value;
     }
 
@@ -130,7 +130,7 @@ public abstract class EfValue {
     private final String value;
 
     private StringValue(String value) {
-      super(BuiltinTypes.STRING.getEfType());
+      super(BuiltinType.STRING.getEfType());
       this.value = Preconditions.checkNotNull(value);
     }
     
