@@ -1,0 +1,4 @@
+getZero -> IntZero: return 0
+
+main:
+  print getZero

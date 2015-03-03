@@ -1,0 +1,4 @@
+def getNum () -> IntValue:
+  ReturnStatement
+    IntLiteral
+      27
