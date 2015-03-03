@@ -1,0 +1,2 @@
+invalid int literal (must fit in 64-bit signed int) (at line 1, column 28: 9223372036854775808)
+expected result type IntValue but found unknown type (at line 1, column 28: 9223372036854775808)

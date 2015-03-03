@@ -1,0 +1,2 @@
+no such method: '-' (at line 1, column 28: -)
+expected result type IntValue but found unknown type (at line 1, column 28: -)

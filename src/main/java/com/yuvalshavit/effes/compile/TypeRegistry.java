@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.yuvalshavit.effes.compile.node.BuiltinTypes;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfType;
 import org.antlr.v4.runtime.Token;
@@ -20,6 +21,11 @@ public final class TypeRegistry {
 
   public TypeRegistry(CompileErrors errs) {
     this.errs = errs;
+    for (BuiltinTypes builtin : BuiltinTypes.values()) {
+      EfType.SimpleType efType = builtin.getEfType();
+      EfType.SimpleType old = simpleTypes.put(efType.getName(), efType);
+      assert old == null : efType;
+    }
   }
 
   public void registerAlias(Token token, String name, EfType type) {
