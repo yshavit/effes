@@ -2,7 +2,7 @@ package com.yuvalshavit.effes.compile.node;
 
 import java.util.Collections;
 
-public enum BuiltinTypes {
+public enum BuiltinType {
   INT_ZERO("IntZero"),
   INT_VALUE("IntValue"),
   
@@ -11,7 +11,7 @@ public enum BuiltinTypes {
   
   private final EfType.SimpleType efType;
 
-  BuiltinTypes(String efTypeName) {
+  BuiltinType(String efTypeName) {
     this.efType = new EfType.SimpleType(efTypeName, Collections.<String>emptyList());
   }
 
