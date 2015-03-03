@@ -21,11 +21,15 @@ public final class TypeRegistry {
 
   public TypeRegistry(CompileErrors errs) {
     this.errs = errs;
-    for (BuiltinTypes builtin : BuiltinTypes.values()) {
-      EfType.SimpleType efType = builtin.getEfType();
-      EfType.SimpleType old = simpleTypes.put(efType.getName(), efType);
-      assert old == null : efType;
+  }
+
+  public void registerType(BuiltinTypes builtin) {
+    EfType.SimpleType efType = builtin.getEfType();
+    String typeName = efType.getName();
+    if (simpleTypes.containsKey(typeName)) {
+      throw new IllegalStateException("already registered built-in type: " + typeName);
     }
+    simpleTypes.put(typeName, efType);
   }
 
   public void registerAlias(Token token, String name, EfType type) {
@@ -33,6 +37,7 @@ public final class TypeRegistry {
       typeAliases.put(name,  type);
     }
   }
+  
 
   public void registerType(Token token, String name, List<String> params) {
     if (nameIsAvailable(token, name)) {

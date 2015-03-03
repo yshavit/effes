@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile;
 
 import com.yuvalshavit.effes.compile.node.Block;
+import com.yuvalshavit.effes.compile.node.BuiltinTypes;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfArgs;
 import com.yuvalshavit.effes.compile.node.EfMethod;
@@ -23,15 +24,20 @@ public final class IrCompiler<E> {
   {
     this.errs = errs;
     CtorRegistry ctors = new CtorRegistry();
-    TypeRegistry typeRegistry = getTypeRegistry(source, new TypeRegistry(errs), ctors, errs);
+    TypeRegistry typeRegistry = getTypeRegistry(source, ctors, errs);
+    
     builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
     compiledMethods = compileToIntermediate(source, typeRegistry, ctors, builtInMethods, errs);
   }
 
   private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
-                                              TypeRegistry typeRegistry,
                                               CtorRegistry ctors,
                                               CompileErrors errs) {
+    TypeRegistry typeRegistry = new TypeRegistry(errs);
+    // TODO use some sort of builtin.ef file for these?
+    for (BuiltinTypes builtin : BuiltinTypes.values()) {
+      typeRegistry.registerType(builtin);
+    }
     new TypesFinder(typeRegistry, ctors, errs).accept(source);
     return typeRegistry;
   }
