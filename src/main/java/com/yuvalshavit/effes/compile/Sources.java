@@ -10,12 +10,12 @@ import com.yuvalshavit.effes.parser.EffesParser;
 
 public class Sources {
   
-  private final Iterable<EffesParser.CompilationUnitContext> builtins;
-  private final Iterable<EffesParser.CompilationUnitContext> userland;
+  private final Iterable<Source> builtins;
+  private final Iterable<Source> userland;
 
   public Sources(Iterable<EffesParser.CompilationUnitContext> builtins, Iterable<EffesParser.CompilationUnitContext> userland) {
-    this.builtins = builtins;
-    this.userland = userland;
+    this.builtins = Iterables.transform(builtins, c -> new Source(c, true));
+    this.userland = Iterables.transform(userland, c -> new Source(c, false));
   }
   
   public Sources(Iterable<EffesParser.CompilationUnitContext> userland) {
@@ -26,11 +26,11 @@ public class Sources {
     this(Arrays.asList(compilationUnitContexts));
   }
 
-  public void forEach(Consumer<? super EffesParser.CompilationUnitContext> action) {
+  public void forEach(Consumer<? super Source> action) {
     allSources().forEach(action);
   }
 
-  private Iterable<EffesParser.CompilationUnitContext> allSources() {
+  private Iterable<Source> allSources() {
     return Iterables.concat(builtins, userland);
   }
 
@@ -38,5 +38,5 @@ public class Sources {
     // TODO
     return Collections.emptySet();
   }
-  
+
 }

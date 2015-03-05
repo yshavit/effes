@@ -37,8 +37,8 @@ public final class MethodsFinder implements Consumer<Sources> {
   @Override
   public void accept(Sources sources) {
     MethodsInfo info = new MethodsInfo();
-    sources.forEach(source -> ParserUtils.walk(new Finder(info), source));
-    sources.forEach(source -> ParserUtils.walk(new Verifier(), source));
+    sources.forEach(source -> ParserUtils.walk(new Finder(info), source.getParseUnit()));
+    sources.forEach(source -> ParserUtils.walk(new Verifier(), source.getParseUnit()));
     checkOpenMethods(info);
   }
 

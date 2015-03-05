@@ -42,9 +42,9 @@ public class TypesFinder implements Consumer<Sources> {
 
   @Override
   public void accept(Sources sources) {
-    sources.forEach(source -> ParserUtils.walk(new FindTypeNames(), source));
-    sources.forEach(source -> ParserUtils.walk(new FindSimpleTypeArgs(), source));
-    sources.forEach(source -> ParserUtils.walk(new FindOpenTypes(), source).finish());
+    sources.forEach(source -> ParserUtils.walk(new FindTypeNames(source.isBuiltin()), source.getParseUnit()));
+    sources.forEach(source -> ParserUtils.walk(new FindSimpleTypeArgs(), source.getParseUnit()));
+    sources.forEach(source -> ParserUtils.walk(new FindOpenTypes(), source.getParseUnit()).finish());
   }
 
   @VisibleForTesting
@@ -53,6 +53,13 @@ public class TypesFinder implements Consumer<Sources> {
   }
 
   private class FindTypeNames extends EffesBaseListener {
+    
+    private final boolean sourceIsBuiltin;
+
+    public FindTypeNames(boolean sourceIsBuiltin) {
+      this.sourceIsBuiltin = sourceIsBuiltin;
+    }
+
     /**
      * Keys are the name of an alias, and the values are a pair whose "a" is the token that declared that alias,
      * and whose "b" is the tokens that it was declared to point to. For instance, given "Boolean = True | False",
@@ -91,15 +98,18 @@ public class TypesFinder implements Consumer<Sources> {
         }
         registry.registerType(typeName.getSymbol(), typeName.getText(), genericNames);
       } else if (defContext instanceof EffesParser.BuiltinTypeDefContext) {
-        // TODO maybe only allow this from certain files, so that users can't re-define builtin types?
-        BuiltinType builtin = null;
-        try {
-          builtin = BuiltinType.valueOf(typeName.getText());
-        } catch (IllegalArgumentException e) {
-          errs.add(typeName.getSymbol(), "unknown builtin type");
-        }
-        if (builtin != null) {
-          registry.registerType(builtin);
+        if (sourceIsBuiltin) {
+          BuiltinType builtin = null;
+          try {
+            builtin = BuiltinType.valueOf(typeName.getText());
+          } catch (IllegalArgumentException e) {
+            errs.add(typeName.getSymbol(), "unknown builtin type");
+          }
+          if (builtin != null) {
+            registry.registerType(builtin);
+          }
+        } else {
+          errs.add(typeName.getSymbol(), "can't declare built-in types in userland source code");
         }
       } else {
         throw new AssertionError("compiler error: unexpected type def context " + defContext.getClass().getName());
