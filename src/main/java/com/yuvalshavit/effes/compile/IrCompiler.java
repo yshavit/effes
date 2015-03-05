@@ -1,7 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
 import com.yuvalshavit.effes.compile.node.Block;
-import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfArgs;
 import com.yuvalshavit.effes.compile.node.EfMethod;
@@ -9,6 +8,7 @@ import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -18,23 +18,23 @@ public final class IrCompiler<E> {
   private final CompileErrors errs;
   private final MethodsRegistry<E> builtInMethods;
 
-  public IrCompiler(EffesParser.CompilationUnitContext source,
+  public IrCompiler(Sources sources,
                     BiFunction<TypeRegistry, CompileErrors, MethodsRegistry<E>> builtinsRegistryF,
                     CompileErrors errs)
   {
     this.errs = errs;
     CtorRegistry ctors = new CtorRegistry();
-    TypeRegistry typeRegistry = getTypeRegistry(source, ctors, errs);
+    TypeRegistry typeRegistry = getTypeRegistry(sources, ctors, errs);
     
     builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
-    compiledMethods = compileToIntermediate(source, typeRegistry, ctors, builtInMethods, errs);
+    compiledMethods = compileToIntermediate(sources, typeRegistry, ctors, builtInMethods, errs);
   }
 
-  private static TypeRegistry getTypeRegistry(EffesParser.CompilationUnitContext source,
+  private static TypeRegistry getTypeRegistry(Sources sources,
                                               CtorRegistry ctors,
                                               CompileErrors errs) {
     TypeRegistry typeRegistry = new TypeRegistry(errs);
-    new TypesFinder(typeRegistry, ctors, errs).accept(source);
+    new TypesFinder(typeRegistry, ctors, errs).accept(sources);
     return typeRegistry;
   }
 
@@ -58,14 +58,15 @@ public final class IrCompiler<E> {
   }
 
 
-  private static MethodsRegistry<Block> compileToIntermediate(EffesParser.CompilationUnitContext source,
+  private static MethodsRegistry<Block> compileToIntermediate(
+    Sources sources,
     TypeRegistry typeRegistry,
     CtorRegistry ctors,
     MethodsRegistry<?> builtinsRegistry,
     CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
-    new MethodsFinder(typeRegistry, unparsedMethods, ctors, errs).accept(source);
+    new MethodsFinder(typeRegistry, unparsedMethods, ctors, errs).accept(sources);
 
     Scopes<EfVar, Token> vars = new Scopes<>(
       EfVar::getName,

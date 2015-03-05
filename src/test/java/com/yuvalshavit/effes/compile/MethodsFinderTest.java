@@ -13,6 +13,8 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Collections;
+
 public final class MethodsFinderTest {
   @Test
   public void findMethodNames() {
@@ -72,6 +74,6 @@ public final class MethodsFinderTest {
                                   EffesParser parser,
                                   CompileErrors errs) {
     CtorRegistry ctors = Mockito.mock(CtorRegistry.class, new ThrowsExceptionClass(AssertionError.class));
-    new MethodsFinder(types, methodsRegistry, ctors, errs).accept(parser.compilationUnit());
+    new MethodsFinder(types, methodsRegistry, ctors, errs).accept(SourcesFactory.withoutBuiltins(parser));
   }
 }

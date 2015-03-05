@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.compile.Sources;
 import com.yuvalshavit.effes.compile.node.Block;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfMethod;
@@ -16,16 +17,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.function.Function;
 
 public final class Interpreter {
   private final MethodsRegistry<ExecutableMethod> methodsRegistry;
   private final CompileErrors errs;
 
-  public Interpreter(EffesParser.CompilationUnitContext source, PrintStream out) {
+  public Interpreter(Sources sources, PrintStream out) {
     CompileErrors errs = new CompileErrors();
 
-    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(source, (t, e) -> getBuiltins(out, t, e), errs);
+    IrCompiler<ExecutableMethod> compiler = new IrCompiler<>(sources, (t, e) -> getBuiltins(out, t, e), errs);
     if (errs.hasErrors()) {
       this.errs = errs;
       this.methodsRegistry = null;
@@ -65,8 +67,8 @@ public final class Interpreter {
     return builtInMethods;
   }
 
-  public Interpreter(EffesParser.CompilationUnitContext source) {
-    this(source, System.out);
+  public Interpreter(Sources sources) {
+    this(sources, System.out);
   }
 
   public boolean hasErrors() {
@@ -110,7 +112,8 @@ public final class Interpreter {
     File file = new File(home, "Desktop/example.ef");
     try (FileReader tmpFile = new FileReader(file)) {
       EffesParser parser = ParserUtils.createParser(tmpFile);
-      Interpreter interpreter = new Interpreter(parser.compilationUnit());
+      Sources sources = new Sources(parser.compilationUnit());
+      Interpreter interpreter = new Interpreter(sources);
       if (interpreter.hasErrors()) {
         interpreter.getErrors().getErrors().forEach(System.err::println);
         System.err.println(">> Compilation had errors; not executing code.");

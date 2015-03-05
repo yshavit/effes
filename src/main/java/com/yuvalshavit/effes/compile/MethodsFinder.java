@@ -17,7 +17,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.*;
 import java.util.function.Consumer;
 
-public final class MethodsFinder implements Consumer<EffesParser.CompilationUnitContext> {
+public final class MethodsFinder implements Consumer<Sources> {
 
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
   private final CompileErrors errs;
@@ -35,9 +35,10 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
   }
 
   @Override
-  public void accept(EffesParser.CompilationUnitContext source) {
-    MethodsInfo info = ParserUtils.walk(new Finder(), source).methodsInfo;
-    ParserUtils.walk(new Verifier(), source);
+  public void accept(Sources sources) {
+    MethodsInfo info = new MethodsInfo();
+    sources.forEach(source -> ParserUtils.walk(new Finder(info), source));
+    sources.forEach(source -> ParserUtils.walk(new Verifier(), source));
     checkOpenMethods(info);
   }
 
@@ -113,10 +114,14 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
   private class Finder extends EffesBaseListener {
 
-    private final MethodsInfo methodsInfo = new MethodsInfo();
+    private final MethodsInfo methodsInfo;
     private EfType.SimpleType declaringType = null;
     private String declaringOpenType = null;
 
+    Finder(MethodsInfo methodsInfo) {
+      this.methodsInfo = methodsInfo;
+    }
+    
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       enterCheck();

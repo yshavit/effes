@@ -10,7 +10,6 @@ import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
-import com.yuvalshavit.util.Dispatcher;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -29,7 +28,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext> {
+public class TypesFinder implements Consumer<Sources> {
 
   private final TypeRegistry registry;
   private final CtorRegistry ctors;
@@ -42,10 +41,10 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
   }
 
   @Override
-  public void accept(EffesParser.CompilationUnitContext source) {
-    ParserUtils.walk(new FindTypeNames(), source);
-    ParserUtils.walk(new FindSimpleTypeArgs(), source);
-    ParserUtils.walk(new FindOpenTypes(), source).finish();
+  public void accept(Sources sources) {
+    sources.forEach(source -> ParserUtils.walk(new FindTypeNames(), source));
+    sources.forEach(source -> ParserUtils.walk(new FindSimpleTypeArgs(), source));
+    sources.forEach(source -> ParserUtils.walk(new FindOpenTypes(), source).finish());
   }
 
   @VisibleForTesting
