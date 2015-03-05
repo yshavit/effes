@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.yuvalshavit.effes.compile.Sources;
 import com.yuvalshavit.effes.compile.node.Block;
 import com.yuvalshavit.effes.compile.node.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
@@ -25,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -100,14 +102,15 @@ public final class EndToEndTest {
     assertEquals(actualIr, readIfExists(irFileName));
   }
 
-  private EffesParser.CompilationUnitContext getParser(String fileBaseName) throws IOException {
+  private Sources getParser(String fileBaseName) throws IOException {
     URL url = urls.get(fileBaseName + ".ef");
     if (url == null) {
       fail("missing " + fileBaseName + ".ef");
     }
-    String efFile = Resources.toString(url, Charsets.UTF_8) + "\n\n" + efPrefix;
+    String efFile = Resources.toString(url, Charsets.UTF_8);
+    EffesParser prefix = ParserUtils.createParser(efPrefix);
     EffesParser parser = ParserUtils.createParser(efFile);
-    return parser.compilationUnit();
+    return new Sources(Arrays.asList(prefix.compilationUnit(), parser.compilationUnit()));
   }
 
   @Test(dataProvider = "files")

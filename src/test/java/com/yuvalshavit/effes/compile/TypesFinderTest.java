@@ -30,7 +30,7 @@ public final class TypesFinderTest {
       "type True",
       "type False");
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
-    new TypesFinder(registry, new CtorRegistry(), null).accept(parser.compilationUnit());
+    new TypesFinder(registry, new CtorRegistry(), null).accept(SourcesFactory.withoutBuiltins(parser));
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("True", "False"));
   }
 
@@ -42,7 +42,7 @@ public final class TypesFinderTest {
     );
     TUtils.expectErrors(errs -> {
       TypeRegistry registry = new TypeRegistry(errs);
-      new TypesFinder(registry, new CtorRegistry(), null).accept(parser.compilationUnit());
+      new TypesFinder(registry, new CtorRegistry(), null).accept(SourcesFactory.withoutBuiltins(parser));
     });
   }
 
@@ -55,7 +55,7 @@ public final class TypesFinderTest {
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     CtorRegistry ctors = new CtorRegistry();
-    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
+    new TypesFinder(registry, ctors, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("One", "Two", "Another"));
     EfType.SimpleType one = registry.getSimpleType("One");
@@ -76,7 +76,7 @@ public final class TypesFinderTest {
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     CtorRegistry ctors = new CtorRegistry();
-    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
+    new TypesFinder(registry, ctors, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Cat", "Dog", "Pet"));
     EfType.SimpleType cat = registry.getSimpleType("Cat");
@@ -96,7 +96,7 @@ public final class TypesFinderTest {
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     CtorRegistry ctors = new CtorRegistry();
-    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
+    new TypesFinder(registry, ctors, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Infinity"));
     EfType.SimpleType infinity = registry.getSimpleType("Infinity");
@@ -114,7 +114,7 @@ public final class TypesFinderTest {
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     CtorRegistry ctors = new CtorRegistry();
-    new TypesFinder(registry, ctors, null).accept(parser.compilationUnit());
+    new TypesFinder(registry, ctors, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Elem", "Empty", "Cons"));
     EfType.SimpleType cons = registry.getSimpleType("Cons");
@@ -257,7 +257,7 @@ public final class TypesFinderTest {
         return new TreeMap<>();
       }
     };
-    typesFinder.accept(parser.compilationUnit());
+    typesFinder.accept(SourcesFactory.withoutBuiltins(parser));
     return registry;
   }
 }
