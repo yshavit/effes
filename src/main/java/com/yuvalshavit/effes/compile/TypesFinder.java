@@ -3,12 +3,15 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import com.yuvalshavit.util.Dispatcher;
+
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Pair;
@@ -66,25 +69,42 @@ public class TypesFinder implements Consumer<EffesParser.CompilationUnitContext>
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       TerminalNode typeName = ctx.TYPE_NAME();
 
-      List<TerminalNode> generics = ctx.genericsDeclr().GENERIC_NAME();
-      List<String> genericNames;
-      if (generics != null) {
-        genericNames = new ArrayList<>(generics.size());
-        Set<String> uniqueGenericNames = new HashSet<>(generics.size());
-        
-        generics.stream().forEach(genericNode -> {
-          String generic = genericNode.getText();
-          if (uniqueGenericNames.add(generic)) {
-            genericNames.add(generic);
-          } else {
-            genericNames.add("!<" + generic + " >");
-            errs.add(genericNode.getSymbol(), "duplicate generic name");
-          }
-        });
+      EffesParser.DataTypeDefContext defContext = ctx.dataTypeDef();
+      if (defContext instanceof EffesParser.StandardTypeDefContext) {
+        EffesParser.StandardTypeDefContext stdCtx = (EffesParser.StandardTypeDefContext) defContext;
+        List<TerminalNode> generics = stdCtx.genericsDeclr().GENERIC_NAME();
+        List<String> genericNames;
+        if (generics != null) {
+          genericNames = new ArrayList<>(generics.size());
+          Set<String> uniqueGenericNames = new HashSet<>(generics.size());
+
+          generics.stream().forEach(genericNode -> {
+            String generic = genericNode.getText();
+            if (uniqueGenericNames.add(generic)) {
+              genericNames.add(generic);
+            } else {
+              genericNames.add("!<" + generic + " >");
+              errs.add(genericNode.getSymbol(), "duplicate generic name");
+            }
+          });
+        } else {
+          genericNames = Collections.emptyList();
+        }
+        registry.registerType(typeName.getSymbol(), typeName.getText(), genericNames);
+      } else if (defContext instanceof EffesParser.BuiltinTypeDefContext) {
+        // TODO maybe only allow this from certain files, so that users can't re-define builtin types?
+        BuiltinType builtin = null;
+        try {
+          builtin = BuiltinType.valueOf(typeName.getText());
+        } catch (IllegalArgumentException e) {
+          errs.add(typeName.getSymbol(), "unknown builtin type");
+        }
+        if (builtin != null) {
+          registry.registerType(builtin);
+        }
       } else {
-        genericNames = Collections.emptyList();
+        throw new AssertionError("compiler error: unexpected type def context " + defContext.getClass().getName());
       }
-      registry.registerType(typeName.getSymbol(), typeName.getText(), genericNames);
     }
 
     @Override

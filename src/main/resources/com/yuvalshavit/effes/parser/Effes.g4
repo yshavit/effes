@@ -63,8 +63,12 @@ typeAliasDeclr: TYPE name=TYPE_NAME genericsDeclr EQ targets=type NL;
 openTypeDeclr : TYPE name=TYPE_NAME QUESTION
                 (NL | INDENT methodDeclr+ DEDENT );
 
-dataTypeDeclr: TYPE TYPE_NAME genericsDeclr dataTypeArgsDeclr?
+dataTypeDeclr: TYPE TYPE_NAME dataTypeDef
                (NL | COLON INDENT typeMember+ DEDENT );
+
+dataTypeDef: genericsDeclr dataTypeArgsDeclr?                                   # StandardTypeDef
+           | BUILTIN                                                            # BuiltinTypeDef
+           ;
 
 dataTypeArgsDeclr: OPEN_PAREN
                    dataTypeArgDeclr (COMMA dataTypeArgDeclr)*

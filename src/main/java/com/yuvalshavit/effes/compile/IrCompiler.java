@@ -34,10 +34,6 @@ public final class IrCompiler<E> {
                                               CtorRegistry ctors,
                                               CompileErrors errs) {
     TypeRegistry typeRegistry = new TypeRegistry(errs);
-    // TODO use some sort of builtin.ef file for these?
-    for (BuiltinType builtin : BuiltinType.values()) {
-      typeRegistry.registerType(builtin);
-    }
     new TypesFinder(typeRegistry, ctors, errs).accept(source);
     return typeRegistry;
   }
