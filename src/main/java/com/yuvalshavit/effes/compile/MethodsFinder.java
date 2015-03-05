@@ -133,7 +133,6 @@ public final class MethodsFinder implements Consumer<EffesParser.CompilationUnit
 
     @Override
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
-      assert declaringType != null;
       declaringType = null;
     }
 

@@ -3,6 +3,9 @@ type Void
 type True
 type False
 
+type IntValue @builtin
+type IntZero @builtin
+
 type BoolWrapper(val: True | False)
 type VoidWrapper(val: Void)
 -- end prefix

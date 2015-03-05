@@ -130,7 +130,7 @@ public abstract class EfValue {
     private final String value;
 
     private StringValue(String value) {
-      super(BuiltinType.STRING.getEfType());
+      super(BuiltinType.String.getEfType());
       this.value = Preconditions.checkNotNull(value);
     }
     

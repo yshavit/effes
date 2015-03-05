@@ -2,11 +2,15 @@ package com.yuvalshavit.effes.compile.node;
 
 import java.util.Collections;
 
+/**
+ * Built-in types. These all have non-standard enum names to make it easier to look them up from effes code.
+ * Each enum name corresponds exactly to its effes type.
+ */
 public enum BuiltinType {
-  INT_ZERO("IntZero"),
-  INT_VALUE("IntValue"),
+  IntZero("IntZero"),
+  IntValue("IntValue"),
   
-  STRING("String"),
+  String("String"),
   ;
   
   private final EfType.SimpleType efType;
@@ -17,8 +21,8 @@ public enum BuiltinType {
 
   public static EfType.SimpleType efTypeFor(long value) {
     return value == 0
-      ? INT_ZERO.getEfType()
-      : INT_VALUE.getEfType();
+      ? IntZero.getEfType()
+      : IntValue.getEfType();
   }
 
   public EfType.SimpleType getEfType() {
