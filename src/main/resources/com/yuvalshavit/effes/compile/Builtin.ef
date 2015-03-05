@@ -1,0 +1,2 @@
+type IntValue @builtin
+type IntZero @builtin
