@@ -38,7 +38,7 @@ public final class MethodsFinder implements Consumer<Sources> {
   public void accept(Sources sources) {
     MethodsInfo info = new MethodsInfo();
     sources.forEach(source -> ParserUtils.walk(new Finder(info), source.getParseUnit()));
-    sources.forEach(source -> ParserUtils.walk(new Verifier(), source.getParseUnit()));
+    sources.forEach(source -> ParserUtils.walk(new Verifier(source.isBuiltin()), source.getParseUnit()));
     checkOpenMethods(info);
   }
 
@@ -191,7 +191,7 @@ public final class MethodsFinder implements Consumer<Sources> {
         resultType = EfType.VOID;
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
       }
-      EffesParser.InlinableBlockContext body = ctx.inlinableBlock();
+      EffesParser.InlinableBlockContext body = ctx.methodBody().inlinableBlock();
       List<EfType.GenericType> generics = Collections.emptyList(); // TODO; needs to account for method's genericsDeclr as well as context type!
       EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(id, generics, args.build(), resultType, body);
       MethodId methodId;
@@ -268,6 +268,12 @@ public final class MethodsFinder implements Consumer<Sources> {
 
   private class Verifier extends EffesBaseListener {
 
+    private final boolean sourceIsBuiltin;
+
+    public Verifier(boolean sourceIsBuiltin) {
+      this.sourceIsBuiltin = sourceIsBuiltin;
+    }
+
     private VerifierMode mode = VerifierMode.NONE;
 
     @Override
@@ -299,12 +305,20 @@ public final class MethodsFinder implements Consumer<Sources> {
     }
 
     @Override
-    public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
+    public void enterMethodBody(@NotNull EffesParser.MethodBodyContext ctx) {
       switch (mode) {
       case NONE:
       case DATA_TYPE:
         if (ctx.inlinableBlock() == null) {
-          errs.add(ctx.getStop(), "expected method body");
+          if (ctx.BUILTIN() == null) {
+            errs.add(ctx.getStop(), "expected method body");
+          } else {
+            if (sourceIsBuiltin) {
+              throw new UnsupportedOperationException("validate that such a method exists, and register it?"); // TODO
+            } else {
+              errs.add(ctx.BUILTIN().getSymbol(), "can't declare built-in methods in userland source code");
+            }
+          }
         }
         break;
       case OPEN_TYPE:
