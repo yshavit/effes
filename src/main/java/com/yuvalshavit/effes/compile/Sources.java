@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -21,16 +22,16 @@ public class Sources {
   private final Iterable<Source> builtins;
   private final Iterable<Source> userland;
 
-  public Sources(Iterable<EffesParser.CompilationUnitContext> builtins, Iterable<EffesParser.CompilationUnitContext> userland) {
-    this.builtins = Iterables.transform(builtins, c -> new Source(c, true));
-    this.userland = Iterables.transform(userland, c -> new Source(c, false));
+  public Sources(Iterable<Source> builtins, Iterable<Source> userland) {
+    this.builtins = ImmutableList.copyOf(builtins);
+    this.userland = ImmutableList.copyOf(userland);
   }
   
-  public Sources(Iterable<EffesParser.CompilationUnitContext> userland) {
+  public Sources(Iterable<Source> userland) {
     this(defaultBuiltinSources(), userland);
   }
 
-  public Sources(EffesParser.CompilationUnitContext... compilationUnitContexts) {
+  public Sources(Source... compilationUnitContexts) {
     this(Arrays.asList(compilationUnitContexts));
   }
 
@@ -42,13 +43,14 @@ public class Sources {
     return Iterables.concat(builtins, userland);
   }
 
-  private static Iterable<EffesParser.CompilationUnitContext> defaultBuiltinSources() {
+  private static Iterable<Source> defaultBuiltinSources() {
     RelativeUrl relativeUrl = new RelativeUrl(Sources.class);
     URL url = relativeUrl.get("Builtin.ef");
-    Collection<EffesParser.CompilationUnitContext> contexts = new ArrayList<>();
+    Collection<Source> contexts = new ArrayList<>();
     try (InputStream is = url.openStream(); InputStreamReader reader = new InputStreamReader(is, Charsets.UTF_8)) {
       EffesParser parser = ParserUtils.createParser(reader);
-      contexts.add(parser.compilationUnit());
+      Source source = new Source(parser.compilationUnit(), true);
+      contexts.add(source);
     } catch (IOException e) {
       throw new AssertionError(e);
     }

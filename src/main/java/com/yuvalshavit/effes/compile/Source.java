@@ -6,9 +6,13 @@ public class Source {
   private final boolean isBuiltin;
   private final EffesParser.CompilationUnitContext parseUnit;
 
-  public Source(EffesParser.CompilationUnitContext parseUnit, boolean isBuiltin) {
+  Source(EffesParser.CompilationUnitContext parseUnit, boolean isBuiltin) {
     this.isBuiltin = isBuiltin;
     this.parseUnit = parseUnit;
+  }
+  
+  public Source(EffesParser.CompilationUnitContext parseUnit) {
+    this(parseUnit, false);
   }
 
   public boolean isBuiltin() {

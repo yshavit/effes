@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
+import com.yuvalshavit.effes.compile.Source;
 import com.yuvalshavit.effes.compile.Sources;
 import com.yuvalshavit.effes.compile.node.Block;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
@@ -17,7 +18,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.function.Function;
 
 public final class Interpreter {
@@ -112,7 +112,8 @@ public final class Interpreter {
     File file = new File(home, "Desktop/example.ef");
     try (FileReader tmpFile = new FileReader(file)) {
       EffesParser parser = ParserUtils.createParser(tmpFile);
-      Sources sources = new Sources(parser.compilationUnit());
+      Source userlandSource = new Source(parser.compilationUnit());
+      Sources sources = new Sources(userlandSource);
       Interpreter interpreter = new Interpreter(sources);
       if (interpreter.hasErrors()) {
         interpreter.getErrors().getErrors().forEach(System.err::println);
