@@ -42,9 +42,8 @@ methodDeclr: methodName
              methodBody
            ;
 
-methodBody: COLON inlinableBlock
+methodBody: COLON (BUILTIN | inlinableBlock)
           | NL
-          | BUILTIN
           ;
 
 methodName: VAR_NAME
