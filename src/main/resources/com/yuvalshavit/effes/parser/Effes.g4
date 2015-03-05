@@ -58,7 +58,7 @@ methodReturnDeclr: (ARROW type)?;
 
 // type declrs
 
-typeAliasDeclr: TYPE name=TYPE_NAME genericsDeclr EQ targets=type NL;
+typeAliasDeclr: TYPE name=TYPE_NAME  EQ targets=type NL;
 
 openTypeDeclr : TYPE name=TYPE_NAME QUESTION
                 (NL | INDENT methodDeclr+ DEDENT );

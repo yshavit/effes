@@ -124,9 +124,6 @@ public class TypesFinder implements Consumer<Sources> {
         String name = ctx.name.getText();
         Set<String> targetNames = new HashSet<>();
         List<Token> targetTokens = new ArrayList<>();
-        if (!ctx.genericsDeclr().GENERIC_NAME().isEmpty()) {
-          errs.add(ctx.genericsDeclr().getStart(), "generics not supported on alias types");
-        }
         ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
           .onDataType(targetCtx -> {
             if (targetCtx.singleTypeParameters().OPEN_BRACKET() != null) {
