@@ -39,8 +39,13 @@ methodDeclr: methodName
              //genericsDeclr
              methodArgs
              methodReturnDeclr
-             ((COLON inlinableBlock) | NL)
+             methodBody
            ;
+
+methodBody: COLON inlinableBlock
+          | NL
+          | BUILTIN
+          ;
 
 methodName: VAR_NAME
           | CMP_OPS
