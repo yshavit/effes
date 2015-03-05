@@ -1,5 +1,5 @@
 parse error (at line 3, column 16)
-parse error (at line 7, column 16: newline)
+parse error (at line 5, column 17: newline)
 unrecognized statement (at line 3, column 11: False)
 unrecognized statement (at line 4, column 12: True)
 block may not return, but needs to return False | True (at line 1, column 41: indent)

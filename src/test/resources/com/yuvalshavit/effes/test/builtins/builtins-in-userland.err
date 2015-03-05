@@ -1,0 +1,3 @@
+can't declare built-in types in userland source code (at line 1, column 6: SomeNewBuiltin)
+unknown type "SomeNewBuiltin" (at line 1, column 6: SomeNewBuiltin)
+unrecognized type 'SomeNewBuiltin' (this is likely a compiler bug) (at line 1, column 6: SomeNewBuiltin)

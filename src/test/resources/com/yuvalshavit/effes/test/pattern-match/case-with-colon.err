@@ -1,6 +1,6 @@
 parse error (at line 2, column 12: :)
 parse error (at line 3, column 15)
-parse error (at line 7, column 16: newline)
+parse error (at line 5, column 17: newline)
 unrecognized statement (at line 3, column 11: Void)
 unrecognized statement (at line 4, column 12: Void)
 block may not return, but needs to return Void (at line 1, column 31: indent)
