@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.yuvalshavit.effes.compile.Source;
 import com.yuvalshavit.effes.compile.Sources;
 import com.yuvalshavit.effes.compile.node.Block;
 import com.yuvalshavit.effes.compile.node.BuiltInMethodsFactory;
@@ -16,7 +17,6 @@ import com.yuvalshavit.effes.compile.node.Node;
 import com.yuvalshavit.effes.compile.NodeStateVisitor;
 import com.yuvalshavit.effes.interpreter.ExecutableBuiltInMethods;
 import com.yuvalshavit.effes.interpreter.Interpreter;
-import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 import com.yuvalshavit.util.RelativeUrl;
 import org.testng.annotations.DataProvider;
@@ -108,9 +108,9 @@ public final class EndToEndTest {
       fail("missing " + fileBaseName + ".ef");
     }
     String efFile = Resources.toString(url, Charsets.UTF_8);
-    EffesParser prefix = ParserUtils.createParser(efPrefix);
-    EffesParser parser = ParserUtils.createParser(efFile);
-    return new Sources(Arrays.asList(prefix.compilationUnit(), parser.compilationUnit()));
+    Source prefix = new Source(ParserUtils.createParser(efPrefix).compilationUnit());
+    Source parser = new Source(ParserUtils.createParser(efFile).compilationUnit());
+    return new Sources(Arrays.asList(prefix, parser));
   }
 
   @Test(dataProvider = "files")
