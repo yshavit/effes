@@ -42,7 +42,7 @@ methodDeclr: methodName
              methodBody
            ;
 
-methodBody: COLON (BUILTIN | inlinableBlock)
+methodBody: COLON (BUILTIN NL | inlinableBlock)
           | NL
           ;
 

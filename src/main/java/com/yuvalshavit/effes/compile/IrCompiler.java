@@ -8,7 +8,6 @@ import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesParser;
 import org.antlr.v4.runtime.Token;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 

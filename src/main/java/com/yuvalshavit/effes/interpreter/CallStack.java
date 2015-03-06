@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 
 import java.util.ArrayList;
 import java.util.List;

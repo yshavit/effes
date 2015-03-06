@@ -12,7 +12,8 @@ import org.antlr.v4.runtime.misc.Pair;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -22,6 +23,9 @@ import java.util.stream.Stream;
 public interface BuiltInMethodsFactory<T> {
   @BuiltInMethod(name = "print", resultType = "Void", args = "T", generics = {"T"})
   public T print();
+  
+  @BuiltInMethod(name = "+", resultType = "Int", args = "Int", targets = "IntValue | IntZero")
+  public T addInt();
 
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry, CompileErrors errs) {
     for (Method m : BuiltInMethodsFactory.class.getDeclaredMethods()) {
@@ -48,7 +52,8 @@ public interface BuiltInMethodsFactory<T> {
             EfType type = resolver.apply(parsedType);
           return new Pair<>(parsedType.getStart(), type);
         };
-        EfMethod.Id id = new EfMethod.Id(meta.name());
+        String methodName = meta.name();
+        EfMethod.Id id = new EfMethod.Id(methodName);
         Set<String> genericsSet = Sets.newHashSet(meta.generics());
         List<EfType.GenericType> genericsList = Stream.of(meta.generics()).map(g -> new EfType.GenericType(g, id)).collect(Collectors.toList());
         if (genericsList.size() != genericsSet.size()) {
@@ -64,9 +69,30 @@ public interface BuiltInMethodsFactory<T> {
           args.add(parse.a, null, parse.b);
         });
         EfType resultType = typeParser.apply(meta.resultType()).b;
-        outRegistry.registerMethod(
-          MethodId.topLevel(meta.name()),
-          new EfMethod<>(id, genericsList, args.build(), resultType, casted));
+        Collection<String> targets = Stream.of(meta.targets().split(" *\\| *")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+        if (targets.isEmpty()) {
+          EfMethod<T> method = new EfMethod<>(id, genericsList, args.build(), resultType, casted);
+          outRegistry.registerMethod(MethodId.topLevel(methodName), method);
+        } else {
+          if (meta.generics().length > 0) {
+            errs.add(null, "unsupported generics on builtin instance method (this is a compiler error): " + methodName);
+          } else {
+            for (String target : targets) {
+              EfType.SimpleType simpleType = typeRegistry.getSimpleType(target);
+              if (simpleType == null) {
+                errs.add(null, String.format("builtin instance method %s on unknown type %s (this is a compiler error)", methodName, target));
+              } else if (!simpleType.getGenericsDeclr().isEmpty()) {
+                errs.add(null, String.format("builtin instance method %s on generic type %s (this is a compiler error)", methodName, target));
+              } else {
+                EfArgs.Builder argsForInstance = new EfArgs.Builder(errs);
+                argsForInstance.add(null, EfVar.THIS_VAR_NAME, simpleType);
+                argsForInstance.addAllFrom(args);
+                EfMethod<T> method = new EfMethod<>(id, genericsList, argsForInstance.build(), resultType, casted);
+                outRegistry.registerMethod(MethodId.of(simpleType, methodName), method);
+              }
+            }
+          }
+        }
       }
     }
   }
