@@ -1,3 +1,4 @@
+-- Int
 type Int = IntZero | IntValue
 
 type IntValue @builtin:
@@ -5,6 +6,10 @@ type IntValue @builtin:
 
 type IntZero @builtin
 
-type Void
+-- Boolean
+-- type Boolean = True | False
 type True
 type False
+
+-- Void
+type Void
