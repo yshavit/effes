@@ -204,7 +204,6 @@ public final class MethodsFinder implements Consumer<Sources> {
       } else {
         methodId = MethodId.of(declaringType, name);
         if (body == null) {
-          assert ctx.methodBody().BUILTIN() != null : "no body, but also not a builtin method: " + ctx.getText();
           // TODO actually register it from the builtins registry? validation against expected args, etc?
         } else {
           try {
