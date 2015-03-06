@@ -1,0 +1,10 @@
+type DivByZero
+
+divide10 (denominator: Int) -> Int | DivByZero:
+  return case denominator of
+    IntZero: DivByZero
+    IntValue: 10 . / denominator
+
+main:
+  print divide10 2
+  print divide10 0

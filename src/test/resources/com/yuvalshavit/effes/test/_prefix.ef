@@ -1,8 +1,4 @@
 -- start prefix
-type Void
-type True
-type False
-
 type BoolWrapper(val: True | False)
 type VoidWrapper(val: Void)
 -- end prefix
