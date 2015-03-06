@@ -12,7 +12,6 @@ import org.antlr.v4.runtime.misc.Pair;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -22,10 +21,19 @@ import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
   @BuiltInMethod(name = "print", resultType = "Void", args = "T", generics = {"T"})
-  public T print();
+  T print();
   
   @BuiltInMethod(name = "+", resultType = "Int", args = "Int", targets = "IntValue | IntZero")
-  public T addInt();
+  T addInt();
+
+  @BuiltInMethod(name = "-", resultType = "Int", args = "Int", targets = "IntValue | IntZero")
+  T subInt();
+
+  @BuiltInMethod(name = "*", resultType = "Int", args = "Int", targets = "IntValue | IntZero")
+  T multInt();
+
+  @BuiltInMethod(name = "/", resultType = "Int", args = "IntValue", targets = "IntValue | IntZero")
+  T divInt();
 
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry, CompileErrors errs) {
     for (Method m : BuiltInMethodsFactory.class.getDeclaredMethods()) {

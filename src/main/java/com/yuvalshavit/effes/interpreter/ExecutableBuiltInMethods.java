@@ -4,6 +4,8 @@ import com.yuvalshavit.effes.compile.node.BuiltInMethodsFactory;
 import com.yuvalshavit.effes.compile.TypeRegistry;
 
 import java.io.PrintStream;
+import java.util.function.BiFunction;
+import java.util.function.LongBinaryOperator;
 
 public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<ExecutableMethod> {
   private final TypeRegistry typeRegistry;
@@ -25,10 +27,34 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
 
   @Override
   public ExecutableMethod addInt() {
+    return binaryLongMethod(Long::sum);
+  }
+
+  @Override
+  public ExecutableMethod subInt() {
+    return binaryLongMethod((l, r) -> l -r);
+  }
+
+  @Override
+  public ExecutableMethod multInt() {
+    return binaryLongMethod((l, r) -> l * r);
+  }
+
+  @Override
+  public ExecutableMethod divInt() {
+    return binaryLongMethod((l, r) -> l / r);
+  }
+  
+  private static ExecutableMethod binaryLongMethod(LongBinaryOperator op) {
+    return binaryMethod(EfValue.LongValue.class, (lhs, rhs) -> EfValue.of(op.applyAsLong(lhs.getValue(), rhs.getValue())));
+  }
+  
+  private static <T extends EfValue> ExecutableMethod binaryMethod(Class<T> operandsClass, BiFunction<T, T, EfValue> function) {
     return method(stack -> {
-      EfValue.LongValue lhs = (EfValue.LongValue) stack.peekArg(0);
-      EfValue.LongValue rhs = (EfValue.LongValue) stack.peekArg(1);
-      stack.push(EfValue.of(lhs.getValue() + rhs.getValue()));
+      T lhs = operandsClass.cast(stack.peekArg(0));
+      T rhs = operandsClass.cast(stack.peekArg(1));
+      EfValue result = function.apply(lhs, rhs);
+      stack.push(result);
       stack.popToRv();
     });
   }
