@@ -1,0 +1,20 @@
+def divide10 (denominator: IntValue | IntZero) -> DivByZero | IntValue | IntZero:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: denominator
+          pos: 0
+      of IntZero:
+        CtorInvoke
+          type: DivByZero
+      of IntValue:
+        MethodInvoke
+          method: IntValue::/ [built-in]
+          arg0:
+            IntLiteral
+              10
+          arg1:
+            VarExpression
+              arg: denominator
+              pos: 0
