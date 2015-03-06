@@ -1,0 +1,12 @@
+def test () -> no result type:
+  MethodInvoke
+    method: print [built-in]
+    arg0:
+      MethodInvoke
+        method: IntValue::+ [built-in]
+        arg0:
+          IntLiteral
+            33
+        arg1:
+          IntLiteral
+            22

@@ -11,5 +11,6 @@ import java.lang.annotation.Target;
   String name();
   String resultType();
   String[] args();
-  String[] generics();
+  String[] generics() default {};
+  String targets() default "";
 }

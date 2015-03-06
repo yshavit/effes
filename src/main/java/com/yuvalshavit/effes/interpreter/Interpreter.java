@@ -59,8 +59,7 @@ public final class Interpreter {
     this.methodsRegistry = executableMethods;
   }
 
-  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry,
-                                                               CompileErrors errs) {
+  private static MethodsRegistry<ExecutableMethod> getBuiltins(PrintStream out, TypeRegistry typeRegistry, CompileErrors errs) {
     MethodsRegistry<ExecutableMethod> builtInMethods = new MethodsRegistry<>();
     ExecutableBuiltInMethods builtIns = new ExecutableBuiltInMethods(typeRegistry, out);
     builtIns.addTo(typeRegistry, builtInMethods, errs);

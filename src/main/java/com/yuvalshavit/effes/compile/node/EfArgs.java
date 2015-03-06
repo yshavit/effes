@@ -101,5 +101,9 @@ public final class EfArgs {
       }
       return str;
     }
+
+    public void addAllFrom(Builder other) {
+      args.addAll(other.args);
+    }
   }
 }

@@ -38,14 +38,21 @@ public abstract class EfValue {
   public List<EfValue> getState() {
     return state;
   }
-  
+
+  public abstract String getUserVisibleString();
+
   public static final class StandardValue extends EfValue {
     
     private StandardValue(EfType.SimpleType type, List<EfValue> state) {
       super(type, state);
       // TODO also check types against expected
     }
-    
+
+    @Override
+    public String getUserVisibleString() {
+      return toString();
+    }
+
     @Override
     public String toString() {
       if (getState().isEmpty()) {
@@ -81,8 +88,6 @@ public abstract class EfValue {
     protected abstract boolean equalsComponent(E other);
     @Override
     public abstract int hashCode();
-    @Override
-    public abstract String toString();
     
     protected BuiltinValue(EfType.SimpleType type) {
       super(type, Collections.emptyList());
@@ -98,8 +103,13 @@ public abstract class EfValue {
       @SuppressWarnings("unchecked")
       E that = (E) o;
       return equalsComponent(that);
-
     }
+
+    @Override
+    public final String toString() {
+      return String.format("%s<%s>", getType(), getUserVisibleString());
+    }
+
   }
   
   public static final class LongValue extends BuiltinValue<LongValue> {
@@ -108,6 +118,10 @@ public abstract class EfValue {
     private LongValue(long value) {
       super(BuiltinType.efTypeFor(value));
       this.value = value;
+    }
+
+    public long getValue() {
+      return value;
     }
 
     @Override
@@ -121,7 +135,7 @@ public abstract class EfValue {
     }
 
     @Override
-    public String toString() {
+    public String getUserVisibleString() {
       return String.valueOf(value);
     }
   }
@@ -149,7 +163,7 @@ public abstract class EfValue {
     }
 
     @Override
-    public String toString() {
+    public String getUserVisibleString() {
       return getString();
     }
   }

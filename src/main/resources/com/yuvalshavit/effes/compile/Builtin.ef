@@ -1,2 +1,6 @@
-type IntValue @builtin
+type IntValue @builtin:
+  + (term: Int) -> Int: @builtin
+
 type IntZero @builtin
+
+type Int = IntZero | IntValue

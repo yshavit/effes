@@ -203,10 +203,15 @@ public final class MethodsFinder implements Consumer<Sources> {
         methodsInfo.openMethods.registerMethod(methodId, method);
       } else {
         methodId = MethodId.of(declaringType, name);
-        try {
-          methodsRegistry.registerMethod(methodId, method);
-        } catch (DuplicateMethodNameException e) {
-          errs.add(ctx.methodName().getStart(), e.getMessage());
+        if (body == null) {
+          assert ctx.methodBody().BUILTIN() != null : "no body, but also not a builtin method: " + ctx.getText();
+          // TODO actually register it from the builtins registry? validation against expected args, etc?
+        } else {
+          try {
+            methodsRegistry.registerMethod(methodId, method);
+          } catch (DuplicateMethodNameException e) {
+            errs.add(ctx.methodName().getStart(), e.getMessage());
+          }
         }
       }
       methodsInfo.register(methodId, methodTokens);
@@ -313,9 +318,7 @@ public final class MethodsFinder implements Consumer<Sources> {
           if (ctx.BUILTIN() == null) {
             errs.add(ctx.getStop(), "expected method body");
           } else {
-            if (sourceIsBuiltin) {
-              throw new UnsupportedOperationException("validate that such a method exists, and register it?"); // TODO
-            } else {
+            if (!sourceIsBuiltin) {
               errs.add(ctx.BUILTIN().getSymbol(), "can't declare built-in methods in userland source code");
             }
           }

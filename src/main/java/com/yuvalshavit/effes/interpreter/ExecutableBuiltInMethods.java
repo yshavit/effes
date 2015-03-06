@@ -17,8 +17,18 @@ public final class ExecutableBuiltInMethods implements BuiltInMethodsFactory<Exe
   @Override
   public ExecutableMethod print() {
     return method(stack -> {
-      out.println("Your argument was: " + stack.peekArg(0));
+      out.println("Your argument was: " + stack.peekArg(0).getUserVisibleString());
       stack.push(typeRegistry.getSimpleType("Void"), 0); // TODO need some mechanism to ensure that Void has no args!
+      stack.popToRv();
+    });
+  }
+
+  @Override
+  public ExecutableMethod addInt() {
+    return method(stack -> {
+      EfValue.LongValue lhs = (EfValue.LongValue) stack.peekArg(0);
+      EfValue.LongValue rhs = (EfValue.LongValue) stack.peekArg(1);
+      stack.push(EfValue.of(lhs.getValue() + rhs.getValue()));
       stack.popToRv();
     });
   }

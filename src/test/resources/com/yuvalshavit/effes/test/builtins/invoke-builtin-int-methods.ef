@@ -1,0 +1,5 @@
+test:
+  print 33 . + 22
+
+main:
+  test 
