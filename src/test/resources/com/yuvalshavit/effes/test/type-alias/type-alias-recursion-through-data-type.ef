@@ -1,8 +1,8 @@
-type One(prev: Int)
+type One(prev: BoolInt)
 type Zero
-type Int = One | Zero
+type BoolInt = One | Zero
 
-add(n: Int) -> Int: return One(n)
-sub(n: Int) -> Int: return case n of
+add(n: BoolInt) -> BoolInt: return One(n)
+sub(n: BoolInt) -> BoolInt: return case n of
   One(p): p
   Zero: Zero
