@@ -1,0 +1,13 @@
+isZeroA (arg: Int) -> True | False: return case arg of
+  IntZero: True
+  IntValue: False
+
+isZeroB (arg: Int) -> True | False: return case arg of
+  IntValue: False
+  IntZero: True
+
+main:
+  print isZeroA 0
+  print isZeroA 1
+  print isZeroB 0
+  print isZeroB 1
