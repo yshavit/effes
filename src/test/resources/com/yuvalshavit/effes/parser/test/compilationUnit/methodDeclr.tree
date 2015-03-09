@@ -14,10 +14,11 @@ compilationUnit
           SingleDataType
             TYPE_NAME: False
             singleTypeParameters
-      inlinableBlock
-        ReturnStat
-          SingleLineExpression
-            CtorInvoke
-              TYPE_NAME: False
-              singleTypeParameters
+      methodBody
+        inlinableBlock
+          ReturnStat
+            SingleLineExpression
+              CtorInvoke
+                TYPE_NAME: False
+                singleTypeParameters
   EOF: <EOF>

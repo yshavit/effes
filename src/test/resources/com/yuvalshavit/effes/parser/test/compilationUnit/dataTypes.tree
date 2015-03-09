@@ -2,9 +2,11 @@ compilationUnit
   compilationBodyElement
     dataTypeDeclr
       TYPE_NAME: True
-      genericsDeclr
+      StandardTypeDef
+        genericsDeclr
   compilationBodyElement
     dataTypeDeclr
       TYPE_NAME: False
-      genericsDeclr
+      StandardTypeDef
+        genericsDeclr
   EOF: <EOF>
