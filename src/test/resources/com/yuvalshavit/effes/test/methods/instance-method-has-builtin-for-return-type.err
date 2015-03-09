@@ -1,0 +1,3 @@
+no result type provided after arrow (at line 2, column 15: @builtin)
+parse error (at line 2, column 15: @builtin)
+expected method body (at line 3, column 81: newline)
