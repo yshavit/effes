@@ -183,10 +183,16 @@ public final class MethodsFinder implements Consumer<Sources> {
           methodTokens.argTokens.put(argName, argContext.getStart());
         }
       }
-      EfType resultType;
-      if (ctx.methodReturnDeclr().type() != null) {
-        resultType = typeResolver.apply(ctx.methodReturnDeclr().type());
-        methodTokens.resultTypeStart = ctx.methodReturnDeclr().type().getStart();
+      final EfType resultType;
+      EffesParser.TypeContext resultTypeContext = ctx.methodReturnDeclr().type();
+      if (resultTypeContext != null) {
+        if (resultTypeContext.singleType().isEmpty()) {
+          errs.add(resultTypeContext.getStart(), "no result type provided after arrow");
+          resultType = EfType.UNKNOWN;
+        } else {
+          resultType = typeResolver.apply(resultTypeContext);
+          methodTokens.resultTypeStart = resultTypeContext.getStart();
+        }
       } else {
         resultType = EfType.VOID;
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
