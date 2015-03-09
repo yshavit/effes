@@ -1,10 +1,11 @@
 dataTypeDeclr
   TYPE_NAME: Optional
-  genericsDeclr
-    GENERIC_NAME: T
-  dataTypeArgsDeclr
-    dataTypeArgDeclr
-      VAR_NAME: value
-      type
-        SingleGenericType
-          GENERIC_NAME: T
+  StandardTypeDef
+    genericsDeclr
+      GENERIC_NAME: T
+    dataTypeArgsDeclr
+      dataTypeArgDeclr
+        VAR_NAME: value
+        type
+          SingleGenericType
+            GENERIC_NAME: T

@@ -12,9 +12,10 @@ methodDeclr
       SingleDataType
         TYPE_NAME: Bar
         singleTypeParameters
-  inlinableBlock
-    ReturnStat
-      SingleLineExpression
-        CtorInvoke
-          TYPE_NAME: Bar
-          singleTypeParameters
+  methodBody
+    inlinableBlock
+      ReturnStat
+        SingleLineExpression
+          CtorInvoke
+            TYPE_NAME: Bar
+            singleTypeParameters

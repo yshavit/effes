@@ -1,3 +1,4 @@
 dataTypeDeclr
   TYPE_NAME: Nothing
-  genericsDeclr
+  StandardTypeDef
+    genericsDeclr
