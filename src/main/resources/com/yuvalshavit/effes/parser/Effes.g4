@@ -134,7 +134,9 @@ methodInvokeArgs: expr
 
 caseAlternative: casePattern COLON exprBlock;
 
-casePattern: TYPE_NAME singleTypeParameters (OPEN_PAREN VAR_NAME (COMMA VAR_NAME)* CLOSE_PAREN)?;
+casePattern: TYPE_NAME singleTypeParameters (OPEN_PAREN VAR_NAME (COMMA VAR_NAME)* CLOSE_PAREN)?  # SingleTypePatternMatch
+           | INT                                                                                  # IntLiteralPatternMatch
+           ;
 
 exprBlock: expr NL;
 

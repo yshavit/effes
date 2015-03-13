@@ -365,7 +365,18 @@ public final class ExpressionCompiler {
         : new Expression.UnrecognizedExpression(c.getStart()));
   }
 
+  private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, CasePattern> casePatternDispatcher
+    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.CasePatternContext.class, CasePattern.class)
+    .put(EffesParser.SingleTypePatternMatchContext.class, ExpressionCompiler::casePattern)
+    .put(EffesParser.IntLiteralPatternMatchContext.class, ExpressionCompiler::casePattern)
+    .build(ExpressionCompiler::casePatternErr);
+    
+  
   public CasePattern casePattern(EffesParser.CasePatternContext casePattern) {
+    return casePatternDispatcher.apply(this, casePattern);
+  }
+  
+  private CasePattern casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
     TerminalNode tok = casePattern.TYPE_NAME();
     TypeResolver resolver = new TypeResolver(typeRegistry, errs, declaringType);
     EfType.SimpleType matchType = resolver.getSimpleType(tok, casePattern.singleTypeParameters().type());
@@ -383,7 +394,37 @@ public final class ExpressionCompiler {
 
     return new CasePattern(matchType, bindings, casePattern.getStart());
   }
+  
+  private CasePattern casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
+    long literalValue;
+    try {
+      literalValue = Long.parseLong(casePattern.getText());
+    } catch (NumberFormatException e) {
+      errs.add(casePattern.getStart(), "number out of range: " + casePattern.getText());
+      return null;
+    }
+    if (literalValue == 0) {
+      return new CasePattern(BuiltinType.IntZero.getEfType(), Collections.emptyList(), casePattern.getStart());
+    } else {
+      errs.add(casePattern.getStart(), "non-0 int literals are unsupported as pattern matchers");
+      return null;
+    }
+  }
 
+  private CasePattern casePatternErr(EffesParser.CasePatternContext casePattern) {
+    Class<?> clazz;
+    Token tok;
+    if (casePattern == null) {
+      clazz = null;
+      tok = null;
+    } else {
+      clazz = casePattern.getClass();
+      tok = casePattern.getStart();
+    }
+    errs.add(tok, String.format("unknown error in handling pattern of type " + clazz));
+    return null;
+  }
+  
   @Nullable
   public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
     C ctx,

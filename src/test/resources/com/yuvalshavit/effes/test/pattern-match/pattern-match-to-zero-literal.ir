@@ -1,0 +1,13 @@
+def isZero (i: IntValue | IntZero) -> False | True:
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          arg: i
+          pos: 0
+      of IntZero:
+        CtorInvoke
+          type: True
+      of IntValue:
+        CtorInvoke
+          type: False

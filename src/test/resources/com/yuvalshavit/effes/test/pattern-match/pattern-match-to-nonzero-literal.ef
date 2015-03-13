@@ -1,0 +1,9 @@
+type Boolean = True | False
+
+isZero (i: Int) -> Boolean: return case i of
+  1: True
+  IntValue: False
+
+main:
+  print isZero 0
+  print isZero 1
