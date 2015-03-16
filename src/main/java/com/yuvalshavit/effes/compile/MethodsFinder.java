@@ -22,13 +22,16 @@ public final class MethodsFinder implements Consumer<Sources> {
   private final MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry;
   private final CompileErrors errs;
   private final TypeRegistry typeRegistry;
+  private final MethodsRegistry<?> builtins;
   private final CtorRegistry ctors;
 
   public MethodsFinder(TypeRegistry typeRegistry,
+                       MethodsRegistry<?> builtins,
                        MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
                        CtorRegistry ctors,
                        CompileErrors errs) {
     this.typeRegistry = typeRegistry;
+    this.builtins = builtins;
     this.methodsRegistry = methodsRegistry;
     this.ctors = ctors;
     this.errs = errs;
@@ -37,9 +40,10 @@ public final class MethodsFinder implements Consumer<Sources> {
   @Override
   public void accept(Sources sources) {
     MethodsInfo info = new MethodsInfo();
-    sources.forEach(source -> ParserUtils.walk(new Finder(info), source.getParseUnit()));
+    sources.forEach(source -> ParserUtils.walk(new Finder(info, builtins, source.isBuiltin()), source.getParseUnit()));
     sources.forEach(source -> ParserUtils.walk(new Verifier(source.isBuiltin()), source.getParseUnit()));
     checkOpenMethods(info);
+    builtins.retainOnly(info.builtInMethods);
   }
 
   private void checkOpenMethods(MethodsInfo info) {
@@ -115,11 +119,15 @@ public final class MethodsFinder implements Consumer<Sources> {
   private class Finder extends EffesBaseListener {
 
     private final MethodsInfo methodsInfo;
+    private final MethodsRegistry<?> allBuiltins;
+    private final boolean sourceIsBuiltIn;
     private EfType.SimpleType declaringType = null;
     private String declaringOpenType = null;
 
-    Finder(MethodsInfo methodsInfo) {
+    Finder(MethodsInfo methodsInfo, MethodsRegistry<?> allBuiltins, boolean sourceIsBuiltIn) {
+      this.allBuiltins = allBuiltins;
       this.methodsInfo = methodsInfo;
+      this.sourceIsBuiltIn = sourceIsBuiltIn;
     }
     
     @Override
@@ -209,7 +217,25 @@ public final class MethodsFinder implements Consumer<Sources> {
         methodsInfo.openMethods.registerMethod(methodId, method);
       } else {
         methodId = MethodId.of(declaringType, name);
-        if (body == null) {
+        if (body == null && ctx.methodBody().BUILTIN() != null) {
+          if (sourceIsBuiltIn) {
+            if (!methodId.equals(MethodId.topLevel("print"))) { // TODO remove the methodId.equals check once functions can be generic
+              EfMethod<?> builtin = allBuiltins.getMethod(methodId);
+              if (builtin == null) {
+                errs.add(ctx.methodBody().BUILTIN().getSymbol(), "built-in method not known (this is a compiler error)");
+              } else {
+                if (!method.getResultType().equals(builtin.getResultType())) {
+                  errs.add(ctx.methodReturnDeclr().getStart(), "incompatible return type on built in method (this is a compiler error)");
+                }
+                if (!method.getArgs().getTypes().equals(builtin.getArgs().getTypes())) {
+                  errs.add(ctx.getStart(), "incompatible arguments on built in method (this is a compiler error)");
+                }
+                methodsInfo.addBuiltins(methodId);
+              }
+            }
+          } else {
+            errs.add(ctx.methodBody().BUILTIN().getSymbol(), "can't declare built-in methods in userland source code");
+          }
           // TODO actually register it from the builtins registry? validation against expected args, etc?
         } else {
           try {
@@ -244,6 +270,7 @@ public final class MethodsFinder implements Consumer<Sources> {
     private static final MethodTokens blankInfos = new MethodTokens();
     private final MethodsRegistry<Object> openMethods = new MethodsRegistry<>();
     private final Map<MethodId, MethodTokens> methodsTokens = new HashMap<>();
+    private final Set<MethodId> builtInMethods = new HashSet<>();
 
     public void register(MethodId methodId, MethodTokens tokens) {
       if (!methodsTokens.containsKey(methodId)) {
@@ -263,6 +290,10 @@ public final class MethodsFinder implements Consumer<Sources> {
 
     public Token resultTypeToken(MethodId methodId) {
       return methodsTokens.getOrDefault(methodId, blankInfos).resultTypeStart;
+    }
+
+    public void addBuiltins(MethodId methodId) {
+      builtInMethods.add(methodId);
     }
   }
 
@@ -319,14 +350,8 @@ public final class MethodsFinder implements Consumer<Sources> {
       switch (mode) {
       case NONE:
       case DATA_TYPE:
-        if (ctx.inlinableBlock() == null) {
-          if (ctx.BUILTIN() == null) {
-            errs.add(ctx.getStop(), "expected method body");
-          } else {
-            if (!sourceIsBuiltin) {
-              errs.add(ctx.BUILTIN().getSymbol(), "can't declare built-in methods in userland source code");
-            }
-          }
+        if (ctx.inlinableBlock() == null && ctx.BUILTIN() == null) {
+          errs.add(ctx.getStop(), "expected method body");
         }
         break;
       case OPEN_TYPE:

@@ -3,8 +3,15 @@ type Int = IntZero | IntValue
 
 type IntValue @builtin:
   + (term: Int) -> Int: @builtin
+  - (term: Int) -> Int: @builtin
+  * (term: Int) -> Int: @builtin
+  / (term: IntValue) -> Int: @builtin
 
-type IntZero @builtin
+type IntZero @builtin:
+  + (term: Int) -> Int: @builtin
+  - (term: Int) -> Int: @builtin
+  * (term: Int) -> Int: @builtin
+  / (term: IntValue) -> Int: @builtin
 
 -- Boolean
 type Boolean = True | False
@@ -13,3 +20,5 @@ type False
 
 -- Void
 type Void
+
+print (a: Int) -> Void: @builtin

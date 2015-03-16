@@ -74,6 +74,8 @@ public final class MethodsFinderTest {
                                   EffesParser parser,
                                   CompileErrors errs) {
     CtorRegistry ctors = Mockito.mock(CtorRegistry.class, new ThrowsExceptionClass(AssertionError.class));
-    new MethodsFinder(types, methodsRegistry, ctors, errs).accept(SourcesFactory.withoutBuiltins(parser));
+    MethodsRegistry<?> fakedBuiltinMethods = new MethodsRegistry<>();
+    new MethodsFinder(types, fakedBuiltinMethods, methodsRegistry, ctors, errs)
+      .accept(SourcesFactory.withoutBuiltins(parser));
   }
 }

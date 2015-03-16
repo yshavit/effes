@@ -27,6 +27,10 @@ public final class EfArgs {
     return args;
   }
 
+  public List<EfType> getTypes() {
+    return args.stream().map(Arg::type).collect(Collectors.toList());
+  }
+
   public int length() {
     return args.size();
   }

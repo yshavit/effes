@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.compile;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.compile.node.EfMethod;
 import com.yuvalshavit.effes.compile.node.MethodId;
 
@@ -9,6 +10,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -38,6 +40,16 @@ public final class MethodsRegistry<B> {
 
   public Map<? extends MethodId, ? extends EfMethod<? extends B>> getMethodsByName() {
     return Collections.unmodifiableMap(methods);
+  }
+
+  public void retainOnly(Set<MethodId> toRetain) {
+    toRetain = new HashSet<>(toRetain);
+    toRetain.add(MethodId.topLevel("print")); // TODO remove once functions can be generic
+    Set<MethodId> unknown = Sets.difference(toRetain, methods.keySet());
+    if (!unknown.isEmpty()) {
+      throw new IllegalArgumentException("unknown method(s) to retain: " + unknown);
+    }
+    methods.keySet().retainAll(toRetain);
   }
 
   @Nullable

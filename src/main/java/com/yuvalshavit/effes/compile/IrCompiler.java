@@ -65,7 +65,7 @@ public final class IrCompiler<E> {
     CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
-    new MethodsFinder(typeRegistry, unparsedMethods, ctors, errs).accept(sources);
+    new MethodsFinder(typeRegistry, builtinsRegistry, unparsedMethods, ctors, errs).accept(sources);
 
     Scopes<EfVar, Token> vars = new Scopes<>(
       EfVar::getName,
