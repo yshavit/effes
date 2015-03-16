@@ -50,6 +50,7 @@ methodName: VAR_NAME
           | CMP_OPS
           | MULT_OPS
           | ADD_OPS
+          | NOT
           ;
 
 methodArgs: ( methodArg (COMMA methodArg)* )?;
@@ -161,6 +162,7 @@ THEN: 'then';
 ELSE: 'else';
 THIS: 'this';
 CASE: 'case';
+NOT: '!';
 OF: 'of';
 RETURN: 'return';
 WHERE: 'where';

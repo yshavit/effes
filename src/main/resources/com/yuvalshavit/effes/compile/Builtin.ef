@@ -11,5 +11,9 @@ type Boolean = True | False
 type True
 type False
 
+! (bool: Boolean) -> Boolean: return case bool of
+  True: False
+  False: True
+
 -- Void
 type Void
