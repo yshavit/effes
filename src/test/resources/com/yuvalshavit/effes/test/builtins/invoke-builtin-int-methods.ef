@@ -1,8 +1,8 @@
 test:
-  print 33 . + 22
-  print 33 . - 22
-  print 33 . * 10
-  print 33 . / 10
+  debugPrint 33 . + 22
+  debugPrint 33 . - 22
+  debugPrint 33 . * 10
+  debugPrint 33 . / 10
 
 main:
   test 

@@ -1,9 +1,9 @@
 type Boolean = True | False
 
 type One[T] (value: T):
-  describeMe: print value
+  describeMe: debugPrint value
   
 main:
   o = One[Boolean](True)
   o.describeMe
-  print (o.value)
+  debugPrint (o.value)

@@ -7,7 +7,7 @@ isZeroB (arg: Int) -> True | False: return case arg of
   IntZero: True
 
 main:
-  print isZeroA 0
-  print isZeroA 1
-  print isZeroB 0
-  print isZeroB 1
+  debugPrint isZeroA 0
+  debugPrint isZeroA 1
+  debugPrint isZeroB 0
+  debugPrint isZeroB 1

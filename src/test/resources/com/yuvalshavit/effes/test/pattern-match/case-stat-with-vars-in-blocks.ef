@@ -2,11 +2,11 @@ casey (b: True | False):
   case b of
     True:
       a = True
-      print a
+      debugPrint a
     False:
       c = False
       a = False
-      print c
+      debugPrint c
 
 main:
   casey True

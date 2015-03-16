@@ -5,4 +5,4 @@ isDogCute (d: Dog) -> True | False:
   return d.isCute
 
 main:
-  print (isDogCute Dog)
+  debugPrint (isDogCute Dog)

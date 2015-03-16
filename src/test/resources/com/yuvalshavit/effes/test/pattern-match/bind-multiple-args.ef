@@ -2,7 +2,7 @@ type TwoArgs(v: Void, shouldPrint: True | False)
 
 sayHi (value: Void), (vocal: True | False) -> Void:
   return case vocal of
-    True: print value
+    True: debugPrint value
     False: Void
 
 foo (t: TwoArgs | Void) -> True | False | Void:

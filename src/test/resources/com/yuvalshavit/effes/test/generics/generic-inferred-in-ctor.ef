@@ -2,4 +2,4 @@ type One[T] (value: T)
 
 describeOnce(what: True):
   oneB = One(what)
-  print oneB
+  debugPrint oneB

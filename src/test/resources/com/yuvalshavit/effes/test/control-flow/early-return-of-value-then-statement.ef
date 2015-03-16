@@ -4,6 +4,6 @@ boolId (bool: True | False) -> True | False:
       return True
     False:
       return False
-  print Void
+  debugPrint Void
 
-main: print boolId True
+main: debugPrint boolId True

@@ -11,7 +11,7 @@ def foo (True) -> True:
         var: t1
         pos: 0
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       VarExpression
         var: t2

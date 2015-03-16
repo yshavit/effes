@@ -1,8 +1,8 @@
 foo (b: BoolWrapper | Void) -> Void:
   t = True
   return case b of
-    BoolWrapper(x): print t
-    Void: print False
+    BoolWrapper(x): debugPrint t
+    Void: debugPrint False
 
 main -> Void:
   foo BoolWrapper(True)

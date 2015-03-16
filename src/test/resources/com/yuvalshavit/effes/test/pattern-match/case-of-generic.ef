@@ -13,6 +13,6 @@ describe (in: Node[True] | Node[False] | Boolean) -> TrueNode | FalseNode | Bool
     False: False
 
 main:
-  print describe Node[True](True, Empty)
-  print describe Node[False](False, Empty)
-  print describe True
+  debugPrint describe Node[True](True, Empty)
+  debugPrint describe Node[False](False, Empty)
+  debugPrint describe True

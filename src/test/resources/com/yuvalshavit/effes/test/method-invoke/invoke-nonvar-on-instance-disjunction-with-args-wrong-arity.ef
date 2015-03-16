@@ -10,5 +10,5 @@ unwrap (b: AWrap) -> True | False:
   return b.value.mapped Void
 
 main:
-  print (unwrap AWrap(ATrue))
-  print (unwrap AWrap(AFalse))
+  debugPrint (unwrap AWrap(ATrue))
+  debugPrint (unwrap AWrap(AFalse))

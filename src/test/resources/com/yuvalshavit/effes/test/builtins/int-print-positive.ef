@@ -1,4 +1,4 @@
 getNum -> IntValue: return 27
 
 main:
-  print getNum
+  debugPrint getNum

@@ -1,6 +1,6 @@
 def test () -> no result type:
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       MethodInvoke
         method: IntValue::+ [built-in]
@@ -11,7 +11,7 @@ def test () -> no result type:
           IntLiteral
             22
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       MethodInvoke
         method: IntValue::- [built-in]
@@ -22,7 +22,7 @@ def test () -> no result type:
           IntLiteral
             22
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       MethodInvoke
         method: IntValue::* [built-in]
@@ -33,7 +33,7 @@ def test () -> no result type:
           IntLiteral
             10
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       MethodInvoke
         method: IntValue::/ [built-in]

@@ -7,7 +7,7 @@ main -> Void:
   b1 = BoolWrapper(True)
   b2 = BoolWrapper(False)
   v1 = VoidWrapper(Void)
-  print extractValue b1
-  print extractValue b2
-  print extractValue v1
+  debugPrint extractValue b1
+  debugPrint extractValue b2
+  debugPrint extractValue v1
   return Void

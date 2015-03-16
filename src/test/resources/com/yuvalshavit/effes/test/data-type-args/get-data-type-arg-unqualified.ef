@@ -7,5 +7,5 @@ main:
   w2 = BoolWrap(False)
   u1 = w1.unwrap
   u2 = w2.unwrap
-  print u1
-  print u2
+  debugPrint u1
+  debugPrint u2

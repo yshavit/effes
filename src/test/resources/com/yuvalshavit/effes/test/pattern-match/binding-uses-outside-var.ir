@@ -12,14 +12,14 @@ def foo (b: BoolWrapper | Void) -> Void:
           pos: 0
       of BoolWrapper:
         MethodInvoke
-          method: print [built-in]
+          method: debugPrint [built-in]
           arg0:
             VarExpression
               var: t
               pos: 0
       of Void:
         MethodInvoke
-          method: print [built-in]
+          method: debugPrint [built-in]
           arg0:
             CtorInvoke
               type: False

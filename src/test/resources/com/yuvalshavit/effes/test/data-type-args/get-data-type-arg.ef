@@ -8,5 +8,5 @@ main:
   w2 = BoolWrap(False)
   u1 = unwrap w1
   u2 = unwrap w2
-  print u1
-  print u2
+  debugPrint u1
+  debugPrint u2

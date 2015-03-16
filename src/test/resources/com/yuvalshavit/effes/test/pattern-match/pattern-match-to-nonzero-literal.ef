@@ -5,5 +5,5 @@ isZero (i: Int) -> Boolean: return case i of
   IntValue: False
 
 main:
-  print isZero 0
-  print isZero 1
+  debugPrint isZero 0
+  debugPrint isZero 1

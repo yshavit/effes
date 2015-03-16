@@ -28,7 +28,7 @@ def sayHi (value: Void) (vocal: False | True) -> Void:
           pos: 1
       of True:
         MethodInvoke
-          method: print [built-in]
+          method: debugPrint [built-in]
           arg0:
             VarExpression
               arg: value

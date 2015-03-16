@@ -15,7 +15,7 @@ feedThenCheck (pet: Pet), (whenFed: Bool) -> Bool:
   return pet.isHappy whenFed
 
 main:
-  print feedThenCheck(Dog, True)
-  print feedThenCheck(Dog, False)
-  print feedThenCheck(Cat, True)
-  print feedThenCheck(Cat, False)
+  debugPrint feedThenCheck(Dog, True)
+  debugPrint feedThenCheck(Dog, False)
+  debugPrint feedThenCheck(Cat, True)
+  debugPrint feedThenCheck(Cat, False)

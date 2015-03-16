@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface BuiltInMethodsFactory<T> {
-  @BuiltInMethod(name = "print", resultType = "Void", args = "T", generics = {"T"})
+  @BuiltInMethod(name = "debugPrint", resultType = "Void", args = "T", generics = {"T"})
   T print();
   
   @BuiltInMethod(name = "+", resultType = "Int", args = "Int", targets = "IntValue | IntZero")

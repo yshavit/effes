@@ -23,7 +23,7 @@ def pushFooTrue () -> no result type:
           CtorInvoke
             type: False
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       VarExpression
         var: r

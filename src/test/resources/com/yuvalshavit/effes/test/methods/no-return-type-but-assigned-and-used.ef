@@ -1,4 +1,4 @@
-sayTrue: print True
+sayTrue: debugPrint True
 
 foo -> True:
   t = sayTrue

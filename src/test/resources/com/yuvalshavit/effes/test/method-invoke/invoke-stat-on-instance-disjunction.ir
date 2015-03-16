@@ -1,6 +1,6 @@
 def unwrap (b: AFalse | ATrue) -> no result type:
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       CaseExpression
         case:

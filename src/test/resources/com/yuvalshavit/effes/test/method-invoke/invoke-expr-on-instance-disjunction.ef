@@ -8,5 +8,5 @@ unwrap (b: ATrue | AFalse) -> True | False:
   return b.mapped
 
 main:
-  print (unwrap ATrue)
-  print (unwrap AFalse)
+  debugPrint (unwrap ATrue)
+  debugPrint (unwrap AFalse)

@@ -11,4 +11,4 @@ main:
   n1 = Node[Boolean](False, n0)
   n2 = Node[Boolean](True, n1)
   ln = ListOfNodes[Boolean](n2)
-  print ln
+  debugPrint ln

@@ -5,7 +5,7 @@ type Foo(bool: True | False):
 pushFooTrue:
   foo = Foo(True)
   r = foo.push(Void, False)
-  print r
+  debugPrint r
 
 main:
   pushFooTrue

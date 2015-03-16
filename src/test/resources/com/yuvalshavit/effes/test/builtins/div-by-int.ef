@@ -1,2 +1,2 @@
 divByZero (denominator: Int):
-  print 1 . / denominator -- possible divide-by-zero!
+  debugPrint 1 . / denominator -- possible divide-by-zero!

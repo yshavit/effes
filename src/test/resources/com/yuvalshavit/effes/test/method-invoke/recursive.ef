@@ -9,4 +9,4 @@ recurse (in: One | Two | Three | True) -> True:
     Two: recurse One
     Three: recurse Two
 
-main -> Void: return print recurse Three
+main -> Void: return debugPrint recurse Three

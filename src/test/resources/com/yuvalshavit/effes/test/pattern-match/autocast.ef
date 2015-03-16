@@ -1,5 +1,5 @@
-hello (t: True): print True
-goodbye (f: False): print False
+hello (t: True): debugPrint True
+goodbye (f: False): debugPrint False
 
 helloGoodbye(b: True | False):
   case b of

@@ -1,12 +1,12 @@
 def goodbye (f: False) -> no result type:
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       CtorInvoke
         type: False
 def hello (t: True) -> no result type:
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       CtorInvoke
         type: True

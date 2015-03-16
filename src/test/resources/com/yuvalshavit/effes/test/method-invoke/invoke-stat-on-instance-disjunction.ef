@@ -5,7 +5,7 @@ type AFalse:
   mapped -> False: return False
 
 unwrap (b: ATrue | AFalse):
-  print b.mapped
+  debugPrint b.mapped
 
 main:
   unwrap ATrue

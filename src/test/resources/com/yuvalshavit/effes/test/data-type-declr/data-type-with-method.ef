@@ -1,5 +1,5 @@
 type Dog:
-  isCute: print True
+  isCute: debugPrint True
 
 main:
   Dog.isCute

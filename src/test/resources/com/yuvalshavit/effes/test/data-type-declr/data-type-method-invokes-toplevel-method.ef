@@ -1,4 +1,4 @@
-sayHi: print True
+sayHi: debugPrint True
 
 type HiSayer:
   salute: sayHi

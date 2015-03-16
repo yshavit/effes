@@ -4,6 +4,6 @@ foo (bool: BoolWrapper | VoidWrapper) -> True | False | Void:
     VoidWrapper(v): v
 
 main -> Void:
-  print (foo BoolWrapper(True))
-  print foo VoidWrapper(Void)
+  debugPrint (foo BoolWrapper(True))
+  debugPrint foo VoidWrapper(Void)
   return Void

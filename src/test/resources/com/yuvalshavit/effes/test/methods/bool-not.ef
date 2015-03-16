@@ -4,6 +4,6 @@ not (bool: True | False) -> (True | False):
     False: True
 
 main -> Void:
-  print not True
-  print not False
+  debugPrint not True
+  debugPrint not False
   return Void

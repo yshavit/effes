@@ -1,6 +1,6 @@
 def One[T]::describeMe () -> no result type:
   MethodInvoke
-    method: print [built-in]
+    method: debugPrint [built-in]
     arg0:
       InstanceArg
         target:

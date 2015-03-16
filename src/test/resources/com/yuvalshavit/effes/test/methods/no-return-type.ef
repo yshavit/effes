@@ -1,6 +1,6 @@
 foo:
-  print True
-  print False
+  debugPrint True
+  debugPrint False
 
 main:
   foo

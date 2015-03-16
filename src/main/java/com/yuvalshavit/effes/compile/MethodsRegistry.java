@@ -44,7 +44,6 @@ public final class MethodsRegistry<B> {
 
   public void retainOnly(Set<MethodId> toRetain) {
     toRetain = new HashSet<>(toRetain);
-    toRetain.add(MethodId.topLevel("print")); // TODO remove once functions can be generic
     Set<MethodId> unknown = Sets.difference(toRetain, methods.keySet());
     if (!unknown.isEmpty()) {
       throw new IllegalArgumentException("unknown method(s) to retain: " + unknown);

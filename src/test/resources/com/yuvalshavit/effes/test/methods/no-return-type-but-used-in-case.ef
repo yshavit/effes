@@ -1,4 +1,4 @@
-foo: print True
+foo: debugPrint True
 
 bar -> True: return case foo of
   True: True

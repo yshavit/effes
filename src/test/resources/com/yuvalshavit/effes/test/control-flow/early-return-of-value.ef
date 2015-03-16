@@ -1,10 +1,10 @@
 boolId (bool: True | False) -> True | False:
   case bool of
     True:
-      print True
+      debugPrint True
       return True
     False:
-      print False
+      debugPrint False
       return False
 
-main: print boolId True
+main: debugPrint boolId True

@@ -6,5 +6,5 @@ invert (b: Boolean) -> Boolean:
     False: True
 
 main:
-  print (invert True)
-  print (invert False)
+  debugPrint (invert True)
+  debugPrint (invert False)

@@ -1,2 +1,2 @@
 divByZero:
-  print 1 . / 0
+  debugPrint 1 . / 0

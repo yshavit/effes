@@ -1,7 +1,7 @@
 foo True -> True:
   t1 = True
   t2 = t1
-  print t2
+  debugPrint t2
   return t2
 
 main -> True: return foo True
