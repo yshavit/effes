@@ -1,10 +1,10 @@
-type Boolean ?
-  negate -> Boolean
+type NegatableBool ?
+  negate -> NegatableBool
 
 type BTrue:
-  is Boolean
+  is NegatableBool
   negate -> BFalse: return BFalse
 
 type BFalse:
-  is Boolean
+  is NegatableBool
   negate -> BTrue: return BTrue

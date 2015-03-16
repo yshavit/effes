@@ -7,7 +7,7 @@ type IntValue @builtin:
 type IntZero @builtin
 
 -- Boolean
--- type Boolean = True | False
+type Boolean = True | False
 type True
 type False
 
