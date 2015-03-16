@@ -36,7 +36,7 @@ compilationBodyElement: dataTypeDeclr
 // methods
 
 methodDeclr: methodName
-             //genericsDeclr
+             genericsDeclr
              methodArgs
              methodReturnDeclr
              methodBody

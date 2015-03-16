@@ -9,6 +9,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,11 +20,17 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
   private final CompileErrors errs;
   private final EfType.SimpleType context;
   private final SingleTypeResolver resolver;
+  private final Collection<EfType.GenericType> extraGenerics;
 
   public TypeResolver(TypeRegistry typeRegistry, CompileErrors errs, EfType.SimpleType context) {
+    this(typeRegistry, errs, context, Collections.emptySet());
+  }
+
+  public TypeResolver(TypeRegistry typeRegistry, CompileErrors errs, EfType.SimpleType context, Collection<EfType.GenericType> extraGenerics) {
     this.typeRegistry = typeRegistry;
     this.errs = errs;
     this.context = context;
+    this.extraGenerics = extraGenerics;
     resolver = new SingleTypeResolver();
   }
 
@@ -108,18 +116,37 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     protected EfType lookupGenericType(EffesParser.SingleGenericTypeContext ctx) {
       String genericName = ctx.GENERIC_NAME().getText();
       if (context == null) {
-        // global method
-        // TODO generics on methods!
-        errs.add(ctx.getStart(), "undeclared generic type " + genericName);
+        // top-level function
+        EfType found = lookUpGenericByName(extraGenerics, genericName);
+        if (found == null) {
+          errs.add(ctx.getStart(), "undeclared generic type " + genericName);
+          return EfType.UNKNOWN;
+        } else {
+          return found;
+        }
+      }
+      EfType.GenericType genericOnType = lookUpGenericByName(context.getGenericsDeclr(), genericName);
+      EfType.GenericType extraGeneric = lookUpGenericByName(extraGenerics, genericName);
+      if (genericOnType != null && extraGeneric != null) {
+        errs.add(ctx.GENERIC_NAME().getSymbol(), "ambiguous generic " + genericName);
+      }
+     if (genericOnType != null) {
+        return genericOnType;
+      } else if (extraGeneric != null) {
+        return extraGeneric;
+      } else {
+        errs.add(ctx.getStart(), String.format("no generic parameter %s defined on %s", genericName, context.getGeneric()));
         return EfType.UNKNOWN;
       }
-      for (EfType.GenericType generic : context.getGenericsDeclr()) {
+    }
+
+    private EfType.GenericType lookUpGenericByName(Collection<EfType.GenericType> generics, String genericName) {
+      for (EfType.GenericType generic : generics) {
         if (generic.getName().equals(genericName)) {
           return generic;
         }
       }
-      errs.add(ctx.getStart(), String.format("no generic parameter %s defined on %s", genericName, context.getGeneric()));
-      return EfType.UNKNOWN;
+      return null;
     }
   }
 }

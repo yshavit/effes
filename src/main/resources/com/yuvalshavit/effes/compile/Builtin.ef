@@ -21,4 +21,4 @@ type False
 -- Void
 type Void
 
-print (a: Int) -> Void: @builtin
+print [T] (a: T) -> Void: @builtin

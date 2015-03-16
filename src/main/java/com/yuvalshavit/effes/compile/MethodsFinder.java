@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfArgs;
 import com.yuvalshavit.effes.compile.node.EfMethod;
@@ -16,6 +17,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class MethodsFinder implements Consumer<Sources> {
 
@@ -180,7 +182,11 @@ public final class MethodsFinder implements Consumer<Sources> {
         args.add(ctx.getStart(), EfVar.THIS_VAR_NAME, type);
       }
       methodTokens.argsStart = ctx.methodArgs().getStart();
-      TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, declaringType);
+      List<EfType.GenericType> generics = ctx.genericsDeclr().GENERIC_NAME()
+        .stream()
+        .map(g -> new EfType.GenericType(g.getText(), id))
+        .collect(Collectors.toList());
+      TypeResolver typeResolver = new TypeResolver(typeRegistry, errs, declaringType, generics);
       for (EffesParser.MethodArgContext argContext : ctx.methodArgs().methodArg()) {
         EffesParser.TypeContext typeContext = argContext.type();
         if (typeContext != null) {
@@ -206,8 +212,9 @@ public final class MethodsFinder implements Consumer<Sources> {
         methodTokens.resultTypeStart = ctx.methodReturnDeclr().getStart();
       }
       EffesParser.InlinableBlockContext body = ctx.methodBody().inlinableBlock();
-      List<EfType.GenericType> generics = Collections.emptyList(); // TODO; needs to account for method's genericsDeclr as well as context type!
-      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(id, generics, args.build(), resultType, body);
+
+      EfArgs methodArgs = args.build();
+      EfMethod<EffesParser.InlinableBlockContext> method = new EfMethod<>(id, generics, methodArgs, resultType, body);
       MethodId methodId;
       if (declaringOpenType != null) {
         assert declaringType == null : declaringType;
@@ -219,19 +226,24 @@ public final class MethodsFinder implements Consumer<Sources> {
         methodId = MethodId.of(declaringType, name);
         if (body == null && ctx.methodBody().BUILTIN() != null) {
           if (sourceIsBuiltIn) {
-            if (!methodId.equals(MethodId.topLevel("print"))) { // TODO remove the methodId.equals check once functions can be generic
-              EfMethod<?> builtin = allBuiltins.getMethod(methodId);
-              if (builtin == null) {
-                errs.add(ctx.methodBody().BUILTIN().getSymbol(), "built-in method not known (this is a compiler error)");
-              } else {
-                if (!method.getResultType().equals(builtin.getResultType())) {
-                  errs.add(ctx.methodReturnDeclr().getStart(), "incompatible return type on built in method (this is a compiler error)");
-                }
-                if (!method.getArgs().getTypes().equals(builtin.getArgs().getTypes())) {
-                  errs.add(ctx.getStart(), "incompatible arguments on built in method (this is a compiler error)");
-                }
-                methodsInfo.addBuiltins(methodId);
+            // TODO remove the methodId.equals check once functions can be generic
+            EfMethod<?> builtin = allBuiltins.getMethod(methodId);
+            if (builtin == null) {
+              errs.add(ctx.methodBody().BUILTIN().getSymbol(), "built-in method not known (this is a compiler error)");
+            } else {
+              if (!resultType.equals(builtin.getResultType())) {
+                errs.add(ctx.methodReturnDeclr().getStart(), "incompatible return type on built in method (this is a compiler error)");
               }
+              // We want to compare method args, but generics pose a problem since they compare owners, which for
+              // generics is the EfMethod.Id, which compares by identity. So we'll just do a quick reification that
+              // converts owners from the local "id" to the builtin's id.
+              methodArgs = methodArgs.reify(g -> g.getOwner().equals(id)
+                ? new EfType.GenericType(g.getName(), builtin.getTrueId())
+                : g);
+              if (!methodArgs.getTypes().equals(builtin.getArgs().getTypes())) {
+                errs.add(ctx.getStart(), "incompatible arguments on built in method (this is a compiler error)");
+              }
+              methodsInfo.addBuiltins(methodId);
             }
           } else {
             errs.add(ctx.methodBody().BUILTIN().getSymbol(), "can't declare built-in methods in userland source code");
