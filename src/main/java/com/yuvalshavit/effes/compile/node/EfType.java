@@ -32,6 +32,8 @@ public abstract class EfType {
   public abstract int hashCode();
 
   public abstract Collection<SimpleType> simpleTypes();
+  
+  public abstract <T> T handle(EfTypeHandler<? extends T> handler);
 
   public boolean isFakeType() {
     return getClass().equals(UnknownType.class);
@@ -54,14 +56,28 @@ public abstract class EfType {
 
   private static final class UnknownType extends EfType {
     private enum Variant {
-      UNKNOWN("unknown type"),
-      VOID("no result type");
+      UNKNOWN("unknown type") {
+        @Override
+        <T> T handle(EfTypeHandler<? extends T> handler) {
+          return handler.unknown();
+        }
+      },
+      VOID("no result type") {
+        @Override
+        <T> T handle(EfTypeHandler<? extends T> handler) {
+          return handler.voidType();
+        }
+      },
+      ;
 
       private final String description;
+      
 
       Variant(String description) {
         this.description = description;
       }
+      
+      abstract <T> T handle(EfTypeHandler<? extends T> handler);
     }
     private final Variant variant;
 
@@ -82,6 +98,11 @@ public abstract class EfType {
     @Override
     public EfType reify(Function<GenericType, EfType> reification) {
       return this;
+    }
+
+    @Override
+    public <T> T handle(EfTypeHandler<? extends T> handler) {
+      return variant.handle(handler);
     }
 
     @Override
@@ -134,6 +155,11 @@ public abstract class EfType {
     @Override
     public Collection<SimpleType> simpleTypes() {
       return Collections.singleton(this);
+    }
+
+    @Override
+    public <T> T handle(EfTypeHandler<? extends T> handler) {
+      return handler.simple(this);
     }
 
     public SimpleType getGeneric() {
@@ -313,6 +339,11 @@ public abstract class EfType {
     }
 
     @Override
+    public <T> T handle(EfTypeHandler<? extends T> handler) {
+      return handler.disjunction(this);
+    }
+
+    @Override
     public String toString() {
       return Joiner.on(" | ").join(options);
     }
@@ -371,6 +402,11 @@ public abstract class EfType {
     @Override
     public Collection<SimpleType> simpleTypes() {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T handle(EfTypeHandler<? extends T> handler) {
+      return handler.generic(this);
     }
 
     @Override
