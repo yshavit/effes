@@ -17,6 +17,8 @@ import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Equality;
 
+import static com.yuvalshavit.util.EfCollections.mapList;
+
 public abstract class PCase {
 
   @Nullable public abstract PCase minus(@Nonnull PCase type);
@@ -149,6 +151,10 @@ public abstract class PCase {
 
         @Override
         public PCase whenDisjunction(Collection<Supplier<Simple>> alternatives) {
+          // e.g. t: List[T] = Head[T] | Empty
+          List<? extends Simple> altsList = mapList(alternatives, Supplier::get);
+
+          if (altsList.stream().an)
           throw new UnsupportedOperationException(); // TODO distribute if possible, else null
         }
       });

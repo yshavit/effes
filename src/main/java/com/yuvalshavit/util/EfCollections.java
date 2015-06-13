@@ -1,7 +1,11 @@
 package com.yuvalshavit.util;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 
@@ -25,5 +29,9 @@ public class EfCollections {
         return Maps.immutableEntry(l, r);
       }
     };
+  }
+
+  public static <I,O> List<? extends O> mapList(Collection<? extends I> c, Function<? super I, ? extends O> f) {
+    return c.stream().map(f).collect(Collectors.toList());
   }
 }
