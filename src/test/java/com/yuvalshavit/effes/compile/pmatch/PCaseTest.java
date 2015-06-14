@@ -7,7 +7,6 @@ import static org.testng.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import java.util.function.Function;
 
 import org.testng.annotations.Test;
@@ -26,9 +25,11 @@ public class PCaseTest {
   private final EfType.SimpleType tCons;
   private final EfType.SimpleType tEmpty;
   private final EfType.DisjunctiveType tList;
+  private EfType.SimpleType tBoolCons;
+
   private final EfType.GenericType tListGeneric;
-  
   private final CtorRegistry ctors;
+  private EfType tBoolsList;
 
   public PCaseTest() {
     tTrue = new EfType.SimpleType("True", Collections.emptyList());
@@ -55,26 +56,20 @@ public class PCaseTest {
         EfVar.arg("head", 0, tListGeneric),
         EfVar.arg("tail", 1, tList)));
     ctors.setCtorArgs(tEmpty, Collections.emptyList());
+
+    Function<EfType.GenericType, EfType> boolReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
+    tBoolsList = tList.reify(boolReification);
+    tBoolCons = this.tCons.reify(boolReification);
   }
 
   @Test
   public void listPattern() {
-    Map<EfType.GenericType, EfType> tIsBool = Collections.<EfType.GenericType, EfType>singletonMap(tListGeneric, tBool);
-    Function<EfType.GenericType, EfType> reification = Functions.forMap(tIsBool)::apply;
-    EfType boolsList = tList.reify(reification);
-    PPossibility boolsPossibility = PPossibility.from(boolsList, ctors);
-    EfType.SimpleType boolCon = this.tCons.reify(reification);
-    PAlternative firstIsTrue = simple(
-      boolCon,
-      simple(tTrue),
-      any()
-    ).build(ctors);
-    PAlternative secondIsTrue = simple(
-      boolCon,
+    PPossibility boolsPossibility = PPossibility.from(tBoolsList, ctors);
+    PAlternative firstIsTrue = boolCons(mTrue(), any()).build(ctors);
+    PAlternative secondIsTrue = boolCons(
       any(),
-      simple(
-        boolCon,
-        simple(tTrue),
+      boolCons(
+        mTrue(),
         any())
     ).build(ctors);
 
@@ -83,10 +78,22 @@ public class PCaseTest {
     PPossibility second = result.minus(secondIsTrue);
     fail("validate somehow that it's [False, False, _]: " + second);
   }
-  
+
+  private Builder boolCons(Builder head, Builder tail) {
+    return simple(
+      tBoolCons,
+      head,
+      tail
+    );
+  }
+
+  private Builder mTrue() {
+    return simple(tTrue);
+  }
+
   @Test
   public void trueNoArgs() {
-    assertNotNull(simple(tTrue).build(ctors));
+    assertNotNull(mTrue().build(ctors));
   }
 
   @Test
