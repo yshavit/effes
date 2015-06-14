@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -61,19 +60,22 @@ public abstract class PPossibility {
   }
 
   private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
-    TypedValue<Lazy<PPossibility>> value;
+    Lazy<TypedValue<PPossibility>> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
-      value = new TypedValue.LargeDomainValue<>(type);
+      value = Lazy.forced(new TypedValue.LargeDomainValue<>(type));
       argNames = Collections.emptyList();
     } else {
       List<EfVar> ctorVars = ctors.get(type, type.getReification());
-      List<Lazy<PPossibility>> args = new ArrayList<>(ctorVars.size());
-      for (EfVar ctorVar : ctorVars) {
-        args.add(Lazy.lazy(() -> from(ctorVar.getType(), ctors)));
-      }
-      value = new TypedValue.StandardValue<>(type, args);
-      argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
+      value = Lazy.lazy(
+        () -> {
+          List<PPossibility> args  = new ArrayList<>(ctorVars.size());
+          for (EfVar ctorVar : ctorVars) {
+            args.add(from(ctorVar.getType(), ctors));
+          }
+          return new TypedValue.StandardValue<>(type, args);
+        });
+        argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
     }
     return new Simple(value, argNames);
   }
@@ -103,10 +105,10 @@ public abstract class PPossibility {
   };
 
   static class Simple extends NonEmpty {
-    private final TypedValue<Lazy<PPossibility>> value;
+    private final Lazy<TypedValue<PPossibility>> value;
     private final List<String> argNames;
 
-    private Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
+    private Simple(Lazy<TypedValue<PPossibility>> value, List<String> argNames) {
       this.value = value;
       this.argNames = argNames;
     }
@@ -115,10 +117,11 @@ public abstract class PPossibility {
     @Override
     protected PPossibility minusAlternative(PAlternative.Simple simpleAlternative) {
       TypedValue<PAlternative> simpleValue = simpleAlternative.value();
-      if (!this.value.type().equals(simpleValue.type())) {
+      TypedValue<PPossibility> forcedPossible = this.value.get();
+      if (!forcedPossible.type().equals(simpleValue.type())) {
         return null;
       }
-      return this.value.transform(
+      return forcedPossible.transform(
         p -> large(),
         p -> simpleValue.transform(
           s -> large(), // ditto re decorating the result
@@ -128,54 +131,53 @@ public abstract class PPossibility {
     }
     
     @VisibleForTesting
-    TypedValue<Lazy<PPossibility>> typedAndArgs() {
+    Lazy<TypedValue<PPossibility>> typedAndArgs() {
       return value;
     }
 
-    private PPossibility doSubtract(TypedValue.StandardValue<Lazy<PPossibility>> possibility, TypedValue.StandardValue<PAlternative> alternative) {
+    private PPossibility doSubtract(TypedValue.StandardValue<PPossibility> possibility, TypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
-      List<Lazy<PPossibility>> possibleArgs = possibility.args();
+      List<PPossibility> possibleArgs = possibility.args();
       List<PAlternative> alternativeArgs = alternative.args();
       int nArgs = possibleArgs.size();
       assert nArgs == alternativeArgs.size() : String.format("different sizes: %s <~> %s", possibleArgs, alternativeArgs);
       
-      List<Lazy<PPossibility>> resultArgs = new ArrayList<>(nArgs);
+      List<PPossibility> resultArgs = new ArrayList<>(nArgs);
       for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
-        int argIdx = argIdxMutable;
-        Supplier<PPossibility> resultSupplier = () -> {
-          PPossibility possibleArg = possibleArgs.get(argIdx).get();
-          PAlternative alternativeArg = alternativeArgs.get(argIdx);
-          PPossibility resultArg = null;
-          if (possibleArg instanceof Disjunction) {
-            // e.g. head: True | False | Error(reason: Unknown | String)
-            Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
-            resultArg = possibleArgDisjunction.minus(alternativeArg);
-          } else if (possibleArg instanceof Simple) {
-            // e.g. just True, or just Error(..)
-            resultArg = possibleArg.minus(alternativeArg);
-          }
-          return resultArg;
-        };
-        resultArgs.add(Lazy.lazy(resultSupplier));
+        PPossibility possibleArg = possibleArgs.get(argIdxMutable);
+        PAlternative alternativeArg = alternativeArgs.get(argIdxMutable);
+        PPossibility resultArg = null;
+        if (possibleArg instanceof Disjunction) {
+          // e.g. head: True | False | Error(reason: Unknown | String)
+          Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
+          resultArg = possibleArgDisjunction.minus(alternativeArg);
+        } else if (possibleArg instanceof Simple) {
+          // e.g. just True, or just Error(..)
+          resultArg = possibleArg.minus(alternativeArg);
+        }
+        resultArgs.add(resultArg);
       }
       
-      if (resultArgs.stream().map(Lazy::get).allMatch(none::equals)) {
+      if (resultArgs.stream().allMatch(none::equals)) {
         return none;
       }
-      if (resultArgs.stream().map(Lazy::get).anyMatch(Objects::isNull)) {
+      if (resultArgs.stream().anyMatch(Objects::isNull)) {
         return null;
       }
-      return new Simple(possibility.with(resultArgs), argNames);
+      return new Simple(Lazy.forced(possibility.with(resultArgs)), argNames);
     }
 
     @Override
     public String toString(boolean verbose) {
-      return value.transform(
+      if (value.isUnforced()) {
+        return Lazy.UNFORCED_DESC;
+      }
+      return value.get().transform(
         large -> toString(large.type(), verbose),
         std -> {
-          List<Lazy<PPossibility>> args = std.args();
+          List<PPossibility> args = std.args();
           if (args.isEmpty()) {
             return toString(std.type(), verbose);
           } else {

@@ -127,7 +127,8 @@ public class PCaseTest {
 
   @Test
   public void createInfinitePossibilities() {
-    PPossibility.from(tInfiniteBools, ctors);
+    PPossibility from = PPossibility.from(tInfiniteBools, ctors);
+    assertNotNull(from.toString()); // this is really to check for a stack overflow due to infinite recursion
   }
   
   private static class Validator {
@@ -182,16 +183,19 @@ public class PCaseTest {
     }
     return new Validator(
       desc,
-      forced(actual -> {
-        assertThat(actual, instanceOf(PPossibility.Simple.class));
-        PPossibility.Simple actualSimple = (PPossibility.Simple) actual;
-        assertThat(actualSimple.typedAndArgs().type(), equalTo(type));
-        actualSimple.typedAndArgs().consume(
-          l -> assertEquals(args.length, 0), s -> {
-          assertEquals(s.args().size(), args.length);
-          EfCollections.zipC(Arrays.asList(args), s.args(), Validator::validate);
-        });
-      }));
+      forced(
+        actual -> {
+          assertThat(actual, instanceOf(PPossibility.Simple.class));
+          PPossibility.Simple actualSimple = (PPossibility.Simple) actual;
+          assertFalse(actualSimple.typedAndArgs().isUnforced(), "not forced");
+          TypedValue<PPossibility> typedvalue = actualSimple.typedAndArgs().get();
+          assertThat(typedvalue.type(), equalTo(type));
+          typedvalue.consume(
+            l -> assertEquals(args.length, 0), s -> {
+              assertEquals(s.args().size(), args.length);
+              EfCollections.zipC(Arrays.asList(args), s.args(), Validator::validate);
+            });
+        }));
   }
   
   private static Validator disjunctionV(Validator... alternatives) {
