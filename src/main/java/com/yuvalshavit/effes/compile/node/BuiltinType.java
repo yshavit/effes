@@ -7,15 +7,17 @@ import java.util.Collections;
  * Each enum name corresponds exactly to its effes type.
  */
 public enum BuiltinType {
-  IntZero("IntZero"),
-  IntValue("IntValue"),
+  IntZero("IntZero", false),
+  IntValue("IntValue", true),
   
-  String("String"),
+  String("String", true),
   ;
   
   private final EfType.SimpleType efType;
+  private final boolean hasLargeDomain;
 
-  BuiltinType(String efTypeName) {
+  BuiltinType(String efTypeName, boolean hasLargeDomain) {
+    this.hasLargeDomain = hasLargeDomain;
     this.efType = new EfType.SimpleType(efTypeName, Collections.<String>emptyList());
   }
 
@@ -27,5 +29,14 @@ public enum BuiltinType {
 
   public EfType.SimpleType getEfType() {
     return efType;
+  }
+
+  public static boolean isBuiltinWithLargeDomain(EfType.SimpleType type) {
+    for (BuiltinType builtIn : BuiltinType.values()) {
+      if (builtIn.efType.equals(type)) {
+        return builtIn.hasLargeDomain;
+      }
+    }
+    return false;
   }
 }

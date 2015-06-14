@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.yuvalshavit.effes.compile.node.BuiltinType;
+import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
@@ -14,6 +18,40 @@ public abstract class PPossibility {
   @Nullable public abstract PPossibility minus(PAlternative alternative);
   
   private PPossibility() {}
+  
+  public static PPossibility from(EfType type) {
+    if (type instanceof EfType.SimpleType) {
+      return from((EfType.SimpleType) type);
+    } else if (type instanceof EfType.DisjunctiveType) {
+      EfType.DisjunctiveType disjunction = (EfType.DisjunctiveType) type;
+      Set<EfType> alternatives = disjunction.getAlternatives();
+      List<EfType.SimpleType> simpleAlternatives = new ArrayList<>(alternatives.size());
+      for (EfType alternative : alternatives) {
+        if (alternative instanceof EfType.SimpleType) {
+          simpleAlternatives.add(((EfType.SimpleType) alternative));
+        } else {
+          // TODO report an error!
+          return PPossibility.none;
+        }
+      }
+      List<Lazy<Simple>> possibilities = simpleAlternatives
+        .stream()
+        .map(t -> new Lazy<Simple>(from(t)))
+        .collect(Collectors.toList());
+      return new PPossibility.Disjunction(possibilities);
+    } else {
+      // TODO report an error!
+      return none;
+    }
+  }
+
+  private static Simple from(EfType.SimpleType type) {
+    PTypedValue<PPossibility> value;
+    value = BuiltinType.isBuiltinWithLargeDomain(type)
+      ? new PTypedValue.LargeDomainValue<>(type)
+      : new PTypedValue.StandardValue<>(type, type.getParams().stream().map(PPossibility::from).collect(Collectors.toList()));
+    return new Simple(value);
+  }
 
   public static final PPossibility none = new PPossibility() {
 
