@@ -18,7 +18,11 @@ public abstract class PTypedValue<T> {
   
   public <R> PTypedValue<R> with(List<R> newValues) {
     return handle(
-      LargeDomainValue::casted,
+      l -> {
+        @SuppressWarnings("unchecked")
+        PTypedValue<R> casted = (PTypedValue<R>) l;
+        return casted;
+      },
       v -> new StandardValue<>(type, newValues));
   }
 
@@ -42,11 +46,6 @@ public abstract class PTypedValue<T> {
       Function<? super StandardValue<T>, ? extends R> whenStandardValue)
     {
       return whenLargeDomainValue.apply(this);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <R> LargeDomainValue<R> casted() {
-      return (LargeDomainValue<R>) this;
     }
   }
 

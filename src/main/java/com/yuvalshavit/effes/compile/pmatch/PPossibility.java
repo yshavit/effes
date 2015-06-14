@@ -9,8 +9,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
@@ -19,9 +21,11 @@ public abstract class PPossibility {
   
   private PPossibility() {}
   
-  public static PPossibility from(EfType type) {
+//  Actually, Simple should be lazy -- at least!
+  
+  public static PPossibility from(EfType type, CtorRegistry ctors) {
     if (type instanceof EfType.SimpleType) {
-      return fromSimple((EfType.SimpleType) type);
+      return fromSimple((EfType.SimpleType) type, ctors);
     } else if (type instanceof EfType.DisjunctiveType) {
       EfType.DisjunctiveType disjunction = (EfType.DisjunctiveType) type;
       Set<EfType> alternatives = disjunction.getAlternatives();
@@ -36,7 +40,7 @@ public abstract class PPossibility {
       }
       List<Lazy<Simple>> possibilities = simpleAlternatives
         .stream()
-        .map(t -> Lazy.from(() -> fromSimple(t)))
+        .map(t -> Lazy.from(() -> fromSimple(t, ctors)))
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
@@ -45,11 +49,17 @@ public abstract class PPossibility {
     }
   }
 
-  private static Simple fromSimple(EfType.SimpleType type) {
+  private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
     PTypedValue<PPossibility> value;
-    value = BuiltinType.isBuiltinWithLargeDomain(type)
-      ? new PTypedValue.LargeDomainValue<>(type)
-      : new PTypedValue.StandardValue<>(type, type.getParams().stream().map(PPossibility::from).collect(Collectors.toList()));
+    if (BuiltinType.isBuiltinWithLargeDomain(type)) {
+      value = new PTypedValue.LargeDomainValue<>(type);
+    } else {
+      value = new PTypedValue.StandardValue<>(type, 
+        ctors.get(type, EfType.KEEP_GENERIC).stream()
+          .map(EfVar::getType)
+          .map(t -> from(t, ctors))
+          .collect(Collectors.toList()));
+    }
     return new Simple(value);
   }
 
