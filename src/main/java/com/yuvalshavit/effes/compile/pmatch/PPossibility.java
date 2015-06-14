@@ -58,7 +58,7 @@ public abstract class PPossibility {
       value = new TypedValue.LargeDomainValue<>(type);
       argNames = Collections.emptyList();
     } else {
-      List<EfVar> ctorVars = ctors.get(type, EfType.KEEP_GENERIC);
+      List<EfVar> ctorVars = ctors.get(type, type.getReification());
       List<Lazy<PPossibility>> args = new ArrayList<>(ctorVars.size());
       for (EfVar ctorVar : ctorVars) {
         args.add(Lazy.from(() -> from(ctorVar.getType(), ctors)));
@@ -147,10 +147,10 @@ public abstract class PPossibility {
         resultArgs.add(Lazy.from(resultSupplier));
       }
       
-      if (resultArgs.stream().allMatch(none::equals)) {
+      if (resultArgs.stream().map(Lazy::get).allMatch(none::equals)) {
         return none;
       }
-      if (resultArgs.stream().anyMatch(Objects::isNull)) {
+      if (resultArgs.stream().map(Lazy::get).anyMatch(Objects::isNull)) {
         return null;
       }
       return new Simple(possibility.with(resultArgs), argNames);

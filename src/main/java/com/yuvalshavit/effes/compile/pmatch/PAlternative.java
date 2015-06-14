@@ -4,11 +4,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
@@ -47,7 +49,7 @@ public abstract class PAlternative {
         return null;
       }
       Simple simple = new Simple(new TypedValue.StandardValue<>(type, builtArgs));
-      return simple.validate(c)
+      return simple.validate(c, type.getReification())
         ? simple
         : null;
     };
@@ -67,7 +69,7 @@ public abstract class PAlternative {
 
     @Override
     public String toString() {
-      return equality.toString(this);
+      return name;
     }
 
     @Override
@@ -94,11 +96,11 @@ public abstract class PAlternative {
       return value;
     }
 
-    public boolean validate(CtorRegistry ctors) {
+    public boolean validate(CtorRegistry ctors, Function<EfType.GenericType, EfType> reification) {
       return value.handle(
         l -> true,
         s -> {
-          List<EfType> expecteds = Lists.transform(ctors.get(value.type(), EfType.KEEP_GENERIC), EfVar::getType);
+          List<EfType> expecteds = Lists.transform(ctors.get(value.type(), reification), EfVar::getType);
           List<PAlternative> actuals = s.args();
           if (expecteds.size() != actuals.size()) {
             return false;
@@ -108,7 +110,10 @@ public abstract class PAlternative {
             if (actual instanceof PAlternative.Simple) {
               Simple simple = (Simple) actual;
               EfType expected = expecteds.get(i);
-              if (!simple.value.type().equals(expected) || !simple.validate(ctors)) {
+              if (!expected.contains(simple.value.type())) {
+                return false;
+              }
+              if (!simple.validate(ctors, reification)) {
                 return false;
               }
             } else {
@@ -132,7 +137,17 @@ public abstract class PAlternative {
 
     @Override
     public String toString() {
-      return equality.toString(this);
+      return value.handle(
+        l -> l.type().toString(),
+        s -> {
+          List<PAlternative> args = s.args();
+          if (args.isEmpty()) {
+            return s.type().toString();
+          } else {
+            StringBuilder sb = new StringBuilder(s.type().toString()).append('(');
+            return Joiner.on(", ").appendTo(sb, args).append(')').toString();
+          }
+        });
     }
   }
 }
