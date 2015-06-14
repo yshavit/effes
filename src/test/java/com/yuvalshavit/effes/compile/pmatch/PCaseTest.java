@@ -64,10 +64,24 @@ public class PCaseTest {
     EfType boolsList = tList.reify(reification);
     PPossibility boolsPossibility = PPossibility.from(boolsList, ctors);
     EfType.SimpleType boolCon = this.tCons.reify(reification);
-    PAlternative firstIsTrue = simple(boolCon, simple(tTrue), any()).build(ctors);
+    PAlternative firstIsTrue = simple(
+      boolCon,
+      simple(tTrue),
+      any()
+    ).build(ctors);
+    PAlternative secondIsTrue = simple(
+      boolCon,
+      any(),
+      simple(
+        boolCon,
+        simple(tTrue),
+        any())
+    ).build(ctors);
 
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     fail("validate somehow that it's [False, _]: " + result);
+    PPossibility second = result.minus(secondIsTrue);
+    fail("validate somehow that it's [False, False, _]: " + second);
   }
   
   @Test
