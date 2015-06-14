@@ -14,7 +14,10 @@ public class Lazy<T> implements Supplier<T> {
   private Supplier<? extends T> unforced;
   private T forced;
 
-
+  public static <T> Lazy<T> from(Supplier<? extends T> supplier) {
+    return new Lazy<>(supplier);
+  }
+  
   public Lazy(T value) {
     forced = value;
   }

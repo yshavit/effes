@@ -21,7 +21,7 @@ public abstract class PPossibility {
   
   public static PPossibility from(EfType type) {
     if (type instanceof EfType.SimpleType) {
-      return from((EfType.SimpleType) type);
+      return fromSimple((EfType.SimpleType) type);
     } else if (type instanceof EfType.DisjunctiveType) {
       EfType.DisjunctiveType disjunction = (EfType.DisjunctiveType) type;
       Set<EfType> alternatives = disjunction.getAlternatives();
@@ -36,7 +36,7 @@ public abstract class PPossibility {
       }
       List<Lazy<Simple>> possibilities = simpleAlternatives
         .stream()
-        .map(t -> new Lazy<Simple>(from(t)))
+        .map(t -> Lazy.from(() -> fromSimple(t)))
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
@@ -45,7 +45,7 @@ public abstract class PPossibility {
     }
   }
 
-  private static Simple from(EfType.SimpleType type) {
+  private static Simple fromSimple(EfType.SimpleType type) {
     PTypedValue<PPossibility> value;
     value = BuiltinType.isBuiltinWithLargeDomain(type)
       ? new PTypedValue.LargeDomainValue<>(type)
