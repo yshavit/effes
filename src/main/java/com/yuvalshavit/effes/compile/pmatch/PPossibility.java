@@ -42,7 +42,7 @@ public abstract class PPossibility {
       }
       List<Lazy<Simple>> possibilities = simpleAlternatives
         .stream()
-        .map(t -> Lazy.from(() -> fromSimple(t, ctors)))
+        .map(t -> Lazy.lazy(() -> fromSimple(t, ctors)))
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
@@ -61,7 +61,7 @@ public abstract class PPossibility {
       List<EfVar> ctorVars = ctors.get(type, type.getReification());
       List<Lazy<PPossibility>> args = new ArrayList<>(ctorVars.size());
       for (EfVar ctorVar : ctorVars) {
-        args.add(Lazy.from(() -> from(ctorVar.getType(), ctors)));
+        args.add(Lazy.lazy(() -> from(ctorVar.getType(), ctors)));
       }
       value = new TypedValue.StandardValue<>(type, args);
       argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
@@ -144,7 +144,7 @@ public abstract class PPossibility {
           }
           return resultArg;
         };
-        resultArgs.add(Lazy.from(resultSupplier));
+        resultArgs.add(Lazy.lazy(resultSupplier));
       }
       
       if (resultArgs.stream().map(Lazy::get).allMatch(none::equals)) {
@@ -225,7 +225,7 @@ public abstract class PPossibility {
       List<Lazy<Simple>> alternatives = new ArrayList<>(remaining.size() + 1);
       if (first instanceof Simple) {
         Simple simple = (Simple) first;
-        alternatives.add(new Lazy<>(simple));
+        alternatives.add(Lazy.forced(simple));
       } else if (first instanceof Disjunction) {
         Disjunction disjunction = (Disjunction) first;
         alternatives.addAll(disjunction.options());

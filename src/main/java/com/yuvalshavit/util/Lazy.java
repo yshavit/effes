@@ -14,25 +14,33 @@ public class Lazy<T> implements Supplier<T> {
   private Supplier<? extends T> unforced;
   private T forced;
 
-  public static <T> Lazy<T> from(Supplier<? extends T> supplier) {
+  public static <T> Lazy<T> lazy(Supplier<? extends T> supplier) {
     return new Lazy<>(supplier);
   }
+
+  public static <T> Lazy<T> forced(T elem) {
+    return new Lazy<>(elem);
+  }
   
-  public Lazy(T value) {
+  private Lazy(T value) {
     forced = value;
   }
   
-  public Lazy(Supplier<? extends T> delegate) {
+  private Lazy(Supplier<? extends T> delegate) {
     this.unforced = checkNotNull(delegate);
   }
 
   @Override
   public T get() {
-    if (unforced != null) {
+    if (isUnforced()) {
       forced = unforced.get();
       unforced = null;
     }
     return forced;
+  }
+  
+  public boolean isUnforced() {
+    return unforced != null;
   }
 
   @Override
