@@ -93,17 +93,13 @@ public abstract class PPossibility {
     }
   };
 
-  public static class Simple extends NonEmpty {
+  static class Simple extends NonEmpty {
     private final TypedValue<Lazy<PPossibility>> value;
     private final List<String> argNames;
 
-    public Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
+    private Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
       this.value = value;
       this.argNames = argNames;
-    }
-    
-    PPossibility force(int i) {
-      return value.handle(l -> null, s -> s.args().get(i).get());
     }
 
     @Nullable
@@ -181,10 +177,10 @@ public abstract class PPossibility {
     }
   }
   
-  public static class Disjunction extends NonEmpty {
+  static class Disjunction extends NonEmpty {
     private final List<Lazy<PPossibility.Simple>> options;
 
-    public Disjunction(Collection<Lazy<Simple>> options) {
+    private Disjunction(Collection<Lazy<Simple>> options) {
       this.options = new ArrayList<>(options);
     }
 

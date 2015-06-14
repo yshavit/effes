@@ -1,5 +1,9 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import static com.yuvalshavit.effes.compile.pmatch.PAlternative.*;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -24,6 +28,7 @@ public class PCaseTest {
     
     ctors = new CtorRegistry();
     ctors.setCtorArgs(tTrue, Collections.emptyList());
+    ctors.setCtorArgs(tFalse, Collections.emptyList());
     ctors.setCtorArgs( tInfiniteBools,
       Arrays.asList(
         EfVar.arg("head", 0, tBool), 
@@ -31,13 +36,24 @@ public class PCaseTest {
   }
 
   @Test
-  public void test() {
-    
+  public void trueNoArgs() {
+    assertNotNull(simple(tTrue).build(ctors));
+  }
+
+  @Test
+  public void trueWithAnyArg() {
+    assertNull(simple(tTrue, any()).build(ctors));
+  }
+  
+  @Test
+  public void trueWithFalseArg() {
+    assertNull(simple(tTrue, simple(tFalse)).build(ctors));
   }
 
   @Test
   public void createInfinitePossibilities() {
     PPossibility.from(tInfiniteBools, ctors);
   }
+  
   
 }

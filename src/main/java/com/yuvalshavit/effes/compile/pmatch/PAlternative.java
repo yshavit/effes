@@ -1,5 +1,19 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
+import com.yuvalshavit.effes.compile.CtorRegistry;
+import com.yuvalshavit.effes.compile.node.BuiltinType;
+import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.Equality;
 
 public abstract class PAlternative {
@@ -9,11 +23,41 @@ public abstract class PAlternative {
   @Override public abstract boolean equals(Object other);
   @Override public abstract String toString();
   
-  public static class Any extends PAlternative {
+  public interface Builder {
+    @Nullable
+    PAlternative build(CtorRegistry ctors);
+  }
+  
+  public static Builder any(String name) {
+    return (c) -> new Any(name);
+  }
+
+  public static Builder any() {
+    return any("_");
+  }
+  
+  public static Builder simple(EfType.SimpleType type, Builder... args) {
+    if (BuiltinType.isBuiltinWithLargeDomain(type)) {
+      checkArgument(args.length == 0, "%s doesn't take any arguments", type);
+      return (c) -> new Simple(new TypedValue.LargeDomainValue<>(type));
+    }
+    return (c) -> {
+      List<PAlternative> builtArgs = Stream.of(args).map(b -> b.build(c)).collect(Collectors.toList());
+      if (builtArgs.stream().anyMatch(Objects::isNull)) {
+        return null;
+      }
+      Simple simple = new Simple(new TypedValue.StandardValue<>(type, builtArgs));
+      return simple.validate(c)
+        ? simple
+        : null;
+    };
+  }
+  
+  static class Any extends PAlternative {
     private static final Equality<Any> equality = Equality.forClass(Any.class).with("name", Any::name).exactClassOnly();
     private final String name;
 
-    public Any(String name) {
+    private Any(String name) {
       this.name = name;
     }
 
@@ -38,16 +82,41 @@ public abstract class PAlternative {
     }
   }
   
-  public static class Simple extends PAlternative {
+  static class Simple extends PAlternative {
     private static final Equality<Simple> equality = Equality.forClass(Simple.class).with("value", Simple::value).exactClassOnly();
     private final TypedValue<PAlternative> value;
 
-    public Simple(TypedValue<PAlternative> value) {
+    private Simple(TypedValue<PAlternative> value) {
       this.value = value;
     }
 
     public TypedValue<PAlternative> value() {
       return value;
+    }
+
+    public boolean validate(CtorRegistry ctors) {
+      return value.handle(
+        l -> true,
+        s -> {
+          List<EfType> expecteds = Lists.transform(ctors.get(value.type(), EfType.KEEP_GENERIC), EfVar::getType);
+          List<PAlternative> actuals = s.args();
+          if (expecteds.size() != actuals.size()) {
+            return false;
+          }
+          for (int i = 0; i < expecteds.size(); ++i) {
+            PAlternative actual = actuals.get(i);
+            if (actual instanceof PAlternative.Simple) {
+              Simple simple = (Simple) actual;
+              EfType expected = expecteds.get(i);
+              if (!simple.value.type().equals(expected) || !simple.validate(ctors)) {
+                return false;
+              }
+            } else {
+              assert actual instanceof Any : actual;
+            }
+          }
+          return true;
+        });
     }
 
     @Override
