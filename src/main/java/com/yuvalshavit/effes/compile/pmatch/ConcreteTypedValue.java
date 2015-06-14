@@ -5,10 +5,10 @@ import java.util.function.Function;
 
 import com.yuvalshavit.effes.compile.node.EfType;
 
-public abstract class TypedValue {
+public abstract class ConcreteTypedValue {
   private final EfType.SimpleType type;
   
-  private TypedValue(EfType.SimpleType type) {
+  private ConcreteTypedValue(EfType.SimpleType type) {
     this.type = type;
   }
 
@@ -25,7 +25,7 @@ public abstract class TypedValue {
    * 
    * These are all built-in types (numbers and chars).
    */
-  public static class LargeDomainValue extends TypedValue {
+  public static class LargeDomainValue extends ConcreteTypedValue {
     public LargeDomainValue(EfType.SimpleType type) {
       super(type);
     }
@@ -43,15 +43,15 @@ public abstract class TypedValue {
    * A standard, userland-defined value -- one whose type is a non-builtin type, or even the simpler builtin types
    * like True and False.
    */
-  public static class StandardValue extends TypedValue {
-    private final List<TypedValue> args;
+  public static class StandardValue extends ConcreteTypedValue {
+    private final List<PAlternative> args;
 
-    public StandardValue(EfType.SimpleType type, List<TypedValue> args) {
+    public StandardValue(EfType.SimpleType type, List<PAlternative> args) {
       super(type);
       this.args = args;
     }
 
-    public List<TypedValue> args() {
+    public List<PAlternative> args() {
       return args;
     }
 
