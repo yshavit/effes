@@ -5,10 +5,10 @@ import java.util.function.Function;
 
 import com.yuvalshavit.effes.compile.node.EfType;
 
-public abstract class PTypedValue<T> {
+public abstract class TypedValue<T> {
   private final EfType.SimpleType type;
   
-  private PTypedValue(EfType.SimpleType type) {
+  private TypedValue(EfType.SimpleType type) {
     this.type = type;
   }
 
@@ -16,7 +16,7 @@ public abstract class PTypedValue<T> {
     return type;
   }
   
-  public PTypedValue<T> with(List<T> newValues) {
+  public TypedValue<T> with(List<T> newValues) {
     return handle(
       Function.identity(),
       v -> new StandardValue<>(type, newValues));
@@ -31,7 +31,7 @@ public abstract class PTypedValue<T> {
    * 
    * These are all built-in types (numbers and chars).
    */
-  public static class LargeDomainValue<T> extends PTypedValue<T> {
+  public static class LargeDomainValue<T> extends TypedValue<T> {
     public LargeDomainValue(EfType.SimpleType type) {
       super(type);
     }
@@ -49,7 +49,7 @@ public abstract class PTypedValue<T> {
    * A standard, userland-defined value -- one whose type is a non-builtin type, or even the simpler builtin types
    * like True and False.
    */
-  public static class StandardValue<T> extends PTypedValue<T> {
+  public static class StandardValue<T> extends TypedValue<T> {
     private final List<T> args;
 
     public StandardValue(EfType.SimpleType type, List<T> args) {

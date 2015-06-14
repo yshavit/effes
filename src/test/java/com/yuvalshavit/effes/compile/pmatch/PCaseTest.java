@@ -36,14 +36,8 @@ public class PCaseTest {
   }
 
   @Test
-  public void testCaseWhereSimpleTypeIsInfinitelyRecursiveWithNoBaseCase() {
-    PPossibility possibility = PPossibility.from(tInfiniteBools, ctors);
-    PPossibility.Simple simple = (PPossibility.Simple) possibility;
-    simple.force(0);
-    // ie, Integers = Integers(value: Int, next: Integers)
-    // We should be able to use this in a pattern, so long as we grab all using _
-    // Note that there is no disjunction here, so the laziness MUST be at the Simple level!
-    throw new UnsupportedOperationException(); // TODO
+  public void createInfinitePossibilities() {
+    PPossibility.from(tInfiniteBools, ctors);
   }
   
 }

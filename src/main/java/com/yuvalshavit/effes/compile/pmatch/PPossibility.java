@@ -52,10 +52,10 @@ public abstract class PPossibility {
   }
 
   private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
-    PTypedValue<Lazy<PPossibility>> value;
+    TypedValue<Lazy<PPossibility>> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
-      value = new PTypedValue.LargeDomainValue<>(type);
+      value = new TypedValue.LargeDomainValue<>(type);
       argNames = Collections.emptyList();
     } else {
       List<EfVar> ctorVars = ctors.get(type, EfType.KEEP_GENERIC);
@@ -63,7 +63,7 @@ public abstract class PPossibility {
       for (EfVar ctorVar : ctorVars) {
         args.add(Lazy.from(() -> from(ctorVar.getType(), ctors)));
       }
-      value = new PTypedValue.StandardValue<>(type, args);
+      value = new TypedValue.StandardValue<>(type, args);
       argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
     }
     return new Simple(value, argNames);
@@ -94,10 +94,10 @@ public abstract class PPossibility {
   };
 
   public static class Simple extends NonEmpty {
-    private final PTypedValue<Lazy<PPossibility>> value;
+    private final TypedValue<Lazy<PPossibility>> value;
     private final List<String> argNames;
 
-    public Simple(PTypedValue<Lazy<PPossibility>> value, List<String> argNames) {
+    public Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
       this.value = value;
       this.argNames = argNames;
     }
@@ -109,7 +109,7 @@ public abstract class PPossibility {
     @Nullable
     @Override
     protected PPossibility minusAlternative(PAlternative.Simple simpleAlternative) {
-      PTypedValue<PAlternative> simpleValue = simpleAlternative.value();
+      TypedValue<PAlternative> simpleValue = simpleAlternative.value();
       if (!this.value.type().equals(simpleValue.type())) {
         return null;
       }
@@ -122,7 +122,7 @@ public abstract class PPossibility {
       );
     }
 
-    private PPossibility doSubtract(PTypedValue.StandardValue<Lazy<PPossibility>> possibility, PTypedValue.StandardValue<PAlternative> alternative) {
+    private PPossibility doSubtract(TypedValue.StandardValue<Lazy<PPossibility>> possibility, TypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
