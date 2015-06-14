@@ -2,17 +2,21 @@ package com.yuvalshavit.effes.compile.pmatch;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Joiner;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
+import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
@@ -20,8 +24,6 @@ public abstract class PPossibility {
   @Nullable public abstract PPossibility minus(PAlternative alternative);
   
   private PPossibility() {}
-  
-//  Actually, Simple should be lazy -- at least!
   
   public static PPossibility from(EfType type, CtorRegistry ctors) {
     if (type instanceof EfType.SimpleType) {
@@ -50,17 +52,21 @@ public abstract class PPossibility {
   }
 
   private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
-    PTypedValue<PPossibility> value;
+    PTypedValue<Lazy<PPossibility>> value;
+    List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       value = new PTypedValue.LargeDomainValue<>(type);
+      argNames = Collections.emptyList();
     } else {
-      value = new PTypedValue.StandardValue<>(type, 
-        ctors.get(type, EfType.KEEP_GENERIC).stream()
-          .map(EfVar::getType)
-          .map(t -> from(t, ctors))
-          .collect(Collectors.toList()));
+      List<EfVar> ctorVars = ctors.get(type, EfType.KEEP_GENERIC);
+      List<Lazy<PPossibility>> args = new ArrayList<>(ctorVars.size());
+      for (EfVar ctorVar : ctorVars) {
+        args.add(Lazy.from(() -> from(ctorVar.getType(), ctors)));
+      }
+      value = new PTypedValue.StandardValue<>(type, args);
+      argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
     }
-    return new Simple(value);
+    return new Simple(value, argNames);
   }
 
   public static final PPossibility none = new PPossibility() {
@@ -88,10 +94,16 @@ public abstract class PPossibility {
   };
 
   public static class Simple extends NonEmpty {
-    private final PTypedValue<PPossibility> value;
+    private final PTypedValue<Lazy<PPossibility>> value;
+    private final List<String> argNames;
 
-    public Simple(PTypedValue<PPossibility> value) {
+    public Simple(PTypedValue<Lazy<PPossibility>> value, List<String> argNames) {
       this.value = value;
+      this.argNames = argNames;
+    }
+    
+    PPossibility force(int i) {
+      return value.handle(l -> null, s -> s.args().get(i).get());
     }
 
     @Nullable
@@ -110,29 +122,33 @@ public abstract class PPossibility {
       );
     }
 
-    private static PPossibility doSubtract(PTypedValue.StandardValue<PPossibility> possibility, PTypedValue.StandardValue<PAlternative> alternative) {
+    private PPossibility doSubtract(PTypedValue.StandardValue<Lazy<PPossibility>> possibility, PTypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
-      List<PPossibility> possibleArgs = possibility.args();
+      List<Lazy<PPossibility>> possibleArgs = possibility.args();
       List<PAlternative> alternativeArgs = alternative.args();
       int nArgs = possibleArgs.size();
       assert nArgs == alternativeArgs.size() : String.format("different sizes: %s <~> %s", possibleArgs, alternativeArgs);
       
-      List<PPossibility> resultArgs = new ArrayList<>(nArgs);
-      for (int argIdx = 0; argIdx < nArgs; ++argIdx) {
-        PPossibility possibleArg = possibleArgs.get(argIdx);
-        PAlternative alternativeArg = alternativeArgs.get(argIdx);
-        PPossibility resultArg = null;
-        if (possibleArg instanceof Disjunction) {
-          // e.g. head: True | False | Error(reason: Unknown | String)
-          Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
-          resultArg = possibleArgDisjunction.subtract(alternativeArg);
-        } else if (possibleArg instanceof Simple) {
-          // e.g. just True, or just Error(..)
-          resultArg = possibleArg.minus(alternativeArg);
-        }
-        resultArgs.add(resultArg);
+      List<Lazy<PPossibility>> resultArgs = new ArrayList<>(nArgs);
+      for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
+        int argIdx = argIdxMutable;
+        Supplier<PPossibility> resultSupplier = () -> {
+          PPossibility possibleArg = possibleArgs.get(argIdx).get();
+          PAlternative alternativeArg = alternativeArgs.get(argIdx);
+          PPossibility resultArg = null;
+          if (possibleArg instanceof Disjunction) {
+            // e.g. head: True | False | Error(reason: Unknown | String)
+            Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
+            resultArg = possibleArgDisjunction.subtract(alternativeArg);
+          } else if (possibleArg instanceof Simple) {
+            // e.g. just True, or just Error(..)
+            resultArg = possibleArg.minus(alternativeArg);
+          }
+          return resultArg;
+        };
+        resultArgs.add(Lazy.from(resultSupplier));
       }
       
       if (resultArgs.stream().allMatch(none::equals)) {
@@ -141,7 +157,23 @@ public abstract class PPossibility {
       if (resultArgs.stream().anyMatch(Objects::isNull)) {
         return null;
       }
-      return new Simple(possibility.with(resultArgs));
+      return new Simple(possibility.with(resultArgs), argNames);
+    }
+
+    @Override
+    public String toString() {
+      return value.handle(
+        large -> large.type().toString(),
+        std -> {
+          List<Lazy<PPossibility>> args = std.args();
+          if (args.isEmpty()) {
+            return std.type().toString();
+          } else {
+            StringBuilder sb = new StringBuilder(std.type().toString()).append('(');
+            Iterable<? extends String> namedArgs = EfCollections.zip(argNames, args, (n, a) -> String.format("%s: (%s)", n, a));
+            return Joiner.on(", ").appendTo(sb, namedArgs).append(')').toString();
+          }
+        });
     }
 
     private PPossibility large() {
@@ -168,7 +200,7 @@ public abstract class PPossibility {
 
     @Override
     public String toString() {
-      return options.toString();
+      return Joiner.on(" | ").join(options);
     }
 
     PPossibility subtract(PAlternative alternative) {

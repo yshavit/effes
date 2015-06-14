@@ -16,13 +16,9 @@ public abstract class PTypedValue<T> {
     return type;
   }
   
-  public <R> PTypedValue<R> with(List<R> newValues) {
+  public PTypedValue<T> with(List<T> newValues) {
     return handle(
-      l -> {
-        @SuppressWarnings("unchecked")
-        PTypedValue<R> casted = (PTypedValue<R>) l;
-        return casted;
-      },
+      Function.identity(),
       v -> new StandardValue<>(type, newValues));
   }
 

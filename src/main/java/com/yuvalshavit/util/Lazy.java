@@ -40,7 +40,7 @@ public class Lazy<T> implements Supplier<T> {
     if (unforced == null) {
       return String.valueOf(forced);
     } else {
-      return "<...>";
+      return "...";
     }
   }
 }
