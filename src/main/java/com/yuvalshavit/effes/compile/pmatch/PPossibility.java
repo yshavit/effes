@@ -11,7 +11,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
@@ -22,7 +25,13 @@ import com.yuvalshavit.util.Lazy;
 public abstract class PPossibility {
   
   @Nullable public abstract PPossibility minus(PAlternative alternative);
-  
+  public abstract String toString(boolean verbose);
+
+  @Override
+  public String toString() {
+    return toString(true);
+  }
+
   private PPossibility() {}
   
   public static PPossibility from(EfType type, CtorRegistry ctors) {
@@ -88,7 +97,7 @@ public abstract class PPossibility {
     }
 
     @Override
-    public String toString() {
+    public String toString(boolean verbose) {
       return "∅";
     }
   };
@@ -109,13 +118,18 @@ public abstract class PPossibility {
       if (!this.value.type().equals(simpleValue.type())) {
         return null;
       }
-      return this.value.handle(
+      return this.value.transform(
         p -> large(),
-        p -> simpleValue.handle(
+        p -> simpleValue.transform(
           s -> large(), // ditto re decorating the result
           a -> doSubtract(p, a)
         )
       );
+    }
+    
+    @VisibleForTesting
+    TypedValue<Lazy<PPossibility>> typedAndArgs() {
+      return value;
     }
 
     private PPossibility doSubtract(TypedValue.StandardValue<Lazy<PPossibility>> possibility, TypedValue.StandardValue<PAlternative> alternative) {
@@ -157,8 +171,8 @@ public abstract class PPossibility {
     }
 
     @Override
-    public String toString() {
-      return value.handle(
+    public String toString(boolean verbose) {
+      return value.transform(
         large -> large.type().toString(),
         std -> {
           List<Lazy<PPossibility>> args = std.args();
@@ -166,7 +180,10 @@ public abstract class PPossibility {
             return std.type().toString();
           } else {
             StringBuilder sb = new StringBuilder(std.type().toString()).append('(');
-            Iterable<? extends String> namedArgs = EfCollections.zip(argNames, args, (n, a) -> String.format("%s: (%s)", n, a));
+            Iterable<? extends String> namedArgs;
+            namedArgs = verbose
+              ? EfCollections.zipF(argNames, args, (n, a) -> String.format("%s: (%s)", n, a))
+              : Lists.transform(args, Functions.toStringFunction());
             return Joiner.on(", ").appendTo(sb, namedArgs).append(')').toString();
           }
         });
@@ -195,8 +212,9 @@ public abstract class PPossibility {
     }
 
     @Override
-    public String toString() {
-      return Joiner.on(" | ").join(options);
+    public String toString(boolean verbose) {
+      List<Lazy<String>> verboseOptions = Lists.transform(options, o -> o.transform(s -> s.toString(verbose)));
+      return Joiner.on(" | ").join(verboseOptions);
     }
 
     PPossibility subtract(PAlternative alternative) {
@@ -233,7 +251,13 @@ public abstract class PPossibility {
         throw new AssertionError("unknown possibility type: " + first);
       }
       alternatives.addAll(remaining);
-      return new Disjunction(alternatives);
+      if (alternatives.isEmpty()) {
+        return none;
+      } else if (alternatives.size() == 1) {
+        return alternatives.get(0).get();
+      } else {
+        return new Disjunction(alternatives);
+      }
     }
   }
 

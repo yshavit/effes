@@ -2,6 +2,7 @@ package com.yuvalshavit.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -11,6 +12,7 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class Lazy<T> implements Supplier<T> {
+  public static final String UNFORCED_DESC = "...";
   private Supplier<? extends T> unforced;
   private T forced;
 
@@ -28,6 +30,12 @@ public class Lazy<T> implements Supplier<T> {
   
   private Lazy(Supplier<? extends T> delegate) {
     this.unforced = checkNotNull(delegate);
+  }
+  
+  public <R> Lazy<R> transform(Function<? super T, ? extends R> transformation) {
+    return isUnforced()
+      ? lazy(() -> transformation.apply(get()))
+      : forced(transformation.apply(get()));
   }
 
   @Override
@@ -48,7 +56,7 @@ public class Lazy<T> implements Supplier<T> {
     if (unforced == null) {
       return String.valueOf(forced);
     } else {
-      return "...";
+      return UNFORCED_DESC;
     }
   }
 }

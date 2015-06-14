@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.yuvalshavit.effes.compile.node.EfType;
@@ -17,14 +18,27 @@ public abstract class TypedValue<T> {
   }
   
   public TypedValue<T> with(List<T> newValues) {
-    return handle(
+    return transform(
       Function.identity(),
       v -> new StandardValue<>(type, newValues));
   }
 
-  public abstract <R> R handle(
+  public abstract <R> R transform(
     Function<? super LargeDomainValue<T>, ? extends R> whenLargeDomainValue,
     Function<? super StandardValue<T>, ? extends R> whenStandardValue);
+
+
+  public void consume(Consumer<? super LargeDomainValue<T>> whenLargeDomainValue, Consumer<? super StandardValue<T>> whenStandardValue) {
+    transform(
+      l -> {
+        whenLargeDomainValue.accept(l);
+        return null;
+      },
+      s -> {
+        whenStandardValue.accept(s);
+        return null;
+      });
+  }
 
   /**
    * A value with a "large" domain, which makes it unfeasible (or unhelpful) to actually look at its values.
@@ -37,7 +51,7 @@ public abstract class TypedValue<T> {
     }
 
     @Override
-    public <R> R handle(
+    public <R> R transform(
       Function<? super LargeDomainValue<T>, ? extends R> whenLargeDomainValue,
       Function<? super StandardValue<T>, ? extends R> whenStandardValue)
     {
@@ -62,7 +76,7 @@ public abstract class TypedValue<T> {
     }
 
     @Override
-    public <R> R handle(
+    public <R> R transform(
       Function<? super LargeDomainValue<T>, ? extends R> whenLargeDomainValue,
       Function<? super StandardValue<T>, ? extends R> whenStandardValue)
     {

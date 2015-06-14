@@ -97,7 +97,7 @@ public abstract class PAlternative {
     }
 
     public boolean validate(CtorRegistry ctors, Function<EfType.GenericType, EfType> reification) {
-      return value.handle(
+      return value.transform(
         l -> true,
         s -> {
           List<EfType> expecteds = Lists.transform(ctors.get(value.type(), reification), EfVar::getType);
@@ -137,7 +137,7 @@ public abstract class PAlternative {
 
     @Override
     public String toString() {
-      return value.handle(
+      return value.transform(
         l -> l.type().toString(),
         s -> {
           List<PAlternative> args = s.args();

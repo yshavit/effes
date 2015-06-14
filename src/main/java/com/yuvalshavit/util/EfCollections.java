@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,12 +34,20 @@ public class EfCollections {
     };
   }
 
-  public static <T, U, R> Iterable<? extends R> zip(
+  public static <T, U, R> Iterable<? extends R> zipF(
     Iterable<? extends T> left,
     Iterable<? extends U> right,
     BiFunction<? super T, ? super U, ? extends R> transform)
   {
     return Iterables.transform(zip(left, right), e -> transform.apply(e.getKey(), e.getValue()));
+  }
+
+  public static <T, U> void zipC(
+    Iterable<? extends T> left,
+    Iterable<? extends U> right,
+    BiConsumer<? super T, ? super U> transform)
+  {
+    Iterables.size(Iterables.transform( zip(left, right), e -> { transform.accept(e.getKey(), e.getValue()); return null; }));
   }
 
   public static <I,O> List<? extends O> mapList(Collection<? extends I> c, Function<? super I, ? extends O> f) {
