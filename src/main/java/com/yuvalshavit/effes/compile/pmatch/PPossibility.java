@@ -49,7 +49,7 @@ public abstract class PPossibility {
     @Nullable
     @Override
     protected PPossibility minusAlternative(PAlternative.Simple simpleAlternative) {
-      ConcreteTypedValue simpleValue = simpleAlternative.value();
+      PTypedValue<PAlternative> simpleValue = simpleAlternative.value();
       if (!this.value.type().equals(simpleValue.type())) {
         return null;
       }
@@ -62,7 +62,7 @@ public abstract class PPossibility {
       );
     }
 
-    private static PPossibility doSubtract(PTypedValue.StandardValue<PPossibility> possibility, ConcreteTypedValue.StandardValue alternative) {
+    private static PPossibility doSubtract(PTypedValue.StandardValue<PPossibility> possibility, PTypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])

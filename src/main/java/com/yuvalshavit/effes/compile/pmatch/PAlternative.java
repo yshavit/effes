@@ -40,13 +40,13 @@ public abstract class PAlternative {
   
   public static class Simple extends PAlternative {
     private static final Equality<Simple> equality = Equality.forClass(Simple.class).with("value", Simple::value).exactClassOnly();
-    private final ConcreteTypedValue value;
+    private final PTypedValue<PAlternative> value;
 
-    public Simple(ConcreteTypedValue value) {
+    public Simple(PTypedValue<PAlternative> value) {
       this.value = value;
     }
 
-    public ConcreteTypedValue value() {
+    public PTypedValue<PAlternative> value() {
       return value;
     }
 
