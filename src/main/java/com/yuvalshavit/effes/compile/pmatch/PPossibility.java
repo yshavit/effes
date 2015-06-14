@@ -173,13 +173,13 @@ public abstract class PPossibility {
     @Override
     public String toString(boolean verbose) {
       return value.transform(
-        large -> large.type().toString(),
+        large -> toString(large.type(), verbose),
         std -> {
           List<Lazy<PPossibility>> args = std.args();
           if (args.isEmpty()) {
-            return std.type().toString();
+            return toString(std.type(), verbose);
           } else {
-            StringBuilder sb = new StringBuilder(std.type().toString()).append('(');
+            StringBuilder sb = new StringBuilder(toString(std.type(), verbose)).append('(');
             Iterable<? extends String> namedArgs;
             namedArgs = verbose
               ? EfCollections.zipF(argNames, args, (n, a) -> String.format("%s: (%s)", n, a))
@@ -191,6 +191,12 @@ public abstract class PPossibility {
 
     private PPossibility large() {
       return this; // eventually it'd be nice to decorate this with something like "not value.value()"
+    }
+
+    private static String toString(EfType.SimpleType type, boolean verbose) {
+      return verbose
+        ? type.toString()
+        : type.getName();
     }
   }
   

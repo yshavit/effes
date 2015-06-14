@@ -175,7 +175,7 @@ public class PCaseTest {
   }
   
   private static Validator singleV(EfType.SimpleType type, Validator... args) {
-    String desc = type.toString();
+    String desc = type.getName();
     if (args.length != 0) {
       StringBuilder sb = new StringBuilder(desc).append('(');
       desc = Joiner.on(", ").appendTo(sb, args).append(')').toString();
