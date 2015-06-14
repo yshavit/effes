@@ -151,7 +151,7 @@ public abstract class PPossibility {
           if (possibleArg instanceof Disjunction) {
             // e.g. head: True | False | Error(reason: Unknown | String)
             Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
-            resultArg = possibleArgDisjunction.subtract(alternativeArg);
+            resultArg = possibleArgDisjunction.minus(alternativeArg);
           } else if (possibleArg instanceof Simple) {
             // e.g. just True, or just Error(..)
             resultArg = possibleArg.minus(alternativeArg);
@@ -224,7 +224,7 @@ public abstract class PPossibility {
         // e.g. True, or Error(...)
         Simple possibleArgOption = possibleArgOptions.get(optionIdx).get();
         PPossibility matchedArg = possibleArgOption.minus(alternative);
-        if (matchedArg != null) {
+        if (matchedArg != null) { assert  matchedArg == none : matchedArg; // TODO ??
           // e.g. the alternative was True, or Error(_) or something else that matched
           List<Lazy<Simple>> remainingOptions = new ArrayList<>(possibleArgOptions);
           remainingOptions.remove(optionIdx);

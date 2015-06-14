@@ -90,7 +90,7 @@ public class PCaseTest {
         singleV(tFalse),
         unforcedV()
       ),
-      singleV(tEmpty)
+      unforcedV()
     ).validate(result);
     assertNotNull(result);
     
