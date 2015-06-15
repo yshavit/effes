@@ -11,6 +11,7 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,12 +36,19 @@ public class PCaseTest {
 
   private final EfType.SimpleType tCons;
   private final EfType.SimpleType tEmpty;
+  private final EfType.GenericType tListGeneric;
   private final EfType.DisjunctiveType tList;
   private EfType.SimpleType tBoolCons;
 
-  private final EfType.GenericType tListGeneric;
+  private final EfType.SimpleType tSnoc; // a Cons but with args swapped: defines (tail, head)
+  private final EfType.GenericType tSnocListGeneric;
+  private final EfType.DisjunctiveType tSnocList;
+  private EfType.SimpleType tBoolSnoc;
+  
+
   private final CtorRegistry ctors;
   private EfType tBoolsList;
+  private EfType tBoolsSnocList;
 
   public PCaseTest() {
     tTrue = new EfType.SimpleType("True", Collections.emptyList());
@@ -67,10 +75,23 @@ public class PCaseTest {
         EfVar.arg("head", 0, tListGeneric),
         EfVar.arg("tail", 1, tList)));
     ctors.setCtorArgs(tEmpty, Collections.emptyList());
+    
+    tSnoc = new EfType.SimpleType("Snoc", Collections.singletonList("T"));
+    tSnocListGeneric = tSnoc.getGenericsDeclr().get(0);
+    tSnocList = (EfType.DisjunctiveType) EfType.disjunction(tSnoc, tEmpty);
+    ctors.setCtorArgs(
+      tSnoc,
+      Arrays.asList(
+        EfVar.arg("tail", 0, tSnocList),
+        EfVar.arg("head", 1, tSnocListGeneric)));
 
-    Function<EfType.GenericType, EfType> boolReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
-    tBoolsList = tList.reify(boolReification);
-    tBoolCons = this.tCons.reify(boolReification);
+    Function<EfType.GenericType, EfType> listReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
+    tBoolsList = tList.reify(listReification);
+    tBoolCons = tCons.reify(listReification);
+
+    Function<EfType.GenericType, EfType> snocReification = Functions.forMap(Collections.singletonMap(tSnocListGeneric, tBool))::apply;
+    tBoolsSnocList = tSnocList.reify(snocReification);
+    tBoolSnoc = tSnoc.reify(snocReification); 
   }
 
   @Test
@@ -97,12 +118,44 @@ public class PCaseTest {
     PPossibility second = result.minus(secondIsTrue);
     fail("validate somehow that it's [False, False, _]: " + second);
   }
+  
+  @Test
+  public void snocListPattern() {
+    PPossibility boolsPossibility = PPossibility.from(tBoolsList, ctors);
+    PAlternative firstIsTrue = boolSnoc(mTrue(), any()).build(ctors);
+    PAlternative secondIsTrue = boolSnoc(
+      boolSnoc(
+        any(),
+        mTrue()),
+      any()
+    ).build(ctors);
+
+    PPossibility result = boolsPossibility.minus(firstIsTrue);
+    disjunctionV(
+      singleV(tBoolSnoc,
+        unforcedV(),
+        singleV(tFalse)
+      ),
+      unforcedV()
+    ).validate(result);
+    assertNotNull(result);
+
+    PPossibility second = result.minus(secondIsTrue);
+    fail("validate somehow that it's [False, False, _]: " + second);
+  }
 
   private Builder boolCons(Builder head, Builder tail) {
     return simple(
       tBoolCons,
       head,
       tail
+    );
+  }
+  private Builder boolSnoc(Builder tail, Builder head) {
+    return simple(
+      tBoolSnoc,
+      tail,
+      head
     );
   }
 
