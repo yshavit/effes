@@ -11,7 +11,6 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -32,82 +31,52 @@ public class PCaseTest {
   private final EfType.SimpleType tTrue;
   private final EfType.SimpleType tFalse;
   private final EfType.DisjunctiveType tBool;
-  private final EfType.SimpleType tInfiniteBools;
-
-  private final EfType.SimpleType tCons;
   private final EfType.SimpleType tEmpty;
-  private final EfType.GenericType tListGeneric;
-  private final EfType.DisjunctiveType tList;
-  private EfType.SimpleType tBoolCons;
-
-  private final EfType.SimpleType tSnoc; // a Cons but with args swapped: defines (tail, head)
-  private final EfType.GenericType tSnocListGeneric;
-  private final EfType.DisjunctiveType tSnocList;
-  private EfType.SimpleType tBoolSnoc;
-  
 
   private final CtorRegistry ctors;
-  private EfType tBoolsList;
-  private EfType tBoolsSnocList;
 
   public PCaseTest() {
     tTrue = new EfType.SimpleType("True", Collections.emptyList());
     tFalse = new EfType.SimpleType("False", Collections.emptyList());
     tBool = (EfType.DisjunctiveType) EfType.disjunction(tTrue, tFalse);
-    tInfiniteBools = new EfType.SimpleType("InfiniteInts", Collections.emptyList());
     
     ctors = new CtorRegistry();
     ctors.setCtorArgs(tTrue, Collections.emptyList());
     ctors.setCtorArgs(tFalse, Collections.emptyList());
-    ctors.setCtorArgs(
-      tInfiniteBools,
-      Arrays.asList(
-        EfVar.arg("head", 0, tBool), 
-        EfVar.arg("tail", 1, tInfiniteBools)));
     
-    tCons = new EfType.SimpleType("Cons", Collections.singletonList("T"));
-    tListGeneric = tCons.getGenericsDeclr().get(0);
     tEmpty = new EfType.SimpleType("Empty", Collections.emptyList());
-    tList = (EfType.DisjunctiveType) EfType.disjunction(tCons, tEmpty);
+    ctors.setCtorArgs(tEmpty, Collections.emptyList());
+  }
+
+  @Test
+  public void listPattern() {
+    EfType.SimpleType tCons = new EfType.SimpleType("Cons", Collections.singletonList("T"));
+    EfType.GenericType tListGeneric = tCons.getGenericsDeclr().get(0);
+    Function<EfType.GenericType, EfType> listReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
+    
+    EfType.DisjunctiveType tList = (EfType.DisjunctiveType) EfType.disjunction(tCons, tEmpty);
+    EfType list = tList.reify(listReification);
+    EfType.SimpleType cons = tCons.reify(listReification);
     ctors.setCtorArgs(
       tCons,
       Arrays.asList(
         EfVar.arg("head", 0, tListGeneric),
         EfVar.arg("tail", 1, tList)));
-    ctors.setCtorArgs(tEmpty, Collections.emptyList());
-    
-    tSnoc = new EfType.SimpleType("Snoc", Collections.singletonList("T"));
-    tSnocListGeneric = tSnoc.getGenericsDeclr().get(0);
-    tSnocList = (EfType.DisjunctiveType) EfType.disjunction(tSnoc, tEmpty);
-    ctors.setCtorArgs(
-      tSnoc,
-      Arrays.asList(
-        EfVar.arg("tail", 0, tSnocList),
-        EfVar.arg("head", 1, tSnocListGeneric)));
 
-    Function<EfType.GenericType, EfType> listReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
-    tBoolsList = tList.reify(listReification);
-    tBoolCons = tCons.reify(listReification);
-
-    Function<EfType.GenericType, EfType> snocReification = Functions.forMap(Collections.singletonMap(tSnocListGeneric, tBool))::apply;
-    tBoolsSnocList = tSnocList.reify(snocReification);
-    tBoolSnoc = tSnoc.reify(snocReification); 
-  }
-
-  @Test
-  public void listPattern() {
-    PPossibility boolsPossibility = PPossibility.from(tBoolsList, ctors);
-    PAlternative firstIsTrue = boolCons(mTrue(), any()).build(ctors);
-    PAlternative secondIsTrue = boolCons(
+    PPossibility boolsPossibility = PPossibility.from(list, ctors);
+    PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
+    PAlternative secondIsTrue = simple(
+      cons,
       any(),
-      boolCons(
+      simple(
+        cons,
         mTrue(),
         any())
     ).build(ctors);
 
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
-      singleV(tBoolCons,
+      singleV(cons,
         singleV(tFalse),
         unforcedV()
       ),
@@ -121,10 +90,25 @@ public class PCaseTest {
   
   @Test
   public void snocListPattern() {
-    PPossibility boolsPossibility = PPossibility.from(tBoolsList, ctors);
-    PAlternative firstIsTrue = boolSnoc(mTrue(), any()).build(ctors);
-    PAlternative secondIsTrue = boolSnoc(
-      boolSnoc(
+    EfType.SimpleType tSnoc = new EfType.SimpleType("Snoc", Collections.singletonList("T")); // a Cons but with args swapped: defines (tail, head)
+    EfType.GenericType tSnocListGeneric = tSnoc.getGenericsDeclr().get(0);
+    Function<EfType.GenericType, EfType> snocReification = Functions.forMap(Collections.singletonMap(tSnocListGeneric, tBool))::apply;
+
+    EfType.DisjunctiveType tSnocList = (EfType.DisjunctiveType) EfType.disjunction(tSnoc, tEmpty);
+    EfType tBoolsSnocList = tSnocList.reify(snocReification);
+    EfType.SimpleType tBoolSnoc = tSnoc.reify(snocReification);
+    ctors.setCtorArgs(
+      tSnoc,
+      Arrays.asList(
+        EfVar.arg("tail", 0, tSnocList),
+        EfVar.arg("head", 1, tSnocListGeneric)));
+    
+    PPossibility boolsPossibility = PPossibility.from(tBoolsSnocList, ctors);
+    PAlternative firstIsTrue = simple(tBoolSnoc, mTrue(), any()).build(ctors);
+    PAlternative secondIsTrue = simple(
+      tBoolSnoc,
+      simple(
+        tBoolSnoc,
         any(),
         mTrue()),
       any()
@@ -142,21 +126,6 @@ public class PCaseTest {
 
     PPossibility second = result.minus(secondIsTrue);
     fail("validate somehow that it's [False, False, _]: " + second);
-  }
-
-  private Builder boolCons(Builder head, Builder tail) {
-    return simple(
-      tBoolCons,
-      head,
-      tail
-    );
-  }
-  private Builder boolSnoc(Builder tail, Builder head) {
-    return simple(
-      tBoolSnoc,
-      tail,
-      head
-    );
   }
 
   private Builder mTrue() {
@@ -180,6 +149,13 @@ public class PCaseTest {
 
   @Test
   public void createInfinitePossibilities() {
+    EfType.SimpleType tInfiniteBools = new EfType.SimpleType("InfiniteInts", Collections.emptyList());
+    ctors.setCtorArgs(
+      tInfiniteBools,
+      Arrays.asList(
+        EfVar.arg("head", 0, tBool),
+        EfVar.arg("tail", 1, tInfiniteBools)));
+    
     PPossibility from = PPossibility.from(tInfiniteBools, ctors);
     assertNotNull(from.toString()); // this is really to check for a stack overflow due to infinite recursion
   }
