@@ -3,6 +3,7 @@ package com.yuvalshavit.effes.compile.pmatch;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.testng.Assert.assertEquals;
@@ -15,6 +16,7 @@ import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -36,48 +38,34 @@ public class PCaseTest {
   private final EfType.SimpleType tTrue;
   private final EfType.SimpleType tFalse;
   private final EfType.DisjunctiveType tBool;
+  
+  private final EfType.SimpleType tOne;
+  private final EfType.SimpleType tNothing;
+  private final EfType.DisjunctiveType tMaybe;
+  
   private final EfType.SimpleType tEmpty;
 
   private final CtorRegistry ctors;
 
   public PCaseTest() {
-    tTrue = new EfType.SimpleType("True", Collections.emptyList());
-    tFalse = new EfType.SimpleType("False", Collections.emptyList());
+    ctors = new CtorRegistry();
+
+    tTrue = createSimple("True", ctors);
+    tFalse = createSimple("False", ctors);
     tBool = (EfType.DisjunctiveType) EfType.disjunction(tTrue, tFalse);
     
-    ctors = new CtorRegistry();
-    ctors.setCtorArgs(tTrue, Collections.emptyList());
-    ctors.setCtorArgs(tFalse, Collections.emptyList());
+    tOne = createSimple("One", singletonList("T"), t -> {
+        EfType.GenericType generic = t.getGenericsDeclr().get(0);
+        ctors.setCtorArgs(t, singletonList(EfVar.arg("value", 0, generic)));
+      });
+    tNothing = createSimple("Nothing", ctors);
+    tMaybe = (EfType.DisjunctiveType) EfType.disjunction(tOne, tNothing);
     
-    tEmpty = new EfType.SimpleType("Empty", Collections.emptyList());
-    ctors.setCtorArgs(tEmpty, Collections.emptyList());
-  }
-
-  private static class ListTypes {
-    private final EfType.SimpleType cons;
-    private final EfType.DisjunctiveType list;
-    private final Function<EfType.GenericType, EfType> reification;
-
-    public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType.GenericType, EfType> reification) {
-      this.cons = cons;
-      this.list = list;
-      this.reification = reification;
-    }
-
-    EfType.SimpleType cons(EfType genericArg) {
-      checkNotNull(genericArg);
-      return cons.reify(reification);
-    }
-    
-    EfType.DisjunctiveType list(EfType genericArg) {
-      checkNotNull(genericArg);
-      return list.reify(reification);
-    }
-    
+    tEmpty = createSimple("Empty", ctors);
   }
   
   private ListTypes buildListType(String name, EfType genericArg, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
-    EfType.SimpleType cons = new EfType.SimpleType(name, Collections.singletonList("T"));
+    EfType.SimpleType cons = new EfType.SimpleType(name, singletonList("T"));
     EfType.GenericType genericParam = cons.getGenericsDeclr().get(0);
     EfType.DisjunctiveType list = (EfType.DisjunctiveType) EfType.disjunction(cons, tEmpty);
     Function<EfType.GenericType, EfType> reification = Functions.forMap(Collections.singletonMap(genericParam, genericArg))::apply;
@@ -269,5 +257,37 @@ public class PCaseTest {
   
   private static Validator unforcedV() {
     return new Validator(Lazy.UNFORCED_DESC, actual -> assertTrue(actual.isUnforced(), "should have been unforced: " + actual));
+  }
+
+  private static EfType.SimpleType createSimple(String name, CtorRegistry ctors) {
+    return createSimple(name, Collections.emptyList(), t -> ctors.setCtorArgs(t, Collections.emptyList()));
+  }
+
+  private static EfType.SimpleType createSimple(String name, List<String> genericParams, Consumer<EfType.SimpleType> ctorsRegistration) {
+    EfType.SimpleType type = new EfType.SimpleType(name, genericParams);
+    ctorsRegistration.accept(type);
+    return type;
+  }
+
+  private static class ListTypes {
+    private final EfType.SimpleType cons;
+    private final EfType.DisjunctiveType list;
+    private final Function<EfType.GenericType, EfType> reification;
+
+    public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType.GenericType, EfType> reification) {
+      this.cons = cons;
+      this.list = list;
+      this.reification = reification;
+    }
+
+    EfType.SimpleType cons(EfType genericArg) {
+      checkNotNull(genericArg);
+      return cons.reify(reification);
+    }
+
+    EfType.DisjunctiveType list(EfType genericArg) {
+      checkNotNull(genericArg);
+      return list.reify(reification);
+    }
   }
 }
