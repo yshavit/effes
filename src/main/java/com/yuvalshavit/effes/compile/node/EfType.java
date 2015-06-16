@@ -298,7 +298,7 @@ public abstract class EfType {
     }
 
     @Override
-    public EfType reify(Function<GenericType, EfType> reification) {
+    public EfType.DisjunctiveType reify(Function<GenericType, EfType> reification) {
       return new DisjunctiveType(options.stream().map(r -> r.reify(reification)).collect(Collectors.toSet()));
     }
 

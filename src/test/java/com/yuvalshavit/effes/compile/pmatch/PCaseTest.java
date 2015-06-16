@@ -1,6 +1,8 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.*;
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.testng.Assert.assertEquals;
@@ -10,14 +12,17 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+import static org.testng.internal.collections.Pair.create;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.testng.annotations.Test;
+import org.testng.internal.collections.Pair;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -48,20 +53,50 @@ public class PCaseTest {
     ctors.setCtorArgs(tEmpty, Collections.emptyList());
   }
 
+  private static class ListTypes {
+    private final EfType.SimpleType cons;
+    private final EfType.DisjunctiveType list;
+    private final Function<EfType.GenericType, EfType> reification;
+
+    public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType.GenericType, EfType> reification) {
+      this.cons = cons;
+      this.list = list;
+      this.reification = reification;
+    }
+
+    EfType.SimpleType cons(EfType genericArg) {
+      checkNotNull(genericArg);
+      return cons.reify(reification);
+    }
+    
+    EfType.DisjunctiveType list(EfType genericArg) {
+      checkNotNull(genericArg);
+      return list.reify(reification);
+    }
+    
+  }
+  
+  private ListTypes buildListType(String name, EfType genericArg, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
+    EfType.SimpleType cons = new EfType.SimpleType(name, Collections.singletonList("T"));
+    EfType.GenericType genericParam = cons.getGenericsDeclr().get(0);
+    EfType.DisjunctiveType list = (EfType.DisjunctiveType) EfType.disjunction(cons, tEmpty);
+    Function<EfType.GenericType, EfType> reification = Functions.forMap(Collections.singletonMap(genericParam, genericArg))::apply;
+
+    List<Pair<String, EfType>> consArgs = consBuilder.apply(genericParam, list);
+    List<EfVar> consVars = new ArrayList<>(consArgs.size());
+    for (int i = 0; i < consArgs.size(); ++i) {
+      Pair<String, EfType> arg = consArgs.get(i);
+      consVars.add(EfVar.arg(arg.first(), i, arg.second()));
+    }
+    ctors.setCtorArgs(cons, consVars);
+    return new ListTypes(cons, list, reification);
+  }
+  
   @Test
   public void listPattern() {
-    EfType.SimpleType tCons = new EfType.SimpleType("Cons", Collections.singletonList("T"));
-    EfType.GenericType tListGeneric = tCons.getGenericsDeclr().get(0);
-    Function<EfType.GenericType, EfType> listReification = Functions.forMap(Collections.singletonMap(tListGeneric, tBool))::apply;
-    
-    EfType.DisjunctiveType tList = (EfType.DisjunctiveType) EfType.disjunction(tCons, tEmpty);
-    EfType list = tList.reify(listReification);
-    EfType.SimpleType cons = tCons.reify(listReification);
-    ctors.setCtorArgs(
-      tCons,
-      Arrays.asList(
-        EfVar.arg("head", 0, tListGeneric),
-        EfVar.arg("tail", 1, tList)));
+    ListTypes listTypes = buildListType("Cons", tBool, (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType.SimpleType cons = listTypes.cons(tBool);
+    EfType.DisjunctiveType list = listTypes.list(tBool);
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
@@ -90,25 +125,18 @@ public class PCaseTest {
   
   @Test
   public void snocListPattern() {
-    EfType.SimpleType tSnoc = new EfType.SimpleType("Snoc", Collections.singletonList("T")); // a Cons but with args swapped: defines (tail, head)
-    EfType.GenericType tSnocListGeneric = tSnoc.getGenericsDeclr().get(0);
-    Function<EfType.GenericType, EfType> snocReification = Functions.forMap(Collections.singletonMap(tSnocListGeneric, tBool))::apply;
+    // a Snoc List is like a Cons List, but with the args swapped: Cons(tail: ConsList[T], head: T).
+    // This means that the infinite recursion is on the first arg (not the second), which tests our lazy evaluation a bit differently.
+    ListTypes listTypes = buildListType("Cons", tBool, (g, l) -> asList(create("tail", l), create("head", g)));
+    EfType.SimpleType snoc = listTypes.cons(tBool);
+    EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    EfType.DisjunctiveType tSnocList = (EfType.DisjunctiveType) EfType.disjunction(tSnoc, tEmpty);
-    EfType tBoolsSnocList = tSnocList.reify(snocReification);
-    EfType.SimpleType tBoolSnoc = tSnoc.reify(snocReification);
-    ctors.setCtorArgs(
-      tSnoc,
-      Arrays.asList(
-        EfVar.arg("tail", 0, tSnocList),
-        EfVar.arg("head", 1, tSnocListGeneric)));
-    
-    PPossibility boolsPossibility = PPossibility.from(tBoolsSnocList, ctors);
-    PAlternative firstIsTrue = simple(tBoolSnoc, mTrue(), any()).build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list, ctors);
+    PAlternative firstIsTrue = simple(snoc, mTrue(), any()).build(ctors);
     PAlternative secondIsTrue = simple(
-      tBoolSnoc,
+      snoc,
       simple(
-        tBoolSnoc,
+        snoc,
         any(),
         mTrue()),
       any()
@@ -116,7 +144,7 @@ public class PCaseTest {
 
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
-      singleV(tBoolSnoc,
+      singleV(snoc,
         unforcedV(),
         singleV(tFalse)
       ),
@@ -152,7 +180,7 @@ public class PCaseTest {
     EfType.SimpleType tInfiniteBools = new EfType.SimpleType("InfiniteInts", Collections.emptyList());
     ctors.setCtorArgs(
       tInfiniteBools,
-      Arrays.asList(
+      asList(
         EfVar.arg("head", 0, tBool),
         EfVar.arg("tail", 1, tInfiniteBools)));
     
@@ -222,7 +250,7 @@ public class PCaseTest {
           typedvalue.consume(
             l -> assertEquals(args.length, 0), s -> {
               assertEquals(s.args().size(), args.length);
-              EfCollections.zipC(Arrays.asList(args), s.args(), Validator::validate);
+              EfCollections.zipC(asList(args), s.args(), Validator::validate);
             });
         }));
   }
@@ -235,7 +263,7 @@ public class PCaseTest {
         PPossibility.Disjunction actualDisjunction = (PPossibility.Disjunction) actual;
         List<Lazy<PPossibility.Simple>> options = actualDisjunction.options();
         assertEquals(options.size(), alternatives.length);
-        EfCollections.zipC(Arrays.asList(alternatives), options, Validator::validate);
+        EfCollections.zipC(asList(alternatives), options, Validator::validate);
       }));
   }
   
