@@ -16,7 +16,6 @@ import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -64,11 +63,11 @@ public class PCaseTest {
     tEmpty = createSimple("Empty", ctors);
   }
   
-  private ListTypes buildListType(String name, EfType genericArg, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
+  private ListTypes buildListType(String name, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
     EfType.SimpleType cons = new EfType.SimpleType(name, singletonList("T"));
     EfType.GenericType genericParam = cons.getGenericsDeclr().get(0);
     EfType.DisjunctiveType list = (EfType.DisjunctiveType) EfType.disjunction(cons, tEmpty);
-    Function<EfType.GenericType, EfType> reification = Functions.forMap(Collections.singletonMap(genericParam, genericArg))::apply;
+    Function<EfType, Function<EfType.GenericType, EfType>> reification = g -> Functions.forMap(Collections.singletonMap(genericParam, g))::apply;
 
     List<Pair<String, EfType>> consArgs = consBuilder.apply(genericParam, list);
     List<EfVar> consVars = new ArrayList<>(consArgs.size());
@@ -82,7 +81,7 @@ public class PCaseTest {
   
   @Test
   public void listPattern() {
-    ListTypes listTypes = buildListType("Cons", tBool, (g, l) -> asList(create("head", g), create("tail", l)));
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
@@ -115,7 +114,7 @@ public class PCaseTest {
   public void snocListPattern() {
     // a Snoc List is like a Cons List, but with the args swapped: Cons(tail: ConsList[T], head: T).
     // This means that the infinite recursion is on the first arg (not the second), which tests our lazy evaluation a bit differently.
-    ListTypes listTypes = buildListType("Cons", tBool, (g, l) -> asList(create("tail", l), create("head", g)));
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("tail", l), create("head", g)));
     EfType.SimpleType snoc = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
@@ -144,6 +143,57 @@ public class PCaseTest {
     fail("validate somehow that it's [False, False, _]: " + second);
   }
 
+  @Test
+  public void listOfMaybies() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType.SimpleType cons = listTypes.cons(tMaybe);
+    EfType.DisjunctiveType list = listTypes.list(tMaybe);
+    PPossibility possibility = PPossibility.from(list, ctors);
+    
+    // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
+    // expected: [One(_), _]                    = Cons(One(_), _)
+    //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
+    //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
+    PAlternative case0 = simple(
+      cons,
+      simple(tNothing),
+      simple(
+        cons,
+        any(),
+        simple(
+          cons,
+          simple(tOne,
+            simple(tTrue)),
+          any()
+        )
+      )
+    ).build(ctors);
+    PPossibility afterCase0 = possibility.minus(case0);
+
+    disjunctionV(
+      singleV(cons,
+        singleV(tOne,
+          unforcedV()),
+        unforcedV()),
+      singleV(cons,
+        singleV(tNothing),
+        singleV(cons,
+          unforcedV(),
+          singleV(cons,
+            singleV(tNothing),
+            unforcedV()))),
+      singleV(
+        cons,
+        singleV(tNothing),
+        singleV(cons,
+          unforcedV(),
+          singleV(cons,
+            singleV(tOne,
+              singleV(tFalse)),
+            unforcedV())))
+    ).validate(afterCase0);
+  }
+  
   private Builder mTrue() {
     return simple(tTrue);
   }
@@ -272,9 +322,9 @@ public class PCaseTest {
   private static class ListTypes {
     private final EfType.SimpleType cons;
     private final EfType.DisjunctiveType list;
-    private final Function<EfType.GenericType, EfType> reification;
+    private final Function<EfType, Function<EfType.GenericType, EfType>> reification;
 
-    public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType.GenericType, EfType> reification) {
+    public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType, Function<EfType.GenericType, EfType>> reification) {
       this.cons = cons;
       this.list = list;
       this.reification = reification;
@@ -282,12 +332,12 @@ public class PCaseTest {
 
     EfType.SimpleType cons(EfType genericArg) {
       checkNotNull(genericArg);
-      return cons.reify(reification);
+      return cons.reify(reification.apply(genericArg));
     }
 
     EfType.DisjunctiveType list(EfType genericArg) {
       checkNotNull(genericArg);
-      return list.reify(reification);
+      return list.reify(reification.apply(genericArg));
     }
   }
 }
