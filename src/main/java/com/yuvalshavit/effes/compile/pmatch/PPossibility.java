@@ -153,6 +153,14 @@ public abstract class PPossibility {
           // e.g. head: True | False | Error(reason: Unknown | String)
           Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
           resultArg = possibleArgDisjunction.minus(alternativeArg);
+          // resultArg is what remains after refactoring. e.g, Cons(False | True, a) - Cons(True, _), resultArg would be False.
+          // This handles the result of Cons(False, a) -- but what happens to the True? In this case, resultArgs
+          // will end up as (True, ∅) so just ∅. But what if other args also matched? What do we do then!? How do we recurse?
+          // Maybe instead we need to create one Collection<PPossibility> per arg index, and then concat them all.
+          // Alternatively, expand out all possibilities as far as we need to handle this alternative, and then just subtract it.
+          if (resultArg instanceof Simple) {
+            assert true;
+          }
         } else if (possibleArg instanceof Simple) {
           // e.g. just True, or just Error(..)
           resultArg = possibleArg.minus(alternativeArg);
