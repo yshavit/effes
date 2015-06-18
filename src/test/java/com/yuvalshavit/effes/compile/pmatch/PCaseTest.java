@@ -100,7 +100,13 @@ public class PCaseTest {
     disjunctionV(
       singleV(cons,
         singleV(tFalse),
-        unforcedV()
+        singleV(tEmpty)
+      ),
+      singleV(cons,
+        singleV(tFalse),
+        singleV(cons,
+          unforcedV(),
+          unforcedV())
       ),
       unforcedV()
     ).validate(result);
@@ -292,17 +298,34 @@ public class PCaseTest {
             });
         }));
   }
-  
+
   private static Validator disjunctionV(Validator... alternatives) {
     return new Validator(
       Joiner.on(" | ").join(alternatives),
-      forced(actual -> {
-        assertThat(actual, instanceOf(PPossibility.Disjunction.class));
-        PPossibility.Disjunction actualDisjunction = (PPossibility.Disjunction) actual;
-        List<Lazy<PPossibility.Simple>> options = actualDisjunction.options();
-        assertEquals(options.size(), alternatives.length);
-        EfCollections.zipC(asList(alternatives), options, Validator::validate);
-      }));
+      forced(
+        actual -> {
+          assertThat(actual, instanceOf(PPossibility.Disjunction.class));
+          PPossibility.Disjunction actualDisjunction = (PPossibility.Disjunction) actual;
+          List<Lazy<PPossibility.Simple>> options = actualDisjunction.options();
+          assertEquals(options.size(), alternatives.length);
+          // ensure that each validator works on exactly one option
+          int[] matchesPerAlternative = new int[alternatives.length];
+          for (int i = 0; i < alternatives.length; ++i) {
+            for (Lazy<PPossibility.Simple> option : options) {
+              try {
+                alternatives[i].validate(option);
+                matchesPerAlternative[i]++;
+              } catch (AssertionError e) {
+                // ignore
+              }
+            }
+          }
+          for (int i = 0; i < matchesPerAlternative.length; i++) {
+            int match = matchesPerAlternative[i];
+            assertEquals(match, 1, "for alternative " + alternatives[i]);
+          }
+          EfCollections.zipC(asList(alternatives), options, Validator::validate);
+        }));
   }
   
   private static Validator unforcedV() {
