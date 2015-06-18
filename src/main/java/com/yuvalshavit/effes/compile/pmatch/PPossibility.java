@@ -1,18 +1,23 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
@@ -23,7 +28,30 @@ import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
   
-  @Nullable public abstract PPossibility minus(PAlternative alternative);
+  @Nullable
+  public final PPossibility minus(PAlternative alternative) {
+    checkNotNull(alternative);
+    if (alternative instanceof PAlternative.Any) {
+      return none;
+    }
+    StepResult result = subtractionStep(alternative);
+    if (result.noneMatched()) {
+      return null;
+    }
+    result.getOnlyMatched(); // confirm that there's only the one
+    Collection<Lazy<PPossibility.Simple>> remaining = result.getUnmatched();
+    if (remaining.isEmpty()) {
+      return none;
+    } else if (remaining.size() == 1) {
+      return Iterables.getOnlyElement(remaining).get();
+    } else {
+      return new PPossibility.Disjunction(remaining);
+    }
+  }
+  
+  @Nonnull
+  protected abstract StepResult subtractionStep(PAlternative alternative);
+  
   public abstract String toString(boolean verbose);
 
   @Override
@@ -83,9 +111,9 @@ public abstract class PPossibility {
   public static final PPossibility none = new PPossibility() {
 
     @Override
-    @Nullable
-    public PPossibility minus(PAlternative alternative) {
-      return null;
+    @Nonnull
+    protected StepResult subtractionStep(PAlternative alternative) {
+      return new StepResult();
     }
 
     @Override
@@ -104,7 +132,7 @@ public abstract class PPossibility {
     }
   };
 
-  static class Simple extends NonEmpty {
+  static class Simple extends PPossibility {
     private final Lazy<TypedValue<PPossibility>> value;
     private final List<String> argNames;
 
@@ -113,13 +141,19 @@ public abstract class PPossibility {
       this.argNames = argNames;
     }
 
-    @Nullable
+    @Nonnull
     @Override
-    protected PPossibility minusAlternative(PAlternative.Simple simpleAlternative) {
+    protected StepResult subtractionStep(PAlternative alternative) {
+      if (alternative instanceof PAlternative.Any) {
+        return matchedAndUnmatched();
+      }
+      PAlternative.Simple simpleAlternative = (PAlternative.Simple) alternative;
       TypedValue<PAlternative> simpleValue = simpleAlternative.value();
       TypedValue<PPossibility> forcedPossible = this.value.get();
       if (!forcedPossible.type().equals(simpleValue.type())) {
-        return null;
+        StepResult r = new StepResult();
+        r.addUnmatched(this);
+        return r;
       }
       return forcedPossible.transform(
         p -> large(),
@@ -129,13 +163,20 @@ public abstract class PPossibility {
         )
       );
     }
-    
+
+    private StepResult matchedAndUnmatched() {
+      StepResult r = new StepResult();
+      r.setMatched(this);
+      r.addUnmatched(this);
+      return r;
+    }
+
     @VisibleForTesting
     Lazy<TypedValue<PPossibility>> typedAndArgs() {
       return value;
     }
 
-    private PPossibility doSubtract(TypedValue.StandardValue<PPossibility> possibility, TypedValue.StandardValue<PAlternative> alternative) {
+    private StepResult doSubtract(TypedValue.StandardValue<PPossibility> possibility, TypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
@@ -144,37 +185,56 @@ public abstract class PPossibility {
       int nArgs = possibleArgs.size();
       assert nArgs == alternativeArgs.size() : String.format("different sizes: %s <~> %s", possibleArgs, alternativeArgs);
       
-      List<PPossibility> resultArgs = new ArrayList<>(nArgs);
+      List<StepResult> resultArgs = new ArrayList<>(nArgs);
       for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
         PPossibility possibleArg = possibleArgs.get(argIdxMutable);
         PAlternative alternativeArg = alternativeArgs.get(argIdxMutable);
-        PPossibility resultArg = null;
-        if (possibleArg instanceof Disjunction) {
-          // e.g. head: True | False | Error(reason: Unknown | String)
-          Disjunction possibleArgDisjunction = (Disjunction) possibleArg;
-          resultArg = possibleArgDisjunction.minus(alternativeArg);
-          // resultArg is what remains after refactoring. e.g, Cons(False | True, a) - Cons(True, _), resultArg would be False.
-          // This handles the result of Cons(False, a) -- but what happens to the True? In this case, resultArgs
-          // will end up as (True, ∅) so just ∅. But what if other args also matched? What do we do then!? How do we recurse?
-          // Maybe instead we need to create one Collection<PPossibility> per arg index, and then concat them all.
-          // Alternatively, expand out all possibilities as far as we need to handle this alternative, and then just subtract it.
-          if (resultArg instanceof Simple) {
-            assert true;
-          }
-        } else if (possibleArg instanceof Simple) {
-          // e.g. just True, or just Error(..)
-          resultArg = possibleArg.minus(alternativeArg);
+        StepResult argStep = possibleArg.subtractionStep(alternativeArg);
+        if (argStep.noneMatched()) {
+          StepResult r = new StepResult();
+          r.addUnmatched(this);
+          return r;
         }
-        resultArgs.add(resultArg);
+        resultArgs.add(argStep);
       }
-      
-      if (resultArgs.stream().allMatch(none::equals)) {
-        return none;
+      StepResult result = new StepResult();
+      result.setMatched(fromMatchedArgs(resultArgs));
+      result.addUnmatched(fromUnmatchedArgs(resultArgs));
+      return result;
+    }
+
+    private Collection<Lazy<PPossibility.Simple>> fromUnmatchedArgs(List<StepResult> resultArgs) {
+      Collection<List<PPossibility>> expoded = explode(resultArgs);
+      return Collections2.transform(expoded, args -> Lazy.forced(createSimilarPossibility(args)));
+    }
+
+    private Collection<List<PPossibility>> explode(List<StepResult> remainingArgs) {
+      if (remainingArgs.isEmpty()) {
+        return Collections.emptyList();
       }
-      if (resultArgs.stream().anyMatch(Objects::isNull)) {
-        return null;
+      StepResult args = remainingArgs.get(0);
+      Collection<Simple> unmatched = Collections2.transform(args.getUnmatched(), Lazy::get);
+      remainingArgs = remainingArgs.subList(1, remainingArgs.size());
+      Collection<List<PPossibility>> results = new ArrayList<>();
+      for (Simple simple : unmatched) {
+        for (List<PPossibility> remainingPossibilities : explode(remainingArgs)) {
+          List<PPossibility> result = new ArrayList<>(remainingPossibilities.size() + 1);
+          result.add(simple);
+          result.addAll(remainingPossibilities);
+          results.add(result);
+        }
       }
-      return new Simple(Lazy.forced(possibility.with(resultArgs)), argNames);
+      return results;
+    }
+
+    private PPossibility fromMatchedArgs(List<StepResult> resultArgs) {
+      List<PPossibility> args = Lists.transform(resultArgs, StepResult::getOnlyMatched);
+      return createSimilarPossibility(args);
+    }
+
+    private Simple createSimilarPossibility(List<PPossibility> args) {
+      TypedValue<PPossibility> resultValue = new TypedValue.StandardValue<>(value.get().type(), args);
+      return new Simple(Lazy.forced(resultValue), argNames);
     }
 
     @Override
@@ -199,8 +259,9 @@ public abstract class PPossibility {
         });
     }
 
-    private PPossibility large() {
-      return this; // eventually it'd be nice to decorate this with something like "not value.value()"
+    private StepResult large() {
+      // eventually it'd be nice to decorate this with something like "not value.value()"
+      return matchedAndUnmatched();
     }
 
     private static String toString(EfType.SimpleType type, boolean verbose) {
@@ -210,7 +271,7 @@ public abstract class PPossibility {
     }
   }
   
-  static class Disjunction extends NonEmpty {
+  static class Disjunction extends PPossibility {
     private final List<Lazy<PPossibility.Simple>> options;
 
     private Disjunction(Collection<Lazy<Simple>> options) {
@@ -221,75 +282,31 @@ public abstract class PPossibility {
       return options;
     }
 
-    @Nullable
+    @Nonnull
     @Override
-    protected PPossibility minusAlternative(PAlternative.Simple simpleAlternative) {
-      return subtract(simpleAlternative);
+    protected StepResult subtractionStep(PAlternative alternative) {
+      Iterator<Lazy<Simple>> iterator = options.iterator();
+      StepResult result = new StepResult();
+      while (iterator.hasNext()) {
+        Lazy<Simple> lazyOption = iterator.next();
+        StepResult step = lazyOption.get().subtractionStep(alternative);
+        result.addUnmatched(step.getUnmatched());
+        if (step.anyMatched()) {
+          result.setMatched(step.getOnlyMatched());
+          break;
+        }
+      }
+      // If one of the early options matched, we need to add the rest. Assume they're unmatched.
+      while (iterator.hasNext()) {
+        result.addUnmatched(iterator.next());
+      }
+      return result;
     }
 
     @Override
     public String toString(boolean verbose) {
       List<Lazy<String>> verboseOptions = Lists.transform(options, o -> o.transform(s -> s.toString(verbose)));
       return Joiner.on(" | ").join(verboseOptions);
-    }
-
-    PPossibility subtract(PAlternative alternative) {
-      // e.g. disjuction is [ True, False, Error(...) ]
-      List<Lazy<Simple>> possibleArgOptions = options();
-      for (int optionIdx = 0; optionIdx < possibleArgOptions.size(); ++optionIdx) {
-        // e.g. True, or Error(...)
-        Simple possibleArgOption = possibleArgOptions.get(optionIdx).get();
-        PPossibility matchedArg = possibleArgOption.minus(alternative);
-        if (matchedArg != null) { assert  matchedArg == none : matchedArg; // TODO ??
-          // e.g. the alternative was True, or Error(_) or something else that matched
-          List<Lazy<Simple>> remainingOptions = new ArrayList<>(possibleArgOptions);
-          remainingOptions.remove(optionIdx);
-          return createFrom(matchedArg, remainingOptions);
-        }
-      }
-      // e.g. the alternative was SomethingElse (not True, False or Error), or it was
-      // Error but not in a way that matches our Error(...)
-      return null;
-    }
-
-    private static PPossibility createFrom(PPossibility first, List<Lazy<Simple>> remaining) {
-      if (remaining.isEmpty()) {
-        return first;
-      }
-      List<Lazy<Simple>> alternatives = new ArrayList<>(remaining.size() + 1);
-      if (first instanceof Simple) {
-        Simple simple = (Simple) first;
-        alternatives.add(Lazy.forced(simple));
-      } else if (first instanceof Disjunction) {
-        Disjunction disjunction = (Disjunction) first;
-        alternatives.addAll(disjunction.options());
-      } else if (!none.equals(first)) {
-        throw new AssertionError("unknown possibility type: " + first);
-      }
-      alternatives.addAll(remaining);
-      if (alternatives.isEmpty()) {
-        return none;
-      } else if (alternatives.size() == 1) {
-        return alternatives.get(0).get();
-      } else {
-        return new Disjunction(alternatives);
-      }
-    }
-  }
-
-  private static abstract class NonEmpty extends PPossibility {
-    @Nullable
-    protected abstract PPossibility minusAlternative(PAlternative.Simple simpleAlternative);
-
-    @Nullable
-    @Override
-    public final PPossibility minus(PAlternative alternative) {
-      if (alternative instanceof PAlternative.Any) {
-        return none;
-      } else {
-        PAlternative.Simple simple = (PAlternative.Simple) alternative;
-        return minusAlternative(simple);
-      }
     }
   }
 }
