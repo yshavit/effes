@@ -204,27 +204,25 @@ public abstract class PPossibility {
     }
 
     private Collection<Lazy<PPossibility.Simple>> fromUnmatchedArgs(List<StepResult> resultArgs) {
-      Collection<List<PPossibility>> expoded = explode(resultArgs);
-      return Collections2.transform(expoded, args -> Lazy.forced(createSimilarPossibility(args)));
-    }
-
-    private Collection<List<PPossibility>> explode(List<StepResult> remainingArgs) {
-      if (remainingArgs.isEmpty()) {
+      Collection<List<PPossibility>> expoded = new ArrayList<>();
+      Iterator<StepResult> iter = resultArgs.iterator();
+      if (!iter.hasNext()) {
         return Collections.emptyList();
       }
-      StepResult args = remainingArgs.get(0);
-      Collection<Simple> unmatched = Collections2.transform(args.getUnmatched(), Lazy::get);
-      remainingArgs = remainingArgs.subList(1, remainingArgs.size());
-      Collection<List<PPossibility>> results = new ArrayList<>();
-      for (Simple simple : unmatched) {
-        for (List<PPossibility> remainingPossibilities : explode(remainingArgs)) {
-          List<PPossibility> result = new ArrayList<>(remainingPossibilities.size() + 1);
-          result.add(simple);
-          result.addAll(remainingPossibilities);
-          results.add(result);
-        }
+      for (Lazy<Simple> simpleLazy : iter.next().getUnmatched()) {
+        expoded.add(Collections.singletonList(simpleLazy.get()));
       }
-      return results;
+      while (iter.hasNext()) {
+        StepResult arg = iter.next();
+        Collection<List<PPossibility>> tmp = new ArrayList<>();
+        for (List<PPossibility> prevArgs : expoded) {
+          for (Lazy<Simple> newArg : arg.getUnmatched()) {
+            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.<PPossibility>singleton(newArg.get()))));
+          }
+        }
+        expoded = tmp;
+      }
+      return Collections2.transform(expoded, args -> Lazy.forced(createSimilarPossibility(args)));
     }
 
     private PPossibility fromMatchedArgs(List<StepResult> resultArgs) {

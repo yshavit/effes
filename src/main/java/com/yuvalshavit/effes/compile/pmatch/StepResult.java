@@ -48,4 +48,9 @@ class StepResult {
   public void addUnmatched(Collection<Lazy<PPossibility.Simple>> unmatched) {
     this.unmatched.addAll(unmatched);
   }
+
+  @Override
+  public String toString() {
+    return "matched=" + (anyMatched() ? matched : "∅") + ", unmatched=" + unmatched;
+  }
 }
