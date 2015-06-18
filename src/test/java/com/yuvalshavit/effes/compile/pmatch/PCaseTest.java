@@ -160,14 +160,11 @@ public class PCaseTest {
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
-    PAlternative case0 = simple(
-      cons,
+    PAlternative case0 = simple(cons,
       simple(tNothing),
-      simple(
-        cons,
+      simple(cons,
         any(),
-        simple(
-          cons,
+        simple(cons,
           simple(tOne,
             simple(tTrue)),
           any()
