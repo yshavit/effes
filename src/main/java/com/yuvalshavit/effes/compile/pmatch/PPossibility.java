@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
@@ -137,6 +136,7 @@ public abstract class PPossibility {
     private final List<String> argNames;
 
     private Simple(Lazy<TypedValue<PPossibility>> value, List<String> argNames) {
+      value.get();
       this.value = value;
       this.argNames = argNames;
     }
@@ -251,7 +251,7 @@ public abstract class PPossibility {
             Iterable<? extends String> namedArgs;
             namedArgs = verbose
               ? EfCollections.zipF(argNames, args, (n, a) -> String.format("%s: (%s)", n, a))
-              : Lists.transform(args, Functions.toStringFunction());
+              : Lists.transform(args, arg -> arg.toString(false));
             return Joiner.on(", ").appendTo(sb, namedArgs).append(')').toString();
           }
         });
@@ -303,8 +303,19 @@ public abstract class PPossibility {
 
     @Override
     public String toString(boolean verbose) {
-      List<Lazy<String>> verboseOptions = Lists.transform(options, o -> o.transform(s -> s.toString(verbose)));
-      return Joiner.on(" | ").join(verboseOptions);
+      boolean anyUnforced = false;
+      List<String> optionDescriptions = new ArrayList<>(options.size());
+      for (Lazy<Simple> option : options) {
+        if (option.isUnforced()) {
+          anyUnforced = true;
+        } else {
+          optionDescriptions.add(option.get().toString(verbose));
+        }
+      }
+      if (anyUnforced) {
+        optionDescriptions.add(Lazy.UNFORCED_DESC);
+      }
+      return Joiner.on(" | ").join(optionDescriptions);
     }
   }
 }
