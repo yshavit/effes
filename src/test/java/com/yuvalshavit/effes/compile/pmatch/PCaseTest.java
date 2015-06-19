@@ -31,6 +31,7 @@ import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfCollections;
+import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Lazy;
 
 public class PCaseTest {
@@ -152,10 +153,16 @@ public class PCaseTest {
   @Test
   public void listOfMaybies() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
-    EfType.SimpleType cons = listTypes.cons(tMaybe);
-    EfType.DisjunctiveType list = listTypes.list(tMaybe);
+
+    Function<EfType.GenericType, EfType> boolReifiction = EfFunctions.fromGuava(
+      Functions.forMap(
+        Collections.singletonMap((EfType.GenericType) this.tOne.getParams().get(0), tBool)));
+    EfType.SimpleType tOneBool = this.tOne.reify(boolReifiction);
+    EfType.DisjunctiveType maybeBool = this.tMaybe.reify(boolReifiction);
+    EfType.SimpleType cons = listTypes.cons(maybeBool);
+    EfType.DisjunctiveType list = listTypes.list(tOneBool);
     PPossibility possibility = PPossibility.from(list, ctors);
-    
+
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
@@ -165,7 +172,8 @@ public class PCaseTest {
       simple(cons,
         any(),
         simple(cons,
-          simple(tOne,
+          simple(
+            tOneBool,
             simple(tTrue)),
           any()
         )
@@ -175,7 +183,8 @@ public class PCaseTest {
 
     disjunctionV(
       singleV(cons,
-        singleV(tOne,
+        singleV(
+          tOneBool,
           unforcedV()),
         unforcedV()),
       singleV(cons,
@@ -191,7 +200,8 @@ public class PCaseTest {
         singleV(cons,
           unforcedV(),
           singleV(cons,
-            singleV(tOne,
+            singleV(
+              tOneBool,
               singleV(tFalse)),
             unforcedV())))
     ).validate(afterCase0);
