@@ -9,16 +9,17 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -104,10 +105,7 @@ public class PCaseTest {
     disjunctionV(
       singleV(cons,
         singleV(tFalse),
-        disjunctionV(
-          unforcedV(),
-          unforcedV()
-        )
+        unforcedDisjunctionV(2)
       ),
       unforcedV()
     ).validate(result);
@@ -137,10 +135,7 @@ public class PCaseTest {
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
       singleV(snoc,
-        disjunctionV(
-          unforcedV(),
-          unforcedV()
-        ),
+        unforcedDisjunctionV(2),
         singleV(tFalse)
       ),
       unforcedV()
@@ -280,10 +275,6 @@ public class PCaseTest {
     };
   }
   
-  private static Validator noneV() {
-    return new Validator(PPossibility.none.toString(), actual -> assertSame(actual, PPossibility.none));
-  }
-  
   private static Validator singleV(EfType.SimpleType type, Validator... args) {
     String desc = type.getName();
     if (args.length != 0) {
@@ -331,6 +322,13 @@ public class PCaseTest {
           }
           EfCollections.zipC(asList(alternatives), options, Validator::validate);
         }));
+  }
+  
+  private static Validator unforcedDisjunctionV(int n) {
+    assertThat("value", n, greaterThan(1));
+    Validator[] validators = new Validator[n];
+    Arrays.fill(validators, unforcedV());
+    return disjunctionV(validators);
   }
   
   private static Validator unforcedV() {
