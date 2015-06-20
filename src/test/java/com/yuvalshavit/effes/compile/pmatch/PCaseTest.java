@@ -124,7 +124,7 @@ public class PCaseTest {
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative firstIsTrue = simple(snoc, mTrue(), any()).build(ctors);
+    PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build(ctors);
     PAlternative secondIsTrue = simple(snoc,
       simple(snoc,
         any(),
