@@ -137,7 +137,10 @@ public class PCaseTest {
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
       singleV(snoc,
-        unforcedV(),
+        disjunctionV(
+          unforcedV(),
+          unforcedV()
+        ),
         singleV(tFalse)
       ),
       unforcedV()
