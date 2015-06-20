@@ -160,7 +160,7 @@ public class PCaseTest {
     EfType.SimpleType tOneBool = this.tOne.reify(boolReifiction);
     EfType.DisjunctiveType maybeBool = this.tMaybe.reify(boolReifiction);
     EfType.SimpleType cons = listTypes.cons(maybeBool);
-    EfType.DisjunctiveType list = listTypes.list(tOneBool);
+    EfType.DisjunctiveType list = listTypes.list(maybeBool);
     PPossibility possibility = PPossibility.from(list, ctors);
 
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))

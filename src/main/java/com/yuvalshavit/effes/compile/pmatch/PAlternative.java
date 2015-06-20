@@ -113,7 +113,7 @@ public abstract class PAlternative {
               if (!expected.contains(simple.value.type())) {
                 return false;
               }
-              if (!simple.validate(ctors, reification)) {
+              if (!simple.validate(ctors, simple.value().type().getReification())) {
                 return false;
               }
             } else {
