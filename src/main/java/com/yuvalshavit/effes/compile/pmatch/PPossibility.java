@@ -56,7 +56,7 @@ public abstract class PPossibility {
 
   @Override
   public String toString() {
-    return toString(true);
+    return toString(false);
   }
 
   private PPossibility() {}
@@ -295,9 +295,7 @@ public abstract class PPossibility {
         }
       }
       // If one of the early options matched, we need to add the rest. Assume they're unmatched.
-      while (iterator.hasNext()) {
-        result.addUnmatched(iterator.next());
-      }
+      iterator.forEachRemaining(result::addUnmatched);
       return result;
     }
 
