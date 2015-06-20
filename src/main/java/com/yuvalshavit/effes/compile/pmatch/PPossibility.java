@@ -39,13 +39,18 @@ public abstract class PPossibility {
       return null;
     }
     result.getOnlyMatched(); // confirm that there's only the one
-    Collection<Lazy<PPossibility.Simple>> remaining = result.getUnmatched();
-    if (remaining.isEmpty()) {
+    Collection<Lazy<? extends PPossibility>> remaining = result.getUnmatched();
+    List<Lazy<Simple>> remainingSimples = remaining.stream()
+      .map(Lazy::get)
+      .map(PPossibility::components)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+    if (remainingSimples.isEmpty()) {
       return none;
-    } else if (remaining.size() == 1) {
+    } else if (remainingSimples.size() == 1) {
       return Iterables.getOnlyElement(remaining).get();
     } else {
-      return new PPossibility.Disjunction(remaining);
+      return new PPossibility.Disjunction(remainingSimples);
     }
   }
   
@@ -53,10 +58,19 @@ public abstract class PPossibility {
   protected abstract StepResult subtractionStep(PAlternative alternative);
   
   public abstract String toString(boolean verbose);
+  
+  public abstract Collection<Lazy<Simple>> components();
 
   @Override
   public String toString() {
     return toString(false);
+  }
+  
+  protected final StepResult handleAny() {
+    StepResult r = new StepResult();
+    r.setMatched(this);
+    r.addUnmatched(Lazy.forced(this));
+    return r;
   }
 
   private PPossibility() {}
@@ -130,6 +144,11 @@ public abstract class PPossibility {
     public String toString(boolean verbose) {
       return "∅";
     }
+
+    @Override
+    public Collection<Lazy<Simple>> components() {
+      return Collections.emptyList();
+    }
   };
 
   static class Simple extends PPossibility {
@@ -141,11 +160,16 @@ public abstract class PPossibility {
       this.argNames = argNames;
     }
 
+    @Override
+    public Collection<Lazy<Simple>> components() {
+      return Collections.singletonList(Lazy.forced(this));
+    }
+
     @Nonnull
     @Override
     protected StepResult subtractionStep(PAlternative alternative) {
       if (alternative instanceof PAlternative.Any) {
-        return matchedAndUnmatched();
+        return handleAny();
       }
       PAlternative.Simple simpleAlternative = (PAlternative.Simple) alternative;
       TypedValue<PAlternative> simpleValue = simpleAlternative.value();
@@ -162,13 +186,6 @@ public abstract class PPossibility {
           a -> doSubtract(p, a)
         )
       );
-    }
-
-    private StepResult matchedAndUnmatched() {
-      StepResult r = new StepResult();
-      r.setMatched(this);
-      r.addUnmatched(this);
-      return r;
     }
 
     @VisibleForTesting
@@ -203,20 +220,20 @@ public abstract class PPossibility {
       return result;
     }
 
-    private Collection<Lazy<PPossibility.Simple>> fromUnmatchedArgs(List<StepResult> resultArgs) {
+    private Collection<Lazy<PPossibility>> fromUnmatchedArgs(List<StepResult> resultArgs) {
       Collection<List<PPossibility>> expoded = new ArrayList<>();
       Iterator<StepResult> iter = resultArgs.iterator();
       if (!iter.hasNext()) {
         return Collections.emptyList();
       }
-      for (Lazy<Simple> simpleLazy : iter.next().getUnmatched()) {
+      for (Lazy<? extends PPossibility> simpleLazy : iter.next().getUnmatched()) {
         expoded.add(Collections.singletonList(simpleLazy.get()));
       }
       while (iter.hasNext()) {
         StepResult arg = iter.next();
         Collection<List<PPossibility>> tmp = new ArrayList<>();
         for (List<PPossibility> prevArgs : expoded) {
-          for (Lazy<Simple> newArg : arg.getUnmatched()) {
+          for (Lazy<? extends PPossibility> newArg : arg.getUnmatched()) {
             tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.<PPossibility>singleton(newArg.get()))));
           }
         }
@@ -259,7 +276,7 @@ public abstract class PPossibility {
 
     private StepResult large() {
       // eventually it'd be nice to decorate this with something like "not value.value()"
-      return matchedAndUnmatched();
+      return handleAny();
     }
 
     private static String toString(EfType.SimpleType type, boolean verbose) {
@@ -280,9 +297,18 @@ public abstract class PPossibility {
       return options;
     }
 
+    @Override
+    public Collection<Lazy<Simple>> components() {
+      return options;
+    }
+
     @Nonnull
     @Override
     protected StepResult subtractionStep(PAlternative alternative) {
+      if (alternative instanceof PAlternative.Any) {
+        return handleAny();
+      }
+        
       Iterator<Lazy<Simple>> iterator = options.iterator();
       StepResult result = new StepResult();
       while (iterator.hasNext()) {

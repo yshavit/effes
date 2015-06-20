@@ -11,7 +11,7 @@ import com.yuvalshavit.util.Lazy;
 
 class StepResult {
   private PPossibility matched = null;
-  private final Collection<Lazy<PPossibility.Simple>> unmatched = new ArrayList<>();
+  private final Collection<Lazy<? extends PPossibility>> unmatched = new ArrayList<>();
   
   public boolean noneMatched() {
     return matched == null;
@@ -28,11 +28,11 @@ class StepResult {
   }
   
   @Nonnull
-  public Collection<Lazy<PPossibility.Simple>> getUnmatched() {
+  public Collection<Lazy<? extends PPossibility>> getUnmatched() {
     return unmatched;
   }
 
-  public void addUnmatched(Lazy<PPossibility.Simple> unmatched) {
+  public void addUnmatched(Lazy<? extends PPossibility> unmatched) {
     this.unmatched.add(unmatched);
   }
   
@@ -45,7 +45,7 @@ class StepResult {
     this.matched = matched;
   }
 
-  public void addUnmatched(Collection<Lazy<PPossibility.Simple>> unmatched) {
+  public void addUnmatched(Collection<? extends Lazy<? extends PPossibility>> unmatched) {
     this.unmatched.addAll(unmatched);
   }
 

@@ -1,10 +1,13 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.yuvalshavit.effes.compile.pmatch.PAlternative.*;
+import static com.yuvalshavit.effes.compile.pmatch.PAlternative.Builder;
+import static com.yuvalshavit.effes.compile.pmatch.PAlternative.any;
+import static com.yuvalshavit.effes.compile.pmatch.PAlternative.simple;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -16,7 +19,9 @@ import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -99,13 +104,10 @@ public class PCaseTest {
     disjunctionV(
       singleV(cons,
         singleV(tFalse),
-        singleV(tEmpty)
-      ),
-      singleV(cons,
-        singleV(tFalse),
-        singleV(cons,
+        disjunctionV(
           unforcedV(),
-          unforcedV())
+          unforcedV()
+        )
       ),
       unforcedV()
     ).validate(result);
@@ -312,20 +314,17 @@ public class PCaseTest {
           List<Lazy<PPossibility.Simple>> options = actualDisjunction.options();
           assertEquals(options.size(), alternatives.length);
           // ensure that each validator works on exactly one option
-          int[] matchesPerAlternative = new int[alternatives.length];
-          for (int i = 0; i < alternatives.length; ++i) {
+          for (Validator alternative : alternatives) {
+            ValidationResults validationResults = new ValidationResults();
             for (Lazy<PPossibility.Simple> option : options) {
               try {
-                alternatives[i].validate(option);
-                matchesPerAlternative[i]++;
+                alternative.validate(option);
+                validationResults.succeeded.add(alternative);
               } catch (AssertionError e) {
-                // ignore
+                validationResults.failed.add(alternative);
               }
             }
-          }
-          for (int i = 0; i < matchesPerAlternative.length; i++) {
-            int match = matchesPerAlternative[i];
-            assertEquals(match, 1, "for alternative " + alternatives[i]);
+            assertTrue(validationResults.exactlyOneSuccess(), "results for alternative " + alternative + ": "+ validationResults);
           }
           EfCollections.zipC(asList(alternatives), options, Validator::validate);
         }));
@@ -349,7 +348,6 @@ public class PCaseTest {
     private final EfType.SimpleType cons;
     private final EfType.DisjunctiveType list;
     private final Function<EfType, Function<EfType.GenericType, EfType>> reification;
-
     public ListTypes(EfType.SimpleType cons, EfType.DisjunctiveType list, Function<EfType, Function<EfType.GenericType, EfType>> reification) {
       this.cons = cons;
       this.list = list;
@@ -364,6 +362,20 @@ public class PCaseTest {
     EfType.DisjunctiveType list(EfType genericArg) {
       checkNotNull(genericArg);
       return list.reify(reification.apply(genericArg));
+    }
+  }
+
+  private static class ValidationResults {
+    final Collection<Validator> succeeded = new HashSet<>();
+    final Collection<Validator> failed = new HashSet<>();
+
+    public boolean exactlyOneSuccess() {
+      return succeeded.size() == 1;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("successes=%s, failures=%s", succeeded, failed);
     }
   }
 }
