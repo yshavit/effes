@@ -88,11 +88,9 @@ public class PCaseTest {
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
-    PAlternative secondIsTrue = simple(
-      cons,
+    PAlternative secondIsTrue = simple(cons,
       any(),
-      simple(
-        cons,
+      simple(cons,
         mTrue(),
         any())
     ).build(ctors);
@@ -127,10 +125,8 @@ public class PCaseTest {
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative firstIsTrue = simple(snoc, mTrue(), any()).build(ctors);
-    PAlternative secondIsTrue = simple(
-      snoc,
-      simple(
-        snoc,
+    PAlternative secondIsTrue = simple(snoc,
+      simple(snoc,
         any(),
         mTrue()),
       any()
