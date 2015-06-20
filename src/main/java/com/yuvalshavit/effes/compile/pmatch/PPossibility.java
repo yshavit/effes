@@ -162,7 +162,9 @@ public abstract class PPossibility {
 
     @Override
     public Collection<Lazy<Simple>> components() {
-      return Collections.singletonList(Lazy.forced(this));
+      return Collections.singletonList(value.isUnforced()
+        ? Lazy.lazy(() -> this)
+        : Lazy.forced(this));
     }
 
     @Nonnull
