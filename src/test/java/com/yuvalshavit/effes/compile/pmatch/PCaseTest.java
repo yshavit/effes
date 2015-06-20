@@ -100,7 +100,14 @@ public class PCaseTest {
         mTrue(),
         any())
     ).build(ctors);
-
+    PAlternative twoFalses = simple(cons,
+      simple(tFalse),
+      simple(cons,
+        simple(tFalse),
+        any())
+    ).build(ctors);
+    PAlternative empty = simple(tEmpty).build(ctors);
+    
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
       singleV(cons,
@@ -112,7 +119,33 @@ public class PCaseTest {
     assertNotNull(result);
     
     PPossibility second = result.minus(secondIsTrue);
-    fail("validate somehow that it's [False, False, _]: " + second);
+    fail("do more validations");
+    PPossibility third = second.minus(twoFalses);
+    PPossibility last = third.minus(empty);
+  }
+
+  @Test
+  public void listPatternStartsWithTwoWildcardsInCons() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType.SimpleType cons = listTypes.cons(tBool);
+    EfType.DisjunctiveType list = listTypes.list(tBool);
+
+    PPossibility boolsPossibility = PPossibility.from(list, ctors);
+    PAlternative doubleWilds = simple(cons, any(), any()).build(ctors);
+    PPossibility result = boolsPossibility.minus(doubleWilds);
+    fail("validate " + result);
+  }
+
+  @Test
+  public void listPatternStartsWithWildcard() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType.SimpleType cons = listTypes.cons(tBool);
+    EfType.DisjunctiveType list = listTypes.list(tBool);
+
+    PPossibility boolsPossibility = PPossibility.from(list, ctors);
+    PAlternative fullyWild = any().build(ctors);
+    PPossibility result = boolsPossibility.minus(fullyWild);
+    noneV().validate(result);
   }
   
   @Test
@@ -333,6 +366,10 @@ public class PCaseTest {
   
   private static Validator unforcedV() {
     return new Validator(Lazy.UNFORCED_DESC, actual -> assertTrue(actual.isUnforced(), "should have been unforced: " + actual));
+  }
+  
+  private static Validator noneV() {
+    return new Validator(PPossibility.none.toString(), forced(PPossibility.none::equals));
   }
 
   private static EfType.SimpleType createSimple(String name, CtorRegistry ctors) {
