@@ -180,7 +180,7 @@ public class PCaseTest {
   }
 
   @Test
-  public void listOfMaybies() {
+  public void listOfMaybes() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
 
     Function<EfType.GenericType, EfType> boolReifiction = EfFunctions.fromGuava(
