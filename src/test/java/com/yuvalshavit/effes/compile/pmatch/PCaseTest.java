@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -196,6 +195,15 @@ public class PCaseTest {
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
+    //           []                             = Empty
+    //
+    // because of laziness, this comes out as: 
+    // Cons(One(_) , _)                             = Cons(..., ...)
+    //                                              | Cons(..., Cons(... | ..., ...))
+    // Cons(Nothing, Cons(_, Cons(Nothing, _)))     = Cons(..., Cons(... | ..., Cons(Nothing, ... | ...)))
+    // Cons(Nothing, Cons(_, Cons(One(False), _)))  = Cons(..., Cons(... | ..., Cons(One(False), ... | ...)))
+    // Empty                                        = ...
+    
     PAlternative case0 = simple(cons,
       simple(tNothing),
       simple(cons,
@@ -212,27 +220,28 @@ public class PCaseTest {
 
     disjunctionV(
       singleV(cons,
-        singleV(
-          tOneBool,
-          unforcedV()),
+        unforcedV(),
         unforcedV()),
       singleV(cons,
-        singleV(tNothing),
+        unforcedV(),
         singleV(cons,
-          unforcedV(),
+            unforcedDisjunctionV(2),
+            unforcedV())),
+      singleV(cons,
+        unforcedV(),
+        singleV(cons,
+          unforcedDisjunctionV(2),
           singleV(cons,
             singleV(tNothing),
-            unforcedV()))),
-      singleV(
-        cons,
-        singleV(tNothing),
+            unforcedDisjunctionV(2)))),
+      singleV(cons,
+        unforcedV(),
         singleV(cons,
-          unforcedV(),
+          unforcedDisjunctionV(2),
           singleV(cons,
-            singleV(
-              tOneBool,
-              singleV(tFalse)),
-            unforcedV())))
+            singleV(tOneBool, singleV(tFalse)),
+            unforcedDisjunctionV(2)))),
+      unforcedV()
     ).validate(afterCase0);
   }
   
@@ -321,9 +330,9 @@ public class PCaseTest {
           assertThat(actual, instanceOf(PPossibility.Simple.class));
           PPossibility.Simple actualSimple = (PPossibility.Simple) actual;
           assertFalse(actualSimple.typedAndArgs().isUnforced(), "not forced");
-          TypedValue<PPossibility> typedvalue = actualSimple.typedAndArgs().get();
-          assertThat(typedvalue.type(), equalTo(type));
-          typedvalue.consume(
+          TypedValue<PPossibility> typedValue = actualSimple.typedAndArgs().get();
+          assertThat(typedValue.type(), equalTo(type));
+          typedValue.consume(
             l -> assertEquals(args.length, 0), s -> {
               assertEquals(s.args().size(), args.length);
               EfCollections.zipC(asList(args), s.args(), Validator::validate);
@@ -346,9 +355,9 @@ public class PCaseTest {
             for (Lazy<PPossibility.Simple> option : options) {
               try {
                 alternative.validate(option);
-                validationResults.succeeded.add(alternative);
+                validationResults.succeeded.add(option);
               } catch (AssertionError e) {
-                validationResults.failed.add(alternative);
+                validationResults.failed.add(option);
               }
             }
             assertTrue(validationResults.exactlyOneSuccess(), "results for alternative " + alternative + ": "+ validationResults);
@@ -404,8 +413,8 @@ public class PCaseTest {
   }
 
   private static class ValidationResults {
-    final Collection<Validator> succeeded = new HashSet<>();
-    final Collection<Validator> failed = new HashSet<>();
+    final Collection<Lazy<PPossibility.Simple>> succeeded = new ArrayList<>();
+    final Collection<Lazy<PPossibility.Simple>> failed = new ArrayList<>();
 
     public boolean exactlyOneSuccess() {
       return succeeded.size() == 1;
@@ -413,7 +422,7 @@ public class PCaseTest {
 
     @Override
     public String toString() {
-      return String.format("successes=%s, failures=%s", succeeded, failed);
+      return String.format("matched=%s, failed=%s", succeeded, failed);
     }
   }
 }
