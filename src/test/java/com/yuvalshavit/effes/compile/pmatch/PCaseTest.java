@@ -4,11 +4,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.Builder;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.any;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.simple;
+import static com.yuvalshavit.util.EfMatchers.isUnforced;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -113,7 +115,7 @@ public class PCaseTest {
         singleV(tFalse),
         unforcedDisjunctionV(2)
       ),
-      unforcedV()
+      singleV(tEmpty)
     ).validate(result);
     assertNotNull(result);
     
@@ -329,8 +331,7 @@ public class PCaseTest {
         actual -> {
           assertThat(actual, instanceOf(PPossibility.Simple.class));
           PPossibility.Simple actualSimple = (PPossibility.Simple) actual;
-          assertFalse(actualSimple.typedAndArgs().isUnforced(), "not forced");
-          TypedValue<PPossibility> typedValue = actualSimple.typedAndArgs().get();
+          TypedValue<Lazy<PPossibility>> typedValue = actualSimple.typedAndArgs();
           assertThat(typedValue.type(), equalTo(type));
           typedValue.consume(
             l -> assertEquals(args.length, 0),
@@ -382,7 +383,10 @@ public class PCaseTest {
       PPossibility possibility = actual.get();
       assertThat(possibility, instanceOf(PPossibility.Simple.class));
       PPossibility.Simple simple = (PPossibility.Simple) possibility;
-      assertTrue(simple.typedAndArgs().isUnforced(), "type is unforced");
+      simple.typedAndArgs().consume(
+        l -> {},
+        s -> assertThat(s.args(), everyItem(isUnforced()))
+      );
     });
   }
   

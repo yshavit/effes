@@ -102,22 +102,19 @@ public abstract class PPossibility {
   }
 
   private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
-    Lazy<TypedValue<PPossibility>> value;
+    TypedValue<Lazy<PPossibility>> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
-      value = Lazy.forced(new TypedValue.LargeDomainValue<>(type));
+      value = new TypedValue.LargeDomainValue<>(type);
       argNames = Collections.emptyList();
     } else {
       List<EfVar> ctorVars = ctors.get(type, type.getReification());
-      value = Lazy.lazy(
-        () -> {
-          List<PPossibility> args  = new ArrayList<>(ctorVars.size());
-          for (EfVar ctorVar : ctorVars) {
-            args.add(from(ctorVar.getType(), ctors));
-          }
-          return new TypedValue.StandardValue<>(type, args);
-        });
-        argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
+      List<Lazy<PPossibility>> args  = new ArrayList<>(ctorVars.size());
+      for (EfVar ctorVar : ctorVars) {
+        args.add(Lazy.lazy(() -> from(ctorVar.getType(), ctors)));
+      }
+      value = new TypedValue.StandardValue<>(type, args);
+      argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
     }
     return new Simple(value, argNames);
   }
@@ -152,19 +149,17 @@ public abstract class PPossibility {
   };
 
   static class Simple extends PPossibility {
-    private final Lazy<TypedValue<PPossibility>> value;
+    private final TypedValue<Lazy<PPossibility>> value;
     private final List<String> argNames;
 
-    private Simple(Lazy<TypedValue<PPossibility>> value, List<String> argNames) {
+    private Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
       this.value = value;
       this.argNames = argNames;
     }
 
     @Override
     public Collection<Lazy<Simple>> components() {
-      return Collections.singletonList(value.isUnforced()
-        ? Lazy.lazy(() -> this)
-        : Lazy.forced(this));
+      return Collections.singletonList(Lazy.forced(this));
     }
 
     @Nonnull
@@ -175,7 +170,7 @@ public abstract class PPossibility {
       }
       PAlternative.Simple simpleAlternative = (PAlternative.Simple) alternative;
       TypedValue<PAlternative> simpleValue = simpleAlternative.value();
-      TypedValue<PPossibility> forcedPossible = this.value.get();
+      TypedValue<Lazy<PPossibility>> forcedPossible = this.value;
       if (!forcedPossible.type().equals(simpleValue.type())) {
         StepResult r = new StepResult();
         r.addUnmatched(this);
@@ -191,22 +186,22 @@ public abstract class PPossibility {
     }
 
     @VisibleForTesting
-    Lazy<TypedValue<PPossibility>> typedAndArgs() {
+    TypedValue<Lazy<PPossibility>> typedAndArgs() {
       return value;
     }
 
-    private StepResult doSubtract(TypedValue.StandardValue<PPossibility> possibility, TypedValue.StandardValue<PAlternative> alternative) {
+    private StepResult doSubtract(TypedValue.StandardValue<Lazy<PPossibility>> possibility, TypedValue.StandardValue<PAlternative> alternative) {
       // given Answer = True | False | Error(reason: Unknown | String)
       // t : Cons(head: Answer, tail: List[Answer])
       //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
-      List<PPossibility> possibleArgs = possibility.args();
+      List<Lazy<PPossibility>> possibleArgs = possibility.args();
       List<PAlternative> alternativeArgs = alternative.args();
       int nArgs = possibleArgs.size();
       assert nArgs == alternativeArgs.size() : String.format("different sizes: %s <~> %s", possibleArgs, alternativeArgs);
       
       List<StepResult> resultArgs = new ArrayList<>(nArgs);
       for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
-        PPossibility possibleArg = possibleArgs.get(argIdxMutable);
+        PPossibility possibleArg = possibleArgs.get(argIdxMutable).get();
         PAlternative alternativeArg = alternativeArgs.get(argIdxMutable);
         StepResult argStep = possibleArg.subtractionStep(alternativeArg);
         if (argStep.noneMatched()) {
@@ -236,7 +231,7 @@ public abstract class PPossibility {
         Collection<List<PPossibility>> tmp = new ArrayList<>();
         for (List<PPossibility> prevArgs : expoded) {
           for (Lazy<? extends PPossibility> newArg : arg.getUnmatched()) {
-            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.<PPossibility>singleton(newArg.get()))));
+            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(newArg.get()))));
           }
         }
         expoded = tmp;
@@ -250,19 +245,16 @@ public abstract class PPossibility {
     }
 
     private Simple createSimilarPossibility(List<PPossibility> args) {
-      TypedValue<PPossibility> resultValue = new TypedValue.StandardValue<>(value.get().type(), args);
-      return new Simple(Lazy.forced(resultValue), argNames);
+      TypedValue<Lazy<PPossibility>> resultValue = new TypedValue.StandardValue<>(value.type(), Lists.transform(args, Lazy::forced));
+      return new Simple(resultValue, argNames);
     }
 
     @Override
     public String toString(boolean verbose) {
-      if (value.isUnforced()) {
-        return Lazy.UNFORCED_DESC;
-      }
-      return value.get().transform(
+      return value.transform(
         large -> toString(large.type(), verbose),
         std -> {
-          List<PPossibility> args = std.args();
+          List<Lazy<PPossibility>> args = std.args();
           if (args.isEmpty()) {
             return toString(std.type(), verbose);
           } else {
