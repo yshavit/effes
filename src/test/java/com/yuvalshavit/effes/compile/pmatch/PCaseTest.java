@@ -333,7 +333,8 @@ public class PCaseTest {
           TypedValue<PPossibility> typedValue = actualSimple.typedAndArgs().get();
           assertThat(typedValue.type(), equalTo(type));
           typedValue.consume(
-            l -> assertEquals(args.length, 0), s -> {
+            l -> assertEquals(args.length, 0),
+            s -> {
               assertEquals(s.args().size(), args.length);
               EfCollections.zipC(asList(args), s.args(), Validator::validate);
             });
@@ -360,7 +361,7 @@ public class PCaseTest {
                 validationResults.failed.add(option);
               }
             }
-            assertTrue(validationResults.exactlyOneSuccess(), "results for alternative " + alternative + ": "+ validationResults);
+            assertTrue(validationResults.exactlyOneSuccess(), "results for alternative " + alternative + ": " + validationResults);
           }
           EfCollections.zipC(asList(alternatives), options, Validator::validate);
         }));
@@ -374,7 +375,15 @@ public class PCaseTest {
   }
   
   private static Validator unforcedV() {
-    return new Validator(Lazy.UNFORCED_DESC, actual -> assertTrue(actual.isUnforced(), "should have been unforced: " + actual));
+    return new Validator(Lazy.UNFORCED_DESC, actual -> {
+      if (actual.isUnforced()) {
+        return;
+      }
+      PPossibility possibility = actual.get();
+      assertThat(possibility, instanceOf(PPossibility.Simple.class));
+      PPossibility.Simple simple = (PPossibility.Simple) possibility;
+      assertTrue(simple.typedAndArgs().isUnforced(), "type is unforced");
+    });
   }
   
   private static Validator noneV() {
