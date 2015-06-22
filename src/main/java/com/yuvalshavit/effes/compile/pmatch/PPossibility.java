@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -293,7 +294,9 @@ public abstract class PPossibility {
 
     @Override
     public Collection<Lazy<Simple>> components() {
-      return options;
+      List<Lazy<Simple>> r = new ArrayList<>(this.options);
+      r.sort(Comparator.comparing(Functions.toStringFunction()::apply));
+      return Collections.unmodifiableList(r);
     }
 
     @Nonnull

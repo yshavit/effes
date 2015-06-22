@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -35,6 +34,7 @@ import org.testng.internal.collections.Pair;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
@@ -52,9 +52,8 @@ public class PCaseTest {
     assertThat(possibility, instanceOf(PPossibility.Simple.class));
     PPossibility.Simple simple = (PPossibility.Simple) possibility;
     simple.typedAndArgs().consume(
-      l -> {
-      },
-      s -> assertThat(s.args(), everyItem(isUnforced()))
+      EfFunctions.emptyConsumer(),
+      s -> assertThat(simple.toString(true), s.args(), everyItem(isUnforced()))
     );
   });
   
@@ -216,10 +215,10 @@ public class PCaseTest {
     //           []                             = Empty
     //
     // because of laziness, this comes out as: 
-    // Cons(One(_) , _)                             = Cons(..., ...)
-    //                                              | Cons(..., Cons(... | ..., ...))
-    // Cons(Nothing, Cons(_, Cons(Nothing, _)))     = Cons(..., Cons(... | ..., Cons(Nothing, ... | ...)))
-    // Cons(Nothing, Cons(_, Cons(One(False), _)))  = Cons(..., Cons(... | ..., Cons(One(False), ... | ...)))
+    // Cons(One(_) , _)                             = Cons(... | ..., ...)
+    //                                              | Cons(... | ..., Cons(... | ..., ...))
+    // Cons(Nothing, Cons(_, Cons(Nothing, _)))     = Cons(... | ..., Cons(... | ..., Cons(Nothing, ... | ...)))
+    // Cons(Nothing, Cons(_, Cons(One(False), _)))  = Cons(... | ..., Cons(... | ..., Cons(One(False), ... | ...)))
     // Empty                                        = ...
     
     PAlternative case0 = simple(cons,
@@ -238,22 +237,23 @@ public class PCaseTest {
 
     disjunctionV(
       singleV(cons,
-        unforcedV(),
-        unforcedV()),
+        unforcedDisjunctionV(2),
+        unforcedDisjunctionV(2)),
       singleV(cons,
-        unforcedV(),
+        unforcedDisjunctionV(2),
+        unforcedDisjunctionV(2)),
         singleV(cons,
             unforcedDisjunctionV(2),
-            unforcedV())),
+            unforcedDisjunctionV(2)),
       singleV(cons,
-        unforcedV(),
+        unforcedDisjunctionV(2),
         singleV(cons,
           unforcedDisjunctionV(2),
           singleV(cons,
             singleV(tNothing),
             unforcedDisjunctionV(2)))),
       singleV(cons,
-        unforcedV(),
+        unforcedDisjunctionV(2),
         singleV(cons,
           unforcedDisjunctionV(2),
           singleV(cons,
@@ -385,7 +385,7 @@ public class PCaseTest {
               throw new AssertionError(
                 new MultiException(
                   "results for alternative " + alternative + ": " + validationResults,
-                  validationResults.failed.stream().map(Pair::first).iterator()));
+                  Collections2.transform(validationResults.failed, Pair::first)));
             }
           }
           EfCollections.zipC(asList(alternatives), options, Validator::validate);
@@ -393,9 +393,9 @@ public class PCaseTest {
   }
   
   private static class MultiException extends RuntimeException {
-    public MultiException(String message, Iterator<? extends Throwable> causes) {
+    public MultiException(String message, Iterable<? extends Throwable> causes) {
       super(message);
-      causes.forEachRemaining(this::addSuppressed);
+      causes.forEach(this::addSuppressed);
     }
   }
   
@@ -455,7 +455,7 @@ public class PCaseTest {
 
     @Override
     public String toString() {
-      return String.format("matched=%s, failed=%s", succeeded, failed);
+      return String.format("matched=%s, failed=%s", succeeded, Collections2.transform(failed, Pair::second));
     }
   }
 }
