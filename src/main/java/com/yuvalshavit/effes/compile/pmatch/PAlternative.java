@@ -142,9 +142,9 @@ public abstract class PAlternative {
         s -> {
           List<PAlternative> args = s.args();
           if (args.isEmpty()) {
-            return s.type().toString();
+            return s.type().getName();
           } else {
-            StringBuilder sb = new StringBuilder(s.type().toString()).append('(');
+            StringBuilder sb = new StringBuilder(s.type().getName()).append('(');
             return Joiner.on(", ").appendTo(sb, args).append(')').toString();
           }
         });
