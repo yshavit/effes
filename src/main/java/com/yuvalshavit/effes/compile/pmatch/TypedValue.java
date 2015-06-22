@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.google.common.base.Joiner;
 import com.yuvalshavit.effes.compile.node.EfType;
 
 public abstract class TypedValue<T> {
@@ -39,6 +40,8 @@ public abstract class TypedValue<T> {
         return null;
       });
   }
+  
+  @Override public abstract String toString();
 
   /**
    * A value with a "large" domain, which makes it unfeasible (or unhelpful) to actually look at its values.
@@ -56,6 +59,11 @@ public abstract class TypedValue<T> {
       Function<? super StandardValue<T>, ? extends R> whenStandardValue)
     {
       return whenLargeDomainValue.apply(this);
+    }
+
+    @Override
+    public String toString() {
+      return type().getName();
     }
   }
 
@@ -81,6 +89,11 @@ public abstract class TypedValue<T> {
       Function<? super StandardValue<T>, ? extends R> whenStandardValue)
     {
       return whenStandardValue.apply(this);
+    }
+
+    @Override
+    public String toString() {
+      return type().getName() + '(' + Joiner.on(", ").join(args) + ')'; 
     }
   }
 }

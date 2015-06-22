@@ -171,13 +171,12 @@ public abstract class PPossibility {
       }
       PAlternative.Simple simpleAlternative = (PAlternative.Simple) alternative;
       TypedValue<PAlternative> simpleValue = simpleAlternative.value();
-      TypedValue<Lazy<PPossibility>> forcedPossible = this.value;
-      if (!forcedPossible.type().equals(simpleValue.type())) {
+      if (!this.value.type().equals(simpleValue.type())) {
         StepResult r = new StepResult();
         r.addUnmatched(this);
         return r;
       }
-      return forcedPossible.transform(
+      return this.value.transform(
         p -> large(),
         p -> simpleValue.transform(
           s -> large(), // ditto re decorating the result
@@ -219,23 +218,30 @@ public abstract class PPossibility {
     }
 
     private Collection<PPossibility> fromUnmatchedArgs(List<StepResult> resultArgs) {
-      Collection<List<PPossibility>> expoded = new ArrayList<>();
+      Collection<List<ExplodeArg>> expoded = new ArrayList<>();
       Iterator<StepResult> iter = resultArgs.iterator();
       if (!iter.hasNext()) {
         return Collections.emptyList();
       }
-      expoded.addAll(Collections2.transform(iter.next().getUnmatched(), Collections::singletonList));
+      StepResult firstArgResults = iter.next();
+      expoded.addAll(Collections2.transform(firstArgResults.getUnmatched(), unmatched -> Collections.singletonList(new ExplodeArg(unmatched, false))));
+      expoded.add(Collections.singletonList(new ExplodeArg(firstArgResults.getOnlyMatched(), true)));
       while (iter.hasNext()) {
         StepResult arg = iter.next();
-        Collection<List<PPossibility>> tmp = new ArrayList<>();
-        for (List<PPossibility> prevArgs : expoded) {
+        Collection<List<ExplodeArg>> tmp = new ArrayList<>();
+        for (List<ExplodeArg> prevArgs : expoded) {
           for (PPossibility newArg : arg.getUnmatched()) {
-            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(newArg))));
+            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(new ExplodeArg(newArg, false)))));
           }
         }
         expoded = tmp;
       }
-      return Collections2.transform(expoded, this::createSimilarPossibility);
+      // remove all the ones that contain only matched args
+      Collection<List<PPossibility>> unmatchedArgCombos = expoded.stream()
+        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
+        .map(args -> Lists.transform(args, ExplodeArg::value))
+        .collect(Collectors.toList());
+      return Collections2.transform(unmatchedArgCombos, this::createSimilarPossibility);
     }
 
     private PPossibility fromMatchedArgs(List<StepResult> resultArgs) {
@@ -325,6 +331,24 @@ public abstract class PPossibility {
     public String toString(boolean verbose) {
       List<String> verboseOptions = Lists.transform(options, s -> s.toString(verbose));
       return Joiner.on(" | ").join(verboseOptions);
+    }
+  }
+
+  private static class ExplodeArg {
+    private final PPossibility possibility;
+    private final boolean fromMatched;
+
+    public ExplodeArg(PPossibility possibility, boolean fromMatched) {
+      this.possibility = possibility;
+      this.fromMatched = fromMatched;
+    }
+
+    public PPossibility value() {
+      return possibility;
+    }
+
+    public boolean notFromMatched() {
+      return ! fromMatched;
     }
   }
 }
