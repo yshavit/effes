@@ -16,7 +16,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
@@ -24,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -42,6 +43,21 @@ import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Lazy;
 
 public class PCaseTest {
+  private static final Validator UNFORCED_VALIDATOR = new Validator(
+    Lazy.UNFORCED_DESC, actual -> {
+    if (actual.isUnforced()) {
+      return;
+    }
+    PPossibility possibility = actual.get();
+    assertThat(possibility, instanceOf(PPossibility.Simple.class));
+    PPossibility.Simple simple = (PPossibility.Simple) possibility;
+    simple.typedAndArgs().consume(
+      l -> {
+      },
+      s -> assertThat(s.args(), everyItem(isUnforced()))
+    );
+  });
+  
   private final EfType.SimpleType tTrue;
   private final EfType.SimpleType tFalse;
   private final EfType.DisjunctiveType tBool;
@@ -359,13 +375,28 @@ public class PCaseTest {
                 alternative.validate(option);
                 validationResults.succeeded.add(option);
               } catch (AssertionError e) {
-                validationResults.failed.add(option);
+                validationResults.failed.add(new Pair<>(e, option));
               }
             }
-            assertTrue(validationResults.exactlyOneSuccess(), "results for alternative " + alternative + ": " + validationResults);
+            // special case: unforced validators can match multiple unforced options
+            if (!validationResults.exactlyOneSuccess()
+              && !(UNFORCED_VALIDATOR.equals(alternative) && validationResults.succeeded.stream().allMatch(Lazy::isUnforced)))
+            {
+              throw new AssertionError(
+                new MultiException(
+                  "results for alternative " + alternative + ": " + validationResults,
+                  validationResults.failed.stream().map(Pair::first).iterator()));
+            }
           }
           EfCollections.zipC(asList(alternatives), options, Validator::validate);
         }));
+  }
+  
+  private static class MultiException extends RuntimeException {
+    public MultiException(String message, Iterator<? extends Throwable> causes) {
+      super(message);
+      causes.forEachRemaining(this::addSuppressed);
+    }
   }
   
   private static Validator unforcedDisjunctionV(int n) {
@@ -376,18 +407,7 @@ public class PCaseTest {
   }
   
   private static Validator unforcedV() {
-    return new Validator(Lazy.UNFORCED_DESC, actual -> {
-      if (actual.isUnforced()) {
-        return;
-      }
-      PPossibility possibility = actual.get();
-      assertThat(possibility, instanceOf(PPossibility.Simple.class));
-      PPossibility.Simple simple = (PPossibility.Simple) possibility;
-      simple.typedAndArgs().consume(
-        l -> {},
-        s -> assertThat(s.args(), everyItem(isUnforced()))
-      );
-    });
+    return UNFORCED_VALIDATOR;
   }
   
   private static Validator noneV() {
@@ -426,8 +446,8 @@ public class PCaseTest {
   }
 
   private static class ValidationResults {
-    final Collection<Lazy<PPossibility.Simple>> succeeded = new ArrayList<>();
-    final Collection<Lazy<PPossibility.Simple>> failed = new ArrayList<>();
+    final Collection<Lazy<PPossibility.Simple>> succeeded = new HashSet<>();
+    final Collection<Pair<AssertionError, Lazy<PPossibility.Simple>>> failed = new ArrayList<>();
 
     public boolean exactlyOneSuccess() {
       return succeeded.size() == 1;
