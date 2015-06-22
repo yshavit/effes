@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
@@ -40,16 +41,15 @@ public abstract class PPossibility {
       return null;
     }
     result.getOnlyMatched(); // confirm that there's only the one
-    Collection<Lazy<? extends PPossibility>> remaining = result.getUnmatched();
-    List<Lazy<Simple>> remainingSimples = remaining.stream()
-      .map(Lazy::get)
+    Collection<PPossibility> remaining = Collections2.transform(result.getUnmatched(), Lazy::get); // TODO make getUnmatched just return the forced type?
+    List<Simple> remainingSimples = remaining.stream()
       .map(PPossibility::components)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
     if (remainingSimples.isEmpty()) {
       return none;
     } else if (remainingSimples.size() == 1) {
-      return Iterables.getOnlyElement(remaining).get();
+      return Iterables.getOnlyElement(remaining);
     } else {
       return new PPossibility.Disjunction(remainingSimples);
     }
@@ -60,7 +60,7 @@ public abstract class PPossibility {
   
   public abstract String toString(boolean verbose);
   
-  public abstract Collection<Lazy<Simple>> components();
+  public abstract Collection<Simple> components();
 
   @Override
   public String toString() {
@@ -91,9 +91,9 @@ public abstract class PPossibility {
           return PPossibility.none;
         }
       }
-      List<Lazy<Simple>> possibilities = simpleAlternatives
+      List<Simple> possibilities = simpleAlternatives
         .stream()
-        .map(t -> Lazy.lazy(() -> fromSimple(t, ctors)))
+        .map(t -> fromSimple(t, ctors))
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
@@ -144,7 +144,7 @@ public abstract class PPossibility {
     }
 
     @Override
-    public Collection<Lazy<Simple>> components() {
+    public Collection<Simple> components() {
       return Collections.emptyList();
     }
   };
@@ -159,8 +159,8 @@ public abstract class PPossibility {
     }
 
     @Override
-    public Collection<Lazy<Simple>> components() {
-      return Collections.singletonList(Lazy.forced(this));
+    public Collection<Simple> components() {
+      return Collections.singletonList(this);
     }
 
     @Nonnull
@@ -282,19 +282,20 @@ public abstract class PPossibility {
   }
   
   static class Disjunction extends PPossibility {
-    private final List<Lazy<PPossibility.Simple>> options;
+    private final List<PPossibility.Simple> options;
 
-    private Disjunction(Collection<Lazy<Simple>> options) {
+    private Disjunction(Collection<Simple> options) {
+      checkArgument(options.size() > 1, options);
       this.options = new ArrayList<>(options);
     }
 
-    public List<Lazy<Simple>> options() {
+    public List<Simple> options() {
       return options;
     }
 
     @Override
-    public Collection<Lazy<Simple>> components() {
-      List<Lazy<Simple>> r = new ArrayList<>(this.options);
+    public Collection<Simple> components() {
+      List<Simple> r = new ArrayList<>(this.options);
       r.sort(Comparator.comparing(Functions.toStringFunction()::apply));
       return Collections.unmodifiableList(r);
     }
@@ -306,11 +307,11 @@ public abstract class PPossibility {
         return handleAny();
       }
         
-      Iterator<Lazy<Simple>> iterator = options.iterator();
+      Iterator<Simple> iterator = options.iterator();
       StepResult result = new StepResult();
       while (iterator.hasNext()) {
-        Lazy<Simple> lazyOption = iterator.next();
-        StepResult step = lazyOption.get().subtractionStep(alternative);
+        Simple lazyOption = iterator.next();
+        StepResult step = lazyOption.subtractionStep(alternative);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
           result.setMatched(step.getOnlyMatched());
@@ -324,7 +325,7 @@ public abstract class PPossibility {
 
     @Override
     public String toString(boolean verbose) {
-      List<Lazy<String>> verboseOptions = Lists.transform(options, o -> o.transform(s -> s.toString(verbose)));
+      List<String> verboseOptions = Lists.transform(options, s -> s.toString(verbose));
       return Joiner.on(" | ").join(verboseOptions);
     }
   }

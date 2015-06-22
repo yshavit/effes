@@ -365,12 +365,12 @@ public class PCaseTest {
         actual -> {
           assertThat(actual, instanceOf(PPossibility.Disjunction.class));
           PPossibility.Disjunction actualDisjunction = (PPossibility.Disjunction) actual;
-          List<Lazy<PPossibility.Simple>> options = actualDisjunction.options();
+          List<PPossibility.Simple> options = actualDisjunction.options();
           assertEquals(options.size(), alternatives.length);
           // ensure that each validator works on exactly one option
           for (Validator alternative : alternatives) {
             ValidationResults validationResults = new ValidationResults();
-            for (Lazy<PPossibility.Simple> option : options) {
+            for (PPossibility.Simple option : options) {
               try {
                 alternative.validate(option);
                 validationResults.succeeded.add(option);
@@ -379,9 +379,7 @@ public class PCaseTest {
               }
             }
             // special case: unforced validators can match multiple unforced options
-            if (!validationResults.exactlyOneSuccess()
-              && !(UNFORCED_VALIDATOR.equals(alternative) && validationResults.succeeded.stream().allMatch(Lazy::isUnforced)))
-            {
+            if (!validationResults.exactlyOneSuccess() && !(UNFORCED_VALIDATOR.equals(alternative) /* && all are unforced... ? */)) {
               throw new AssertionError(
                 new MultiException(
                   "results for alternative " + alternative + ": " + validationResults,
@@ -446,8 +444,8 @@ public class PCaseTest {
   }
 
   private static class ValidationResults {
-    final Collection<Lazy<PPossibility.Simple>> succeeded = new HashSet<>();
-    final Collection<Pair<AssertionError, Lazy<PPossibility.Simple>>> failed = new ArrayList<>();
+    final Collection<PPossibility.Simple> succeeded = new HashSet<>();
+    final Collection<Pair<AssertionError, PPossibility.Simple>> failed = new ArrayList<>();
 
     public boolean exactlyOneSuccess() {
       return succeeded.size() == 1;
