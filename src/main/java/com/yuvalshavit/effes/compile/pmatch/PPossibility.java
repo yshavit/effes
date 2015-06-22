@@ -41,7 +41,7 @@ public abstract class PPossibility {
       return null;
     }
     result.getOnlyMatched(); // confirm that there's only the one
-    Collection<PPossibility> remaining = Collections2.transform(result.getUnmatched(), Lazy::get); // TODO make getUnmatched just return the forced type?
+    Collection<PPossibility> remaining = result.getUnmatched(); // TODO make getUnmatched just return the forced type?
     List<Simple> remainingSimples = remaining.stream()
       .map(PPossibility::components)
       .flatMap(Collection::stream)
@@ -70,7 +70,7 @@ public abstract class PPossibility {
   protected final StepResult handleAny() {
     StepResult r = new StepResult();
     r.setMatched(this);
-    r.addUnmatched(Lazy.forced(this));
+    r.addUnmatched(this);
     return r;
   }
 
@@ -218,26 +218,24 @@ public abstract class PPossibility {
       return result;
     }
 
-    private Collection<Lazy<PPossibility>> fromUnmatchedArgs(List<StepResult> resultArgs) {
+    private Collection<PPossibility> fromUnmatchedArgs(List<StepResult> resultArgs) {
       Collection<List<PPossibility>> expoded = new ArrayList<>();
       Iterator<StepResult> iter = resultArgs.iterator();
       if (!iter.hasNext()) {
         return Collections.emptyList();
       }
-      for (Lazy<? extends PPossibility> simpleLazy : iter.next().getUnmatched()) {
-        expoded.add(Collections.singletonList(simpleLazy.get()));
-      }
+      expoded.addAll(Collections2.transform(iter.next().getUnmatched(), Collections::singletonList));
       while (iter.hasNext()) {
         StepResult arg = iter.next();
         Collection<List<PPossibility>> tmp = new ArrayList<>();
         for (List<PPossibility> prevArgs : expoded) {
-          for (Lazy<? extends PPossibility> newArg : arg.getUnmatched()) {
-            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(newArg.get()))));
+          for (PPossibility newArg : arg.getUnmatched()) {
+            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(newArg))));
           }
         }
         expoded = tmp;
       }
-      return Collections2.transform(expoded, args -> Lazy.forced(createSimilarPossibility(args)));
+      return Collections2.transform(expoded, this::createSimilarPossibility);
     }
 
     private PPossibility fromMatchedArgs(List<StepResult> resultArgs) {
