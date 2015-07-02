@@ -107,23 +107,16 @@ public class PCaseTest {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
-
+    
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
-    PAlternative secondIsTrue = simple(cons,
-      any(),
-      simple(cons,
-        mTrue(),
-        any())
-    ).build(ctors);
-    PAlternative twoFalses = simple(cons,
-      simple(tFalse),
-      simple(cons,
-        simple(tFalse),
-        any())
-    ).build(ctors);
     PAlternative empty = simple(tEmpty).build(ctors);
-    
+
+
+    // case     List[Bool]
+    // of       Cons(True, _)
+    // 
+    // result   Cons(False, _) | Empty
     PPossibility result = boolsPossibility.minus(firstIsTrue);
     disjunctionV(
       singleV(cons,
@@ -132,12 +125,26 @@ public class PCaseTest {
       ),
       singleV(tEmpty)
     ).validate(result);
+
+    PAlternative secondIsTrue = simple(cons,
+      any(),
+      simple(cons,
+        mTrue(),
+        any())
+    ).build(ctors);
     assertNotNull(result);
-    
     PPossibility second = result.minus(secondIsTrue);
-    fail("do more validations");
+    
+    PAlternative twoFalses = simple(cons,
+      simple(tFalse),
+      simple(cons,
+        simple(tFalse),
+        any())
+    ).build(ctors);
+
     PPossibility third = second.minus(twoFalses);
     PPossibility last = third.minus(empty);
+    fail("do more validations");
   }
 
   @Test
@@ -209,6 +216,7 @@ public class PCaseTest {
     PPossibility possibility = PPossibility.from(list, ctors);
 
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
+    //
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))

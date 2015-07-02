@@ -10,6 +10,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -201,7 +203,7 @@ public abstract class PPossibility {
       
       List<StepResult> resultArgs = new ArrayList<>(nArgs);
       for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
-        PPossibility possibleArg = possibleArgs.get(argIdxMutable).get();
+        PPossibility possibleArg = possibleArgs.get(argIdxMutable).get(); // TODO alternativeArg of "any" shouldn't force anything
         PAlternative alternativeArg = alternativeArgs.get(argIdxMutable);
         StepResult argStep = possibleArg.subtractionStep(alternativeArg);
         if (argStep.noneMatched()) {
@@ -307,15 +309,15 @@ public abstract class PPossibility {
     @Nonnull
     @Override
     protected StepResult subtractionStep(PAlternative alternative) {
-      if (alternative instanceof PAlternative.Any) {
+      if (alternative instanceof PAlternative.Any) { // TODO an alternative of "any" should cause this not to be forced
         return handleAny();
       }
         
-      Iterator<Simple> iterator = options.iterator();
       StepResult result = new StepResult();
+      Iterator<Simple> iterator = options.iterator();
       while (iterator.hasNext()) {
-        Simple lazyOption = iterator.next();
-        StepResult step = lazyOption.subtractionStep(alternative);
+        Simple option = iterator.next();
+        StepResult step = option.subtractionStep(alternative);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
           result.setMatched(step.getOnlyMatched());
