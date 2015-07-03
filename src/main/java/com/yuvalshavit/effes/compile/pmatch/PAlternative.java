@@ -161,14 +161,23 @@ public abstract class PAlternative {
       }
       
       return value.transform(
-        largeAlternative -> subtractFromLarge(),
-        simpleAlternative -> simpleTypeAndArgs.transform(
-          largePossibility -> subtractFromLarge(),
-          simplePossibility -> subtractFromStandard(value.type(), simpleAlternative.args(), lazyPossibility, simplePossibility, simple::withArgs)));
+        largeAlternative -> subtractFromLarge(lazyPossibility),
+        standardAlternative -> simpleTypeAndArgs.transform(
+          largePossibility -> {
+            throw new AssertionError(
+              String.format(
+                "types should be the same, but alternative is standard while possibility is large: %s != %s",
+                standardAlternative,
+                largePossibility));
+          },
+          simplePossibility -> subtractFromStandard(value.type(), standardAlternative.args(), lazyPossibility, simplePossibility, simple::withArgs)));
     }
     
-    private StepResult subtractFromLarge() {
-      throw new UnsupportedOperationException(); // TODO
+    private StepResult subtractFromLarge(Lazy<PPossibility> possibility) {
+      StepResult r = new StepResult();
+      r.setMatched(possibility);
+      r.addUnmatched(possibility);
+      return r;
     }
 
     private StepResult subtractFromStandard(
