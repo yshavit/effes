@@ -7,9 +7,11 @@ import java.util.Collection;
 
 import javax.annotation.Nonnull;
 
+import com.yuvalshavit.util.Lazy;
+
 class StepResult {
-  private PPossibility matched = null;
-  private final Collection<PPossibility> unmatched = new ArrayList<>();
+  private Lazy< PPossibility> matched = null;
+  private final Collection<Lazy< PPossibility>> unmatched = new ArrayList<>();
   
   public boolean noneMatched() {
     return matched == null;
@@ -20,26 +22,26 @@ class StepResult {
   }
   
   @Nonnull
-  public PPossibility getOnlyMatched() {
+  public Lazy< PPossibility> getOnlyMatched() {
     checkState(anyMatched(), "no matched");
     return matched;
   }
   
   @Nonnull
-  public Collection<PPossibility> getUnmatched() {
+  public Collection<Lazy< PPossibility>> getUnmatched() {
     return unmatched;
   }
 
-  public void addUnmatched(PPossibility unmatched) {
+  public void addUnmatched(Lazy<PPossibility> unmatched) {
     this.unmatched.add(unmatched);
   }
   
-  public void setMatched(PPossibility matched) {
+  public void setMatched(Lazy< PPossibility> matched) {
     checkState(noneMatched(), "already matched: " + this.matched);
     this.matched = matched;
   }
 
-  public void addUnmatched(Collection<? extends PPossibility> unmatched) {
+  public void addUnmatched(Collection< Lazy< PPossibility>> unmatched) {
     this.unmatched.addAll(unmatched);
   }
 

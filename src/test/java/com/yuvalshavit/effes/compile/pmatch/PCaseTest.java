@@ -118,7 +118,6 @@ public class PCaseTest {
     // 
     // result   Cons(False, _) | Empty
 //    PPossibility result = boolsPossibility.minus(firstIsTrue);
-    assertNotNull(firstIsTrue);
     PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     disjunctionV(
       singleV(
@@ -136,7 +135,7 @@ public class PCaseTest {
         any())
     ).build(ctors);
     assertNotNull(result);
-    PPossibility second = result.minus(secondIsTrue);
+    PPossibility second = secondIsTrue.subtractFrom(result);
     
     PAlternative twoFalses = simple(cons,
       simple(tFalse),
@@ -145,8 +144,8 @@ public class PCaseTest {
         any())
     ).build(ctors);
 
-    PPossibility third = second.minus(twoFalses);
-    PPossibility last = third.minus(empty);
+    PPossibility third = twoFalses.subtractFrom(second);
+    PPossibility last = empty.subtractFrom(third);
     fail("do more validations");
   }
 
@@ -158,7 +157,7 @@ public class PCaseTest {
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative doubleWilds = simple(cons, any(), any()).build(ctors);
-    PPossibility result = boolsPossibility.minus(doubleWilds);
+    PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
     fail("validate " + result);
   }
 
@@ -170,7 +169,7 @@ public class PCaseTest {
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative fullyWild = any().build(ctors);
-    PPossibility result = boolsPossibility.minus(fullyWild);
+    PPossibility result = fullyWild.subtractFrom(boolsPossibility);
     noneV().validate(result);
   }
   
@@ -191,7 +190,7 @@ public class PCaseTest {
       any()
     ).build(ctors);
 
-    PPossibility result = boolsPossibility.minus(firstIsTrue);
+    PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     disjunctionV(
       singleV(snoc,
         unforcedDisjunctionV(2),
@@ -201,7 +200,7 @@ public class PCaseTest {
     ).validate(result);
     assertNotNull(result);
 
-    PPossibility second = result.minus(secondIsTrue);
+    PPossibility second = secondIsTrue.subtractFrom(result);
     fail("validate somehow that it's [False, False, _]: " + second);
   }
 
@@ -245,7 +244,6 @@ public class PCaseTest {
       )
     ).build(ctors);
     
-    assertNotNull(case0);
     PPossibility afterCase0 = case0.subtractFrom(possibility);
 
     disjunctionV(

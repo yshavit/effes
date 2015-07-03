@@ -7,12 +7,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -34,7 +33,7 @@ public abstract class PAlternative {
   @Override public abstract String toString();
   
   public interface Builder {
-    @Nullable
+    @Nonnull
     PAlternative build(CtorRegistry ctors);
   }
   
@@ -53,18 +52,16 @@ public abstract class PAlternative {
     }
     return (c) -> {
       List<PAlternative> builtArgs = Stream.of(args).map(b -> b.build(c)).collect(Collectors.toList());
-      if (builtArgs.stream().anyMatch(Objects::isNull)) {
-        return null;
-      }
       Simple simple = new Simple(new TypedValue.StandardValue<>(type, builtArgs));
-      return simple.validate(c, type.getReification())
-        ? simple
-        : null;
+      if (!simple.validate(c, type.getReification())) {
+        throw new IllegalArgumentException(String.format("failed validation for %s(%s)", type, Joiner.on(", ").join(args)));
+      }
+      return simple;
     };
   }
   
   public PPossibility subtractFrom(PPossibility pPossibility) {
-    StepResult2 result = subtractFrom(Lazy.forced(pPossibility));
+    StepResult result = subtractFrom(Lazy.forced(pPossibility));
     result.getOnlyMatched(); // confirm that there's a match
     List<PPossibility.Simple> simples = result.getUnmatched().stream()
       .map(Lazy::get)
@@ -79,7 +76,7 @@ public abstract class PAlternative {
     }
   }
   
-  protected abstract StepResult2 subtractFrom(Lazy<PPossibility> pPossibility);
+  protected abstract StepResult subtractFrom(Lazy<PPossibility> pPossibility);
   
   static class Any extends PAlternative {
     private static final Equality<Any> equality = Equality.forClass(Any.class).with("name", Any::name).exactClassOnly();
@@ -94,10 +91,9 @@ public abstract class PAlternative {
     }
 
     @Override
-    public StepResult2 subtractFrom(Lazy<PPossibility> pPossibility) {
-      StepResult2 r = new StepResult2();
+    public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
+      StepResult r = new StepResult();
       r.setMatched(pPossibility);
-//      r.addUnmatched(pPossibility);
       return r;
     }
 
@@ -131,20 +127,20 @@ public abstract class PAlternative {
     }
 
     @Override
-    public StepResult2 subtractFrom(Lazy<PPossibility> pPossibility) {
+    public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
       return pPossibility.get().dispatch(
         this::handle, 
         s -> handle(pPossibility, s), 
         this::handleNone);
     }
     
-    private StepResult2 handle(PPossibility.Disjunction disjunction) {
-      StepResult2 result = new StepResult2();
+    private StepResult handle(PPossibility.Disjunction disjunction) {
+      StepResult result = new StepResult();
       Iterator<PPossibility.Simple> iterator = disjunction.options().iterator();
       while (iterator.hasNext()) {
         PPossibility.Simple option = iterator.next();
-        Lazy<PPossibility> lazyOption = Lazy.forced(option); // TODO make disjunction lazy
-        StepResult2 step = subtractFrom(lazyOption);
+        Lazy<PPossibility> lazyOption = Lazy.forced(option);
+        StepResult step = subtractFrom(lazyOption);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
           result.setMatched(lazyOption);
@@ -156,10 +152,10 @@ public abstract class PAlternative {
       return result;
     }
 
-    private StepResult2 handle(Lazy<PPossibility> lazyPossibility, PPossibility.Simple simple) {
+    private StepResult handle(Lazy<PPossibility> lazyPossibility, PPossibility.Simple simple) {
       TypedValue<Lazy<PPossibility>> simpleTypeAndArgs = simple.typedAndArgs();
       if (!simpleTypeAndArgs.type().equals(value.type())) {
-        StepResult2 r = new StepResult2();
+        StepResult r = new StepResult();
         r.addUnmatched(lazyPossibility);
         return r;
       }
@@ -171,11 +167,11 @@ public abstract class PAlternative {
           simplePossibility -> subtractFromStandard(value.type(), simpleAlternative.args(), lazyPossibility, simplePossibility, simple::withArgs)));
     }
     
-    private StepResult2 subtractFromLarge() {
+    private StepResult subtractFromLarge() {
       throw new UnsupportedOperationException(); // TODO
     }
 
-    private StepResult2 subtractFromStandard(
+    private StepResult subtractFromStandard(
       EfType.SimpleType type,
       List<PAlternative> alternativeArgs,
       Lazy<PPossibility> lazyPossibility,
@@ -185,39 +181,39 @@ public abstract class PAlternative {
       List<Lazy<PPossibility>> possibilityArgs = possibility.args();
       int nargs = possibilityArgs.size();
       checkArgument(alternativeArgs.size() == nargs, "mismatched args for %s: %s != %s", type, alternativeArgs, possibilityArgs);
-      List<StepResult2> resultArgs = new ArrayList<>(nargs);
+      List<StepResult> resultArgs = new ArrayList<>(nargs);
       for (int i = 0; i < nargs; ++i) {
         PAlternative alternativeArg = alternativeArgs.get(i);
         Lazy<PPossibility> possibilityArg = possibilityArgs.get(i);
-        StepResult2 argResult = alternativeArg.subtractFrom(possibilityArg);
+        StepResult argResult = alternativeArg.subtractFrom(possibilityArg);
         if (argResult.noneMatched()) {
-          StepResult2 r = new StepResult2();
+          StepResult r = new StepResult();
           r.addUnmatched(lazyPossibility);
           return r;
         }
         resultArgs.add(argResult);
       }
-      StepResult2 result = new StepResult2();
+      StepResult result = new StepResult();
       result.setMatched(fromMatched(possibilityMaker, resultArgs));
       result.addUnmatched(fromUnmatched(possibilityMaker, resultArgs));
       return result;
     }
 
-    private Lazy<PPossibility> fromMatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult2> stepArgs) {
-      return Lazy.forced(typeMaker.apply(Lists.transform(stepArgs, StepResult2::getOnlyMatched)));
+    private Lazy<PPossibility> fromMatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
+      return Lazy.forced(typeMaker.apply(Lists.transform(stepArgs, StepResult::getOnlyMatched)));
     }
 
-    private Collection<Lazy<PPossibility>> fromUnmatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult2> stepArgs) {
-      Iterator<StepResult2> iter = stepArgs.iterator();
+    private Collection<Lazy<PPossibility>> fromUnmatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
+      Iterator<StepResult> iter = stepArgs.iterator();
       if (!iter.hasNext()) {
         return Collections.emptyList();
       }
       Collection<List<ExplodeArg>> exploded = new ArrayList<>();
-      StepResult2 firstArgs = iter.next();
+      StepResult firstArgs = iter.next();
       exploded.add(Collections.singletonList(new ExplodeArg(firstArgs.getOnlyMatched(), true)));
       exploded.addAll(Collections2.transform(firstArgs.getUnmatched(), unmatched -> Collections.singletonList(new ExplodeArg(unmatched, false))));
       while (iter.hasNext()) {
-        StepResult2 args = iter.next();
+        StepResult args = iter.next();
         Collection<List<ExplodeArg>> tmp = new ArrayList<>();
         exploded.forEach(prevArgs -> {
           tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(args.getOnlyMatched(), true)));
@@ -232,8 +228,8 @@ public abstract class PAlternative {
       return Collections2.transform(unmatchedArgCombos, args -> Lazy.forced(typeMaker.apply(args)));
     }
 
-    private StepResult2 handleNone() {
-      return new StepResult2();
+    private StepResult handleNone() {
+      return new StepResult();
     }
 
     public boolean validate(CtorRegistry ctors, Function<EfType.GenericType, EfType> reification) {
@@ -310,7 +306,11 @@ public abstract class PAlternative {
 
     @Override
     public String toString() {
-      return String.format("%smatched %s", (fromMatched ? "" : "un"), possibility);
+      return String.format("%smatched %s",
+        (fromMatched
+          ? ""
+          : "un"),
+        possibility);
     }
   }
 }

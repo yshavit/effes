@@ -1,13 +1,11 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -15,13 +13,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
@@ -31,34 +26,6 @@ import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
-  
-  @Nullable
-  public final PPossibility minus(PAlternative alternative) {
-    checkNotNull(alternative);
-    if (alternative instanceof PAlternative.Any) {
-      return none;
-    }
-    StepResult result = subtractionStep(alternative);
-    if (result.noneMatched()) {
-      return null;
-    }
-    result.getOnlyMatched(); // confirm that there's only the one
-    Collection<PPossibility> remaining = result.getUnmatched(); // TODO make getUnmatched just return the forced type?
-    List<Simple> remainingSimples = remaining.stream()
-      .map(PPossibility::components)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-    if (remainingSimples.isEmpty()) {
-      return none;
-    } else if (remainingSimples.size() == 1) {
-      return Iterables.getOnlyElement(remaining);
-    } else {
-      return new PPossibility.Disjunction(remainingSimples);
-    }
-  }
-  
-  @Nonnull
-  protected abstract StepResult subtractionStep(PAlternative alternative);
   
   @Nonnull
   public abstract <R> R dispatch(
@@ -73,13 +40,6 @@ public abstract class PPossibility {
   @Override
   public String toString() {
     return toString(false);
-  }
-  
-  protected final StepResult handleAny() {
-    StepResult r = new StepResult();
-    r.setMatched(this);
-    r.addUnmatched(this);
-    return r;
   }
 
   private PPossibility() {}
@@ -141,12 +101,6 @@ public abstract class PPossibility {
     }
 
     @Override
-    @Nonnull
-    protected StepResult subtractionStep(PAlternative alternative) {
-      return new StepResult();
-    }
-
-    @Override
     public int hashCode() {
       return -2083232260; // rolled a die :)
     }
@@ -191,99 +145,13 @@ public abstract class PPossibility {
       return Collections.singletonList(this);
     }
 
-    @Nonnull
-    @Override
-    protected StepResult subtractionStep(PAlternative alternative) {
-      if (alternative instanceof PAlternative.Any) {
-        return handleAny();
-      }
-      PAlternative.Simple simpleAlternative = (PAlternative.Simple) alternative;
-      TypedValue<PAlternative> simpleValue = simpleAlternative.value();
-      if (!this.value.type().equals(simpleValue.type())) {
-        StepResult r = new StepResult();
-        r.addUnmatched(this);
-        return r;
-      }
-      return this.value.transform(
-        p -> large(),
-        p -> simpleValue.transform(
-          s -> large(), // ditto re decorating the result
-          a -> doSubtract(p, a)
-        )
-      );
-    }
-
     @VisibleForTesting
     TypedValue<Lazy<PPossibility>> typedAndArgs() {
       return value;
     }
 
-    private StepResult doSubtract(TypedValue.StandardValue<Lazy<PPossibility>> possibility, TypedValue.StandardValue<PAlternative> alternative) {
-      // given Answer = True | False | Error(reason: Unknown | String)
-      // t : Cons(head: Answer, tail: List[Answer])
-      //   : Cons(head: True | False | Error(reason: Unknown | String), tail: List[Answer])
-      List<Lazy<PPossibility>> possibleArgs = possibility.args();
-      List<PAlternative> alternativeArgs = alternative.args();
-      int nArgs = possibleArgs.size();
-      assert nArgs == alternativeArgs.size() : String.format("different sizes: %s <~> %s", possibleArgs, alternativeArgs);
-      
-      List<StepResult> resultArgs = new ArrayList<>(nArgs);
-      for (int argIdxMutable = 0; argIdxMutable < nArgs; ++argIdxMutable) {
-        PPossibility possibleArg = possibleArgs.get(argIdxMutable).get(); // TODO alternativeArg of "any" shouldn't force anything
-        PAlternative alternativeArg = alternativeArgs.get(argIdxMutable);
-        StepResult argStep = possibleArg.subtractionStep(alternativeArg);
-        if (argStep.noneMatched()) {
-          StepResult r = new StepResult();
-          r.addUnmatched(this);
-          return r;
-        }
-        resultArgs.add(argStep);
-      }
-      StepResult result = new StepResult();
-      result.setMatched(fromMatchedArgs(resultArgs));
-      result.addUnmatched(fromUnmatchedArgs(resultArgs));
-      return result;
-    }
-
-    private Collection<PPossibility> fromUnmatchedArgs(List<StepResult> resultArgs) {
-      Collection<List<ExplodeArg>> expoded = new ArrayList<>();
-      Iterator<StepResult> iter = resultArgs.iterator();
-      if (!iter.hasNext()) {
-        return Collections.emptyList();
-      }
-      StepResult firstArgResults = iter.next();
-      expoded.addAll(Collections2.transform(firstArgResults.getUnmatched(), unmatched -> Collections.singletonList(new ExplodeArg(unmatched, false))));
-      expoded.add(Collections.singletonList(new ExplodeArg(firstArgResults.getOnlyMatched(), true)));
-      while (iter.hasNext()) {
-        StepResult arg = iter.next();
-        Collection<List<ExplodeArg>> tmp = new ArrayList<>();
-        for (List<ExplodeArg> prevArgs : expoded) {
-          for (PPossibility newArg : arg.getUnmatched()) {
-            tmp.add(Lists.newArrayList(Iterables.concat(prevArgs, Collections.singleton(new ExplodeArg(newArg, false)))));
-          }
-        }
-        expoded = tmp;
-      }
-      // remove all the ones that contain only matched args
-      Collection<List<PPossibility>> unmatchedArgCombos = expoded.stream()
-        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
-        .map(args -> Lists.transform(args, ExplodeArg::value))
-        .collect(Collectors.toList());
-      return Collections2.transform(unmatchedArgCombos, this::createSimilarPossibility);
-    }
-
-    private PPossibility fromMatchedArgs(List<StepResult> resultArgs) {
-      List<PPossibility> args = Lists.transform(resultArgs, StepResult::getOnlyMatched);
-      return createSimilarPossibility(args);
-    }
-
     public Simple withArgs(List<Lazy<PPossibility>> args) {
       return new Simple(new TypedValue.StandardValue<>(value.type(), args), argNames);
-    }
-    
-    private Simple createSimilarPossibility(List<PPossibility> args) {
-      TypedValue<Lazy<PPossibility>> resultValue = new TypedValue.StandardValue<>(value.type(), Lists.transform(args, Lazy::forced));
-      return new Simple(resultValue, argNames);
     }
 
     @Override
@@ -303,11 +171,6 @@ public abstract class PPossibility {
             return Joiner.on(", ").appendTo(sb, namedArgs).append(')').toString();
           }
         });
-    }
-
-    private StepResult large() {
-      // eventually it'd be nice to decorate this with something like "not value.value()"
-      return handleAny();
     }
 
     private static String toString(EfType.SimpleType type, boolean verbose) {
@@ -346,51 +209,10 @@ public abstract class PPossibility {
       return Collections.unmodifiableList(r);
     }
 
-    @Nonnull
-    @Override
-    protected StepResult subtractionStep(PAlternative alternative) {
-      if (alternative instanceof PAlternative.Any) { // TODO an alternative of "any" should cause this not to be forced
-        return handleAny();
-      }
-        
-      StepResult result = new StepResult();
-      Iterator<Simple> iterator = options.iterator();
-      while (iterator.hasNext()) {
-        Simple option = iterator.next();
-        StepResult step = option.subtractionStep(alternative);
-        result.addUnmatched(step.getUnmatched());
-        if (step.anyMatched()) {
-          result.setMatched(step.getOnlyMatched());
-          break;
-        }
-      }
-      // If one of the early options matched, we need to add the rest. Assume they're unmatched.
-      iterator.forEachRemaining(result::addUnmatched);
-      return result;
-    }
-
     @Override
     public String toString(boolean verbose) {
       List<String> verboseOptions = Lists.transform(options, s -> s.toString(verbose));
       return Joiner.on(" | ").join(verboseOptions);
-    }
-  }
-
-  private static class ExplodeArg {
-    private final PPossibility possibility;
-    private final boolean fromMatched;
-
-    public ExplodeArg(PPossibility possibility, boolean fromMatched) {
-      this.possibility = possibility;
-      this.fromMatched = fromMatched;
-    }
-
-    public PPossibility value() {
-      return possibility;
-    }
-
-    public boolean notFromMatched() {
-      return ! fromMatched;
     }
   }
 }
