@@ -221,9 +221,7 @@ public abstract class PAlternative {
         Collection<List<ExplodeArg>> tmp = new ArrayList<>();
         exploded.forEach(prevArgs -> {
           tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(args.getOnlyMatched(), true)));
-          args.getUnmatched().forEach(unmatched -> {
-            tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(unmatched, false)));
-          });
+          args.getUnmatched().forEach(unmatched -> tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(unmatched, false))));
         });
         exploded = tmp;
       }
