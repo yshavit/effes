@@ -35,9 +35,11 @@ import org.testng.internal.collections.Pair;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
+import com.yuvalshavit.util.EfAssertions;
 import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Lazy;
@@ -224,12 +226,7 @@ public class PCaseTest {
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
     //           []                             = Empty
     //
-    // because of laziness, this comes out as: 
-    // Cons(One(_) , _)                             = Cons(... | ..., ...)
-    //                                              | Cons(... | ..., Cons(... | ..., ...))
-    // Cons(Nothing, Cons(_, Cons(Nothing, _)))     = Cons(... | ..., Cons(... | ..., Cons(Nothing, ... | ...)))
-    // Cons(Nothing, Cons(_, Cons(One(False), _)))  = Cons(... | ..., Cons(... | ..., Cons(One(False), ... | ...)))
-    // Empty                                        = ...
+    // This gets expanded a bit
     
     PAlternative case0 = simple(cons,
       simple(tNothing),
@@ -245,35 +242,39 @@ public class PCaseTest {
     ).build(ctors);
     
     PPossibility afterCase0 = case0.subtractFrom(possibility);
+    check(afterCase0,
+      "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
+      "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
+      "Cons(Nothing, Cons(..., Empty))",
+      "Cons(Nothing, Empty)",
+      "Cons(One(...), Cons(..., Cons(One(True), ...)))",
+      "Cons(One(...), Cons(..., Cons(Nothing, ...)))",
+      "Cons(One(...), Cons(..., Cons(One(False), ...)))",
+      "Cons(One(...), Cons(..., Empty))",
+      "Cons(One(...), Empty)",
+      "Empty");
+    
+    PAlternative case1 = simple(cons,
+      simple(tOneBool, any()),
+      any()
+    ).build(ctors);
 
-    disjunctionV(
-      singleV(cons,
-        unforcedDisjunctionV(2),
-        unforcedDisjunctionV(2)),
-      singleV(cons,
-        unforcedDisjunctionV(2),
-        unforcedDisjunctionV(2)),
-        singleV(cons,
-            unforcedDisjunctionV(2),
-            unforcedDisjunctionV(2)),
-      singleV(cons,
-        unforcedDisjunctionV(2),
-        singleV(cons,
-          unforcedDisjunctionV(2),
-          singleV(cons,
-            singleV(tNothing),
-            unforcedDisjunctionV(2)))),
-      singleV(cons,
-        unforcedDisjunctionV(2),
-        singleV(cons,
-          unforcedDisjunctionV(2),
-          singleV(cons,
-            singleV(tOneBool, singleV(tFalse)),
-            unforcedDisjunctionV(2)))),
-      unforcedV()
-    ).validate(afterCase0);
+    PPossibility afterCase1 = case1.subtractFrom(afterCase0);
+    check(afterCase1,
+      "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
+      "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
+      "Cons(Nothing, Cons(..., Empty))",
+      "Cons(Nothing, Empty)",
+      "Empty");
   }
-  
+
+  private void check(PPossibility possibility, String... expected) {
+    List<String> expectedList = Lists.newArrayList(expected);
+    Collections.sort(expectedList);
+    List<String> actualList = PPossibilities.toStrings(possibility);
+    EfAssertions.equalLists(actualList, expectedList);
+  }
+
   private Builder mTrue() {
     return simple(tTrue);
   }

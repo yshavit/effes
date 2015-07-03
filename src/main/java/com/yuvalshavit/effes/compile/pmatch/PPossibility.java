@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfCollections;
+import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PPossibility {
@@ -32,6 +34,19 @@ public abstract class PPossibility {
     Function<? super Disjunction, ? extends R> onDisjunction,
     Function<? super Simple, ? extends R> onSimple,
     Supplier<? extends R> onNone);
+
+
+  public void consume(
+    Consumer<? super Disjunction> onDisjunction,
+    Consumer<? super Simple> onSimple,
+    Runnable onNone)
+  {
+    dispatch(
+      EfFunctions.from(onDisjunction),
+      EfFunctions.from(onSimple),
+      () -> { onNone.run(); return null; }
+    );
+  }
   
   public abstract String toString(boolean verbose);
   

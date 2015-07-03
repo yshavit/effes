@@ -2,6 +2,7 @@ package com.yuvalshavit.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -15,6 +16,8 @@ public class Lazy<T> implements Supplier<T> {
   public static final String UNFORCED_DESC = "...";
   private Supplier<? extends T> unforced;
   private T forced;
+  private final int id;
+  private static final AtomicInteger ids = new AtomicInteger();
 
   public static <T> Lazy<T> lazy(Supplier<? extends T> supplier) {
     return new Lazy<>(supplier);
@@ -26,12 +29,18 @@ public class Lazy<T> implements Supplier<T> {
   
   private Lazy(T value) {
     forced = value;
+    id = assignId();
   }
   
   private Lazy(Supplier<? extends T> delegate) {
     this.unforced = checkNotNull(delegate);
+    id = assignId();
   }
-  
+
+  private int assignId() {
+    return ids.getAndIncrement();
+  }
+
   public <R> Lazy<R> transform(Function<? super T, ? extends R> transformation) {
     return isUnforced()
       ? lazy(() -> transformation.apply(get()))
@@ -58,5 +67,9 @@ public class Lazy<T> implements Supplier<T> {
     } else {
       return UNFORCED_DESC;
     }
+  }
+
+  public int getId() {
+    return id;
   }
 }

@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,7 +66,7 @@ public abstract class PAlternative {
   
   public PPossibility subtractFrom(PPossibility pPossibility) {
     StepResult result = subtractFrom(Lazy.forced(pPossibility));
-    result.getOnlyMatched(); // confirm that there's a match
+    result.getMatched(); // confirm that there's a match
     List<PPossibility.Simple> simples = result.getUnmatched().stream()
       .map(Lazy::get)
       .flatMap(p -> p.components().stream())
@@ -95,7 +97,7 @@ public abstract class PAlternative {
     @Override
     public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
       StepResult r = new StepResult();
-      r.setMatched(pPossibility);
+      r.addMatched(pPossibility);
       return r;
     }
 
@@ -145,19 +147,14 @@ public abstract class PAlternative {
     
     private StepResult handle(PPossibility.Disjunction disjunction) {
       StepResult result = new StepResult();
-      Iterator<PPossibility.Simple> iterator = disjunction.options().iterator();
-      while (iterator.hasNext()) {
-        PPossibility.Simple option = iterator.next();
+      for (PPossibility.Simple option : disjunction.options()) {
         Lazy<PPossibility> lazyOption = Lazy.forced(option);
         StepResult step = subtractFrom(lazyOption);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
-          result.setMatched(step.getOnlyMatched());
-          break;
+          result.addMatched(step.getMatched());
         }
       }
-      // If one of the early options matched, we need to add the rest. Assume they're unmatched.
-      iterator.forEachRemaining(step -> result.addUnmatched(Lazy.forced(step)));
       return result;
     }
 
@@ -184,7 +181,7 @@ public abstract class PAlternative {
     
     private StepResult subtractFromLarge(Lazy<PPossibility> possibility) {
       StepResult r = new StepResult();
-      r.setMatched(possibility);
+      r.addMatched(possibility);
       r.addUnmatched(possibility);
       return r;
     }
@@ -199,6 +196,14 @@ public abstract class PAlternative {
       List<Lazy<PPossibility>> possibilityArgs = possibility.args();
       int nargs = possibilityArgs.size();
       checkArgument(alternativeArgs.size() == nargs, "mismatched args for %s: %s != %s", type, alternativeArgs, possibilityArgs);
+
+      if (nargs == 0) {
+        // handle no-arg types specially. The caller already validated that the type is right, so we can just say that it matched
+        StepResult result = new StepResult();
+        result.addMatched(lazyPossibility);
+        return result;
+      }
+      
       List<StepResult> resultArgs = new ArrayList<>(nargs);
       for (int i = 0; i < nargs; ++i) {
         PAlternative alternativeArg = alternativeArgs.get(i);
@@ -211,39 +216,62 @@ public abstract class PAlternative {
         }
         resultArgs.add(argResult);
       }
+
+      Collection<List<ExplodeArg>> exploded = explode(resultArgs);
+
       StepResult result = new StepResult();
-      result.setMatched(fromMatched(possibilityMaker, resultArgs));
-      result.addUnmatched(fromUnmatched(possibilityMaker, resultArgs));
+      exploded.stream()
+        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
+        .map(args -> Lists.transform(args, ExplodeArg::value))
+        .map(combo -> Lazy.forced(possibilityMaker.apply(combo)))
+        .forEach(result::addUnmatched);
+      exploded.stream()
+        .filter(args -> args.stream().allMatch(ExplodeArg::fromMatched))
+        .map(args -> Lists.transform(args, ExplodeArg::value))
+        .map(combo -> Lazy.forced(possibilityMaker.apply(combo)))
+        .forEach(result::addMatched);
+      
+      /*
+      
+      Collection<List<Lazy<PPossibility>>> unmatchedArgCombos = exploded.stream()
+        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
+        .map(args -> Lists.transform(args, ExplodeArg::value))
+        .collect(Collectors.toList());
+      return Collections2.transform(unmatchedArgCombos, args -> Lazy.forced(typeMaker.apply(args)));
+       */
+
+      //      result.addMatched(fromMatched(possibilityMaker, resultArgs));
+      //      result.addUnmatched(fromUnmatched(possibilityMaker, resultArgs));
       return result;
     }
 
-    private Lazy<PPossibility> fromMatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
-      return Lazy.forced(typeMaker.apply(Lists.transform(stepArgs, StepResult::getOnlyMatched)));
-    }
+//    private Collection<Lazy<PPossibility>> fromMatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
+//      return Lazy.forced(typeMaker.apply(Lists.transform(stepArgs, StepResult::getMatched)));
+//    }
 
-    private Collection<Lazy<PPossibility>> fromUnmatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
+    private Collection<List<ExplodeArg>> explode(List<StepResult> stepArgs) {
       Iterator<StepResult> iter = stepArgs.iterator();
       if (!iter.hasNext()) {
         return Collections.emptyList();
       }
       Collection<List<ExplodeArg>> exploded = new ArrayList<>();
       StepResult firstArgs = iter.next();
-      exploded.add(Collections.singletonList(new ExplodeArg(firstArgs.getOnlyMatched(), true)));
+      exploded.addAll(Collections2.transform(firstArgs.getMatched(), matched -> Collections.singletonList(new ExplodeArg(matched, true))));
       exploded.addAll(Collections2.transform(firstArgs.getUnmatched(), unmatched -> Collections.singletonList(new ExplodeArg(unmatched, false))));
       while (iter.hasNext()) {
         StepResult args = iter.next();
         Collection<List<ExplodeArg>> tmp = new ArrayList<>();
+        Set<ExplodeArg> addArgs = new HashSet<>(args.getUnmatched().size() + 1);
+        args.getMatched().forEach(matched -> addArgs.add(new ExplodeArg(matched, true)));
+        args.getUnmatched().forEach(unmatched -> addArgs.add(new ExplodeArg(unmatched, false)));
+        if (addArgs.isEmpty()) throw new UnsupportedOperationException();
         exploded.forEach(prevArgs -> {
-          tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(args.getOnlyMatched(), true)));
+          args.getMatched().forEach(matched -> tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(matched, true))));
           args.getUnmatched().forEach(unmatched -> tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(unmatched, false))));
         });
         exploded = tmp;
       }
-      Collection<List<Lazy<PPossibility>>> unmatchedArgCombos = exploded.stream()
-        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
-        .map(args -> Lists.transform(args, ExplodeArg::value))
-        .collect(Collectors.toList());
-      return Collections2.transform(unmatchedArgCombos, args -> Lazy.forced(typeMaker.apply(args)));
+      return exploded;
     }
 
     private StepResult handleNone() {
@@ -316,6 +344,10 @@ public abstract class PAlternative {
 
     public Lazy<PPossibility> value() {
       return possibility;
+    }
+    
+    public boolean fromMatched() {
+      return fromMatched;
     }
 
     public boolean notFromMatched() {

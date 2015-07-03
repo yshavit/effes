@@ -13,11 +13,14 @@ public class EfFunctions {
     return v -> { /*nothing*/ };
   }
   
-  public static <T> Supplier<T> memoizing(Supplier<T> supplier) {
-    return Suppliers.memoize(supplier::get)::get;
-  }
-  
   public static <T, R> Function<T, R> fromGuava(com.google.common.base.Function<? super T, ? extends R> f) {
     return f::apply;
+  }
+  
+  public static <T> Function<? super T, ? extends Void> from(Consumer<? super T> consumer) {
+    return t -> {
+      consumer.accept(t);
+      return null;
+    };
   }
 }
