@@ -117,11 +117,14 @@ public class PCaseTest {
     // of       Cons(True, _)
     // 
     // result   Cons(False, _) | Empty
-    PPossibility result = boolsPossibility.minus(firstIsTrue);
+//    PPossibility result = boolsPossibility.minus(firstIsTrue);
+    assertNotNull(firstIsTrue);
+    PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     disjunctionV(
-      singleV(cons,
+      singleV(
+        cons,
         singleV(tFalse),
-        unforcedDisjunctionV(2)
+        unforcedV()
       ),
       singleV(tEmpty)
     ).validate(result);

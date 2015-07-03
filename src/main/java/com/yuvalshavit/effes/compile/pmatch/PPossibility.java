@@ -60,6 +60,12 @@ public abstract class PPossibility {
   @Nonnull
   protected abstract StepResult subtractionStep(PAlternative alternative);
   
+  @Nonnull
+  public abstract <R> R dispatch(
+    Function<? super Disjunction, ? extends R> onDisjunction,
+    Function<? super Simple, ? extends R> onSimple,
+    Supplier<? extends R> onNone);
+  
   public abstract String toString(boolean verbose);
   
   public abstract Collection<Simple> components();
@@ -124,6 +130,16 @@ public abstract class PPossibility {
 
   public static final PPossibility none = new PPossibility() {
 
+    @Nonnull
+    @Override
+    public <R> R dispatch(
+      Function<? super Disjunction, ? extends R> onDisjunction,
+      Function<? super Simple, ? extends R> onSimple,
+      Supplier<? extends R> onNone)
+    {
+      return onNone.get();
+    }
+
     @Override
     @Nonnull
     protected StepResult subtractionStep(PAlternative alternative) {
@@ -158,6 +174,16 @@ public abstract class PPossibility {
     private Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
       this.value = value;
       this.argNames = argNames;
+    }
+
+    @Nonnull
+    @Override
+    public <R> R dispatch(
+      Function<? super Disjunction, ? extends R> onDisjunction,
+      Function<? super Simple, ? extends R> onSimple,
+      Supplier<? extends R> onNone)
+    {
+      return onSimple.apply(this);
     }
 
     @Override
@@ -251,6 +277,10 @@ public abstract class PPossibility {
       return createSimilarPossibility(args);
     }
 
+    public Simple withArgs(List<Lazy<PPossibility>> args) {
+      return new Simple(new TypedValue.StandardValue<>(value.type(), args), argNames);
+    }
+    
     private Simple createSimilarPossibility(List<PPossibility> args) {
       TypedValue<Lazy<PPossibility>> resultValue = new TypedValue.StandardValue<>(value.type(), Lists.transform(args, Lazy::forced));
       return new Simple(resultValue, argNames);
@@ -290,7 +320,17 @@ public abstract class PPossibility {
   static class Disjunction extends PPossibility {
     private final List<PPossibility.Simple> options;
 
-    private Disjunction(Collection<Simple> options) {
+    @Nonnull
+    @Override
+    public <R> R dispatch(
+      Function<? super Disjunction, ? extends R> onDisjunction,
+      Function<? super Simple, ? extends R> onSimple,
+      Supplier<? extends R> onNone)
+    {
+      return onDisjunction.apply(this);
+    }
+
+    public Disjunction(Collection<Simple> options) {
       checkArgument(options.size() > 1, options);
       this.options = new ArrayList<>(options);
     }
