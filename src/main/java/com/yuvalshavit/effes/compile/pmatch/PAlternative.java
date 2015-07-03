@@ -2,9 +2,11 @@ package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -114,6 +116,8 @@ public abstract class PAlternative {
     }
   }
   
+  static final Deque<String> messages = new ArrayDeque<>(); // TODO REMOVE! Only meant for debugging!
+  
   static class Simple extends PAlternative {
     private static final Equality<Simple> equality = Equality.forClass(Simple.class).with("value", Simple::value).exactClassOnly();
     private final TypedValue<PAlternative> value;
@@ -128,10 +132,15 @@ public abstract class PAlternative {
 
     @Override
     public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
-      return pPossibility.get().dispatch(
-        this::handle, 
-        s -> handle(pPossibility, s), 
-        this::handleNone);
+      messages.push(String.format("subtracting %s from %s", this, pPossibility.get()));
+      try {
+        return pPossibility.get().dispatch(
+          this::handle,
+          s -> handle(pPossibility, s),
+          this::handleNone);
+      } finally {
+        messages.pop();
+      }
     }
     
     private StepResult handle(PPossibility.Disjunction disjunction) {
@@ -143,7 +152,7 @@ public abstract class PAlternative {
         StepResult step = subtractFrom(lazyOption);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
-          result.setMatched(lazyOption);
+          result.setMatched(step.getOnlyMatched());
           break;
         }
       }
@@ -196,7 +205,7 @@ public abstract class PAlternative {
         Lazy<PPossibility> possibilityArg = possibilityArgs.get(i);
         StepResult argResult = alternativeArg.subtractFrom(possibilityArg);
         if (argResult.noneMatched()) {
-          StepResult r = new StepResult();
+          StepResult r = new StepResult(); // Do I want some sort of detail-level reporting to the user?
           r.addUnmatched(lazyPossibility);
           return r;
         }
