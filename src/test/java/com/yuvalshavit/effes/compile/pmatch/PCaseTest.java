@@ -244,7 +244,9 @@ public class PCaseTest {
         )
       )
     ).build(ctors);
-    PPossibility afterCase0 = possibility.minus(case0);
+    
+    assertNotNull(case0);
+    PPossibility afterCase0 = case0.subtractFrom(possibility);
 
     disjunctionV(
       singleV(cons,
