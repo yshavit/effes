@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -64,9 +65,15 @@ public abstract class PAlternative {
     };
   }
   
+  @Nullable
   public PPossibility subtractFrom(PPossibility pPossibility) {
+    if (PPossibility.none.equals(pPossibility)) {
+      return null;
+    }
     StepResult result = subtractFrom(Lazy.forced(pPossibility));
-    result.getMatched(); // confirm that there's a match
+    if (result.noneMatched()) {
+      return null;
+    }
     List<PPossibility.Simple> simples = result.getUnmatched().stream()
       .map(Lazy::get)
       .flatMap(p -> p.components().stream())

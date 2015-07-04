@@ -266,7 +266,44 @@ public class PCaseTest {
       "Cons(Nothing, Cons(..., Empty))",
       "Cons(Nothing, Empty)",
       "Empty");
+    
+    PAlternative case2 = simple(cons,
+      simple(tNothing),
+      any()
+    ).build(ctors);
+
+    PPossibility afterCase2 = case2.subtractFrom(afterCase1);
+    check(afterCase2,
+      "Empty");
+    
+    PAlternative case3 = simple(tEmpty).build(ctors);
+    
+    PPossibility afterCase3 = case3.subtractFrom(afterCase2);
+    
+    assertEquals(afterCase3, PPossibility.none);
   }
+
+  @Test
+  public void wildcardFromNone() {
+    PAlternative any = any().build(ctors);
+    PPossibility subtraction = any.subtractFrom(PPossibility.none);
+    assertNull(subtraction);
+  }
+
+  @Test
+  public void concreteFromNone() {
+    PAlternative any = simple(tNothing).build(ctors);
+    PPossibility subtraction = any.subtractFrom(PPossibility.none);
+    assertNull(subtraction);
+  }
+
+  @Test
+  public void nothingFromEmpty() {
+    PAlternative any = simple(tNothing).build(ctors);
+    PPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty, ctors));
+    assertNull(subtraction);
+  }
+  
 
   private void check(PPossibility possibility, String... expected) {
     List<String> expectedList = Lists.newArrayList(expected);
@@ -284,14 +321,14 @@ public class PCaseTest {
     assertNotNull(mTrue().build(ctors));
   }
 
-  @Test
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithAnyArg() {
-    assertNull(simple(tTrue, any()).build(ctors));
+    simple(tTrue, any()).build(ctors);
   }
   
-  @Test
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithFalseArg() {
-    assertNull(simple(tTrue, simple(tFalse)).build(ctors));
+    simple(tTrue, simple(tFalse)).build(ctors);
   }
 
   @Test
