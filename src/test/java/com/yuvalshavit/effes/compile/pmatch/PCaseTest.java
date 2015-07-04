@@ -4,26 +4,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.Builder;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.any;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.simple;
-import static com.yuvalshavit.util.EfMatchers.isUnforced;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -33,31 +22,14 @@ import org.testng.annotations.Test;
 import org.testng.internal.collections.Pair;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfAssertions;
-import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.EfFunctions;
-import com.yuvalshavit.util.Lazy;
 
 public class PCaseTest {
-  private static final Validator UNFORCED_VALIDATOR = new Validator(
-    Lazy.UNFORCED_DESC, actual -> {
-    if (actual.isUnforced()) {
-      return;
-    }
-    PPossibility possibility = actual.get();
-    assertThat(possibility, instanceOf(PPossibility.Simple.class));
-    PPossibility.Simple simple = (PPossibility.Simple) possibility;
-    simple.typedAndArgs().consume(
-      EfFunctions.emptyConsumer(),
-      s -> assertThat(simple.toString(true), s.args(), everyItem(isUnforced()))
-    );
-  });
   
   private final EfType.SimpleType tTrue;
   private final EfType.SimpleType tFalse;
@@ -112,43 +84,14 @@ public class PCaseTest {
     
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
-    PAlternative empty = simple(tEmpty).build(ctors);
-
-
     // case     List[Bool]
     // of       Cons(True, _)
     // 
     // result   Cons(False, _) | Empty
-//    PPossibility result = boolsPossibility.minus(firstIsTrue);
     PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
-    disjunctionV(
-      singleV(
-        cons,
-        singleV(tFalse),
-        unforcedV()
-      ),
-      singleV(tEmpty)
-    ).validate(result);
-
-    PAlternative secondIsTrue = simple(cons,
-      any(),
-      simple(cons,
-        mTrue(),
-        any())
-    ).build(ctors);
-    assertNotNull(result);
-    PPossibility second = secondIsTrue.subtractFrom(result);
-    
-    PAlternative twoFalses = simple(cons,
-      simple(tFalse),
-      simple(cons,
-        simple(tFalse),
-        any())
-    ).build(ctors);
-
-    PPossibility third = twoFalses.subtractFrom(second);
-    PPossibility last = empty.subtractFrom(third);
-    fail("do more validations");
+    check(result,
+      "Cons(False, ...)",
+      "Empty");
   }
 
   @Test
@@ -160,7 +103,7 @@ public class PCaseTest {
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative doubleWilds = simple(cons, any(), any()).build(ctors);
     PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
-    fail("validate " + result);
+    assertEquals(result, PPossibility.none);
   }
 
   @Test
@@ -172,7 +115,7 @@ public class PCaseTest {
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative fullyWild = any().build(ctors);
     PPossibility result = fullyWild.subtractFrom(boolsPossibility);
-    noneV().validate(result);
+    assertEquals(result, PPossibility.none);
   }
   
   @Test
@@ -193,17 +136,14 @@ public class PCaseTest {
     ).build(ctors);
 
     PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
-    disjunctionV(
-      singleV(snoc,
-        unforcedDisjunctionV(2),
-        singleV(tFalse)
-      ),
-      unforcedV()
-    ).validate(result);
-    assertNotNull(result);
-
+    check(result,
+      "Cons(..., False)",
+      "Empty");
     PPossibility second = secondIsTrue.subtractFrom(result);
-    fail("validate somehow that it's [False, False, _]: " + second);
+    check(second,
+      "Cons(Empty, False)",
+      "Cons(Cons(..., False), False)",
+      "Empty");
   }
 
   @Test
@@ -343,123 +283,6 @@ public class PCaseTest {
     PPossibility from = PPossibility.from(tInfiniteBools, ctors);
     assertNotNull(from.toString()); // this is really to check for a stack overflow due to infinite recursion
   }
-  
-  private static class Validator {
-    private final String desc;
-    private final Consumer<Lazy<? extends PPossibility>> validator;
-
-    public Validator(String desc, Consumer<Lazy<? extends PPossibility>> validator) {
-      this.desc = desc;
-      this.validator = validator;
-    }
-
-    public void validate(PPossibility possibility) {
-      try {
-        validate(Lazy.forced(possibility));
-      } catch (Exception e) {
-        throw new RuntimeException(formatFailure(possibility), e);
-      } catch (AssertionError e) {
-        throw new AssertionError(formatFailure(possibility), e);
-      }
-    }
-
-    private String formatFailure(PPossibility possibility) {
-      return String.format("%nvalidation expected: %s%n            but saw: %s", desc, possibility.toString(false));
-    }
-
-    public void validate(Lazy<? extends PPossibility> possibility) {
-      validator.accept(possibility);
-    }
-
-    @Override
-    public String toString() {
-      return desc;
-    }
-  }
-  
-  private static Consumer<Lazy<? extends PPossibility>> forced(Consumer<? super PPossibility> validator) {
-    return lazyPossibility -> {
-      assertFalse(lazyPossibility.isUnforced(), "possibility was unforced");
-      validator.accept(lazyPossibility.get());
-    };
-  }
-  
-  private static Validator singleV(EfType.SimpleType type, Validator... args) {
-    String desc = type.getName();
-    if (args.length != 0) {
-      StringBuilder sb = new StringBuilder(desc).append('(');
-      desc = Joiner.on(", ").appendTo(sb, args).append(')').toString();
-    }
-    return new Validator(
-      desc,
-      forced(
-        actual -> {
-          assertThat(actual, instanceOf(PPossibility.Simple.class));
-          PPossibility.Simple actualSimple = (PPossibility.Simple) actual;
-          TypedValue<Lazy<PPossibility>> typedValue = actualSimple.typedAndArgs();
-          assertThat(typedValue.type(), equalTo(type));
-          typedValue.consume(
-            l -> assertEquals(args.length, 0),
-            s -> {
-              assertEquals(s.args().size(), args.length);
-              EfCollections.zipC(asList(args), s.args(), Validator::validate);
-            });
-        }));
-  }
-
-  private static Validator disjunctionV(Validator... alternatives) {
-    return new Validator(
-      Joiner.on(" | ").join(alternatives),
-      forced(
-        actual -> {
-          assertThat(actual, instanceOf(PPossibility.Disjunction.class));
-          PPossibility.Disjunction actualDisjunction = (PPossibility.Disjunction) actual;
-          List<PPossibility.Simple> options = actualDisjunction.options();
-          assertEquals(options.size(), alternatives.length);
-          // ensure that each validator works on exactly one option
-          for (Validator alternative : alternatives) {
-            ValidationResults validationResults = new ValidationResults();
-            for (PPossibility.Simple option : options) {
-              try {
-                alternative.validate(option);
-                validationResults.succeeded.add(option);
-              } catch (AssertionError e) {
-                validationResults.failed.add(new Pair<>(e, option));
-              }
-            }
-            // special case: unforced validators can match multiple unforced options
-            if (!validationResults.exactlyOneSuccess() && !(UNFORCED_VALIDATOR.equals(alternative) /* && all are unforced... ? */)) {
-              throw new AssertionError(
-                new MultiException(
-                  "results for alternative " + alternative + ": " + validationResults,
-                  Collections2.transform(validationResults.failed, Pair::first)));
-            }
-          }
-          EfCollections.zipC(asList(alternatives), options, Validator::validate);
-        }));
-  }
-  
-  private static class MultiException extends RuntimeException {
-    public MultiException(String message, Iterable<? extends Throwable> causes) {
-      super(message);
-      causes.forEach(this::addSuppressed);
-    }
-  }
-  
-  private static Validator unforcedDisjunctionV(int n) {
-    assertThat("value", n, greaterThan(1));
-    Validator[] validators = new Validator[n];
-    Arrays.fill(validators, unforcedV());
-    return disjunctionV(validators);
-  }
-  
-  private static Validator unforcedV() {
-    return UNFORCED_VALIDATOR;
-  }
-  
-  private static Validator noneV() {
-    return new Validator(PPossibility.none.toString(), forced(PPossibility.none::equals));
-  }
 
   private static EfType.SimpleType createSimple(String name, CtorRegistry ctors) {
     return createSimple(name, Collections.emptyList(), t -> ctors.setCtorArgs(t, Collections.emptyList()));
@@ -489,20 +312,6 @@ public class PCaseTest {
     EfType.DisjunctiveType list(EfType genericArg) {
       checkNotNull(genericArg);
       return list.reify(reification.apply(genericArg));
-    }
-  }
-
-  private static class ValidationResults {
-    final Collection<PPossibility.Simple> succeeded = new HashSet<>();
-    final Collection<Pair<AssertionError, PPossibility.Simple>> failed = new ArrayList<>();
-
-    public boolean exactlyOneSuccess() {
-      return succeeded.size() == 1;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("matched=%s, failed=%s", succeeded, Collections2.transform(failed, Pair::second));
     }
   }
 }
