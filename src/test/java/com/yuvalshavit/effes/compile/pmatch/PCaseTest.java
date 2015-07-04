@@ -103,6 +103,17 @@ public class PCaseTest {
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
     PAlternative doubleWilds = simple(cons, any(), any()).build(ctors);
     PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
+    check(result, "Empty");
+  }
+
+  @Test
+  public void listPatternStartsWithWildcards() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType.DisjunctiveType list = listTypes.list(tBool);
+
+    PPossibility boolsPossibility = PPossibility.from(list, ctors);
+    PAlternative doubleWilds = any().build(ctors);
+    PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
     assertEquals(result, PPossibility.none);
   }
 
