@@ -2,11 +2,9 @@ package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -125,8 +123,6 @@ public abstract class PAlternative {
     }
   }
   
-  static final Deque<String> messages = new ArrayDeque<>(); // TODO REMOVE! Only meant for debugging!
-  
   static class Simple extends PAlternative {
     private static final Equality<Simple> equality = Equality.forClass(Simple.class).with("value", Simple::value).exactClassOnly();
     private final TypedValue<PAlternative> value;
@@ -141,15 +137,10 @@ public abstract class PAlternative {
 
     @Override
     public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
-      messages.push(String.format("subtracting %s from %s", this, pPossibility.get()));
-      try {
-        return pPossibility.get().dispatch(
-          this::handle,
-          s -> handle(pPossibility, s),
-          this::handleNone);
-      } finally {
-        messages.pop();
-      }
+      return pPossibility.get().dispatch(
+        this::handle,
+        s -> handle(pPossibility, s),
+        this::handleNone);
     }
     
     private StepResult handle(PPossibility.Disjunction disjunction) {
