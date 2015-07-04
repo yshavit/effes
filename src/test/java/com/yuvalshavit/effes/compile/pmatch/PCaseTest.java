@@ -109,7 +109,6 @@ public class PCaseTest {
   @Test
   public void listPatternStartsWithWildcard() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
-    EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
     PPossibility boolsPossibility = PPossibility.from(list, ctors);
