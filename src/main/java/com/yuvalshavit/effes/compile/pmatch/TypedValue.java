@@ -1,7 +1,6 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.base.Joiner;
@@ -17,29 +16,10 @@ public abstract class TypedValue<T> {
   public EfType.SimpleType type() {
     return type;
   }
-  
-  public TypedValue<T> with(List<T> newValues) {
-    return transform(
-      Function.identity(),
-      v -> new StandardValue<>(type, newValues));
-  }
 
   public abstract <R> R transform(
     Function<? super LargeDomainValue<T>, ? extends R> whenLargeDomainValue,
     Function<? super StandardValue<T>, ? extends R> whenStandardValue);
-
-
-  public void consume(Consumer<? super LargeDomainValue<T>> whenLargeDomainValue, Consumer<? super StandardValue<T>> whenStandardValue) {
-    transform(
-      l -> {
-        whenLargeDomainValue.accept(l);
-        return null;
-      },
-      s -> {
-        whenStandardValue.accept(s);
-        return null;
-      });
-  }
   
   @Override public abstract String toString();
 

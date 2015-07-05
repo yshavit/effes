@@ -59,7 +59,7 @@ public abstract class PPossibility {
 
   private PPossibility() {}
   
-  public static PPossibility from(EfType type, CtorRegistry ctors) {
+  public static PPossibility from(EfType type, CtorRegistry ctors) throws PPossibilityCreationException {
     if (type instanceof EfType.SimpleType) {
       return fromSimple((EfType.SimpleType) type, ctors);
     } else if (type instanceof EfType.DisjunctiveType) {
@@ -70,8 +70,7 @@ public abstract class PPossibility {
         if (alternative instanceof EfType.SimpleType) {
           simpleAlternatives.add(((EfType.SimpleType) alternative));
         } else {
-          // TODO report an error!
-          return PPossibility.none;
+          throw new PPossibilityCreationException("not a valid type for a case statement: " + alternative);
         }
       }
       List<Simple> possibilities = simpleAlternatives
@@ -80,8 +79,7 @@ public abstract class PPossibility {
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
-      // TODO report an error!
-      return none;
+      throw new PPossibilityCreationException("not a valid type for a case statement: " + type);
     }
   }
 
