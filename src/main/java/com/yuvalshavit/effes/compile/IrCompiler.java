@@ -22,18 +22,15 @@ public final class IrCompiler<E> {
                     CompileErrors errs)
   {
     this.errs = errs;
-    CtorRegistry ctors = new CtorRegistry();
-    TypeRegistry typeRegistry = getTypeRegistry(sources, ctors, errs);
+    TypeRegistry typeRegistry = getTypeRegistry(sources, errs);
     
     builtInMethods = builtinsRegistryF.apply(typeRegistry, errs);
-    compiledMethods = compileToIntermediate(sources, typeRegistry, ctors, builtInMethods, errs);
+    compiledMethods = compileToIntermediate(sources, typeRegistry, builtInMethods, errs);
   }
 
-  private static TypeRegistry getTypeRegistry(Sources sources,
-                                              CtorRegistry ctors,
-                                              CompileErrors errs) {
+  private static TypeRegistry getTypeRegistry(Sources sources, CompileErrors errs) {
     TypeRegistry typeRegistry = new TypeRegistry(errs);
-    new TypesFinder(typeRegistry, ctors, errs).accept(sources);
+    new TypesFinder(typeRegistry, errs).accept(sources);
     return typeRegistry;
   }
 
@@ -60,17 +57,16 @@ public final class IrCompiler<E> {
   private static MethodsRegistry<Block> compileToIntermediate(
     Sources sources,
     TypeRegistry typeRegistry,
-    CtorRegistry ctors,
     MethodsRegistry<?> builtinsRegistry,
     CompileErrors errs)
   {
     MethodsRegistry<EffesParser.InlinableBlockContext> unparsedMethods = new MethodsRegistry<>();
-    new MethodsFinder(typeRegistry, builtinsRegistry, unparsedMethods, ctors, errs).accept(sources);
+    new MethodsFinder(typeRegistry, builtinsRegistry, unparsedMethods, errs).accept(sources);
 
     Scopes<EfVar, Token> vars = new Scopes<>(
       EfVar::getName,
       (name, token) -> errs.add(token, String.format("duplicate variable name '%s'", name)));
-    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, builtinsRegistry, typeRegistry, ctors, errs, vars);
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(unparsedMethods, builtinsRegistry, typeRegistry, errs, vars);
     StatementCompiler statementCompiler = new StatementCompiler(expressionCompiler, vars);
     BlockCompiler blockCompiler = new BlockCompiler(statementCompiler);
 

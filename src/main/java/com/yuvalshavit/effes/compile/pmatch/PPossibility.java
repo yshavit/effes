@@ -19,7 +19,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
@@ -59,9 +58,9 @@ public abstract class PPossibility {
 
   private PPossibility() {}
   
-  public static PPossibility from(EfType type, CtorRegistry ctors) throws PPossibilityCreationException {
+  public static PPossibility from(EfType type) throws PPossibilityCreationException {
     if (type instanceof EfType.SimpleType) {
-      return fromSimple((EfType.SimpleType) type, ctors);
+      return fromSimple((EfType.SimpleType) type);
     } else if (type instanceof EfType.DisjunctiveType) {
       EfType.DisjunctiveType disjunction = (EfType.DisjunctiveType) type;
       Set<EfType> alternatives = disjunction.getAlternatives();
@@ -75,7 +74,7 @@ public abstract class PPossibility {
       }
       List<Simple> possibilities = simpleAlternatives
         .stream()
-        .map(t -> fromSimple(t, ctors))
+        .map(PPossibility::fromSimple)
         .collect(Collectors.toList());
       return new PPossibility.Disjunction(possibilities);
     } else {
@@ -83,17 +82,20 @@ public abstract class PPossibility {
     }
   }
 
-  private static Simple fromSimple(EfType.SimpleType type, CtorRegistry ctors) {
+  private static Simple fromSimple(EfType.SimpleType type) {
     TypedValue<Lazy<PPossibility>> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       value = new TypedValue.LargeDomainValue<>(type);
       argNames = Collections.emptyList();
     } else {
-      List<EfVar> ctorVars = ctors.get(type, type.getReification());
+      //    List<EfVar> args = argsByType.get(type.getGeneric());
+      //    Preconditions.checkArgument(args != null, "unknown type: " + type);
+      //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+      List<EfVar> ctorVars = type.getArgs(type.getReification());
       List<Lazy<PPossibility>> args  = new ArrayList<>(ctorVars.size());
       for (EfVar ctorVar : ctorVars) {
-        args.add(Lazy.lazy(() -> from(ctorVar.getType(), ctors)));
+        args.add(Lazy.lazy(() -> from(ctorVar.getType())));
       }
       value = new TypedValue.StandardValue<>(type, args);
       argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());

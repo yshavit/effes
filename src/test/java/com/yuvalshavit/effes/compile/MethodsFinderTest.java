@@ -7,13 +7,9 @@ import com.yuvalshavit.effes.compile.node.MethodId;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
 
-import org.mockito.Mockito;
-import org.mockito.internal.stubbing.answers.ThrowsExceptionClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
-
-import java.util.Collections;
 
 public final class MethodsFinderTest {
   @Test
@@ -73,9 +69,8 @@ public final class MethodsFinderTest {
                                   MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
                                   EffesParser parser,
                                   CompileErrors errs) {
-    CtorRegistry ctors = Mockito.mock(CtorRegistry.class, new ThrowsExceptionClass(AssertionError.class));
     MethodsRegistry<?> fakedBuiltinMethods = new MethodsRegistry<>();
-    new MethodsFinder(types, fakedBuiltinMethods, methodsRegistry, ctors, errs)
+    new MethodsFinder(types, fakedBuiltinMethods, methodsRegistry, errs)
       .accept(SourcesFactory.withoutBuiltins(parser));
   }
 }
