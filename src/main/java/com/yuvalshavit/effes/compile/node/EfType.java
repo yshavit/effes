@@ -152,6 +152,9 @@ public abstract class EfType {
 
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
+      if (reificationFunc == KEEP_GENERIC) {
+        return this;
+      }
       List<EfType> reifiedParams = ImmutableList.copyOf(params.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList()));
       return new SimpleType(name, reifiedParams, genericForm);
     }
@@ -249,7 +252,14 @@ public abstract class EfType {
     @Nonnull
     public List<EfVar> getArgs(Function<GenericType, EfType> reification) {
       List<EfVar> args = checkNotNull(genericForm.vars);
-      return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+      return (reification == KEEP_GENERIC)
+        ? args
+        : args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+    }
+    
+    @Nonnull
+    public List<EfVar> getArgs() {
+      return getArgs(KEEP_GENERIC);
     }
     
     public void setCtorArgs(List<EfVar> ctorArgs) {
@@ -269,7 +279,7 @@ public abstract class EfType {
     
     @Nullable
     public EfVar getArgByName(String name, Function<EfType.GenericType, EfType> reification) {
-      for (EfVar arg : getArgs(EfType.KEEP_GENERIC)) {
+      for (EfVar arg : getArgs()) {
         if (arg.getName().equals(name)) {
           return arg.reify(reification);
         }

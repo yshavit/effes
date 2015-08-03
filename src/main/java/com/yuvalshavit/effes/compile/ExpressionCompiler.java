@@ -442,7 +442,7 @@ public final class ExpressionCompiler {
     //    List<EfVar> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    List<EfVar> matchtypeArgs = matchType.getArgs(EfType.KEEP_GENERIC);
+    List<EfVar> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
