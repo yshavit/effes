@@ -20,7 +20,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
@@ -37,11 +36,11 @@ public abstract class PAlternative {
   
   public interface Builder {
     @Nonnull
-    PAlternative build(CtorRegistry ctors);
+    PAlternative build();
   }
   
   public static Builder any(String name) {
-    return (c) -> new Any(name);
+    return () -> new Any(name);
   }
 
   public static Builder any() {
@@ -51,12 +50,12 @@ public abstract class PAlternative {
   public static Builder simple(EfType.SimpleType type, Builder... args) {
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       checkArgument(args.length == 0, "%s doesn't take any arguments", type);
-      return (c) -> new Simple(new TypedValue.LargeDomainValue<>(type));
+      return () -> new Simple(new TypedValue.LargeDomainValue<>(type));
     }
-    return (c) -> {
-      List<PAlternative> builtArgs = Stream.of(args).map(b -> b.build(c)).collect(Collectors.toList());
+    return () -> {
+      List<PAlternative> builtArgs = Stream.of(args).map(Builder::build).collect(Collectors.toList());
       Simple simple = new Simple(new TypedValue.StandardValue<>(type, builtArgs));
-      if (!simple.validate(c, type.getReification())) {
+      if (!simple.validate(type.getReification())) {
         throw new IllegalArgumentException(String.format("failed validation for %s(%s)", type, Joiner.on(", ").join(args)));
       }
       return simple;
@@ -276,11 +275,14 @@ public abstract class PAlternative {
       return new StepResult();
     }
 
-    public boolean validate(CtorRegistry ctors, Function<EfType.GenericType, EfType> reification) {
+    public boolean validate(Function<EfType.GenericType, EfType> reification) {
       return value.transform(
         l -> true,
         s -> {
-          List<EfType> expecteds = Lists.transform(ctors.get(value.type(), reification), EfVar::getType);
+          //    List<EfVar> args = argsByType.get(type.getGeneric());
+          //    Preconditions.checkArgument(args != null, "unknown type: " + type);
+          //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+          List<EfType> expecteds = Lists.transform(value.type().getArgs(reification), EfVar::getType);
           List<PAlternative> actuals = s.args();
           if (expecteds.size() != actuals.size()) {
             return false;
@@ -293,7 +295,7 @@ public abstract class PAlternative {
               if (!expected.contains(simple.value.type())) {
                 return false;
               }
-              if (!simple.validate(ctors, simple.value().type().getReification())) {
+              if (!simple.validate(simple.value().type().getReification())) {
                 return false;
               }
             } else {

@@ -21,20 +21,17 @@ public final class ExpressionCompiler {
   private final TypeRegistry typeRegistry;
   private final CompileErrors errs;
   private final Scopes<EfVar, Token> vars;
-  private final CtorRegistry ctors;
   private EfType.SimpleType declaringType;
 
   public ExpressionCompiler(MethodsRegistry<?> methodsRegistry,
                             MethodsRegistry<?> builtInMethods,
                             TypeRegistry typeRegistry,
-                            CtorRegistry ctors,
                             CompileErrors errs,
                             Scopes<EfVar, Token> vars)
   {
     this.methodsRegistry = methodsRegistry;
     this.builtInMethods = builtInMethods;
     this.typeRegistry = typeRegistry;
-    this.ctors = ctors;
     this.errs = errs;
     this.vars = vars;
   }
@@ -89,7 +86,8 @@ public final class ExpressionCompiler {
       TerminalNode varNode = methodInvoke.methodName().VAR_NAME();
       String varName = varNode.getText();
       if (declaringType != null) {
-        EfVar arg = ctors.getArgByName(declaringType, varName, t -> t);
+        Function<EfType.GenericType, EfType> reification = t -> t;
+        EfVar arg = declaringType.getArgByName(varName, reification);
         if (arg != null) {
           return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
         }
@@ -180,7 +178,7 @@ public final class ExpressionCompiler {
           return new Expression.VarExpression(ctx.getStart(), var);
         }
         else if (target != null) {
-          EfVar arg = ctors.getArgByName(lookOn, methodName, lookOn.getReification());
+          EfVar arg = lookOn.getArgByName(methodName, lookOn.getReification());
           if (arg == null) {
             errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
           } else {
@@ -307,7 +305,10 @@ public final class ExpressionCompiler {
       Token start = ctx.singleTypeParameters().getStart();
       Function<EfType.GenericType,EfType> reification = typeResolver.getReification(start, typeParams, ctorGenericParams);
       type = typeResolver.getSimpleType(typeName, reification);
-      ctorArgs = ctors.get(type, reification);
+      //    List<EfVar> args = argsByType.get(type.getGeneric());
+      //    Preconditions.checkArgument(args != null, "unknown type: " + type);
+      //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+      ctorArgs = type.getArgs(reification);
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, ctorArgs, args);
   }
@@ -438,7 +439,10 @@ public final class ExpressionCompiler {
     }
     EfType.SimpleType matchType = casePattern.matchType();
     List<Pair<Token, String>> bindingTokens = casePattern.bindings();
-    List<EfVar> matchtypeArgs = ctors.get(matchType, EfType.KEEP_GENERIC);
+    //    List<EfVar> args = argsByType.get(type.getGeneric());
+    //    Preconditions.checkArgument(args != null, "unknown type: " + type);
+    //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+    List<EfVar> matchtypeArgs = matchType.getArgs(EfType.KEEP_GENERIC);
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);

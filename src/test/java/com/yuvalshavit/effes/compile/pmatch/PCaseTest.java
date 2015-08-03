@@ -23,7 +23,6 @@ import org.testng.internal.collections.Pair;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
-import com.yuvalshavit.effes.compile.CtorRegistry;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfAssertions;
@@ -41,23 +40,19 @@ public class PCaseTest {
   
   private final EfType.SimpleType tEmpty;
 
-  private final CtorRegistry ctors;
-
   public PCaseTest() {
-    ctors = new CtorRegistry();
-
-    tTrue = createSimple("True", ctors);
-    tFalse = createSimple("False", ctors);
+    tTrue = createSimple("True");
+    tFalse = createSimple("False");
     tBool = (EfType.DisjunctiveType) EfType.disjunction(tTrue, tFalse);
     
     tOne = createSimple("One", singletonList("T"), t -> {
         EfType.GenericType generic = t.getGenericsDeclr().get(0);
-        ctors.setCtorArgs(t, singletonList(EfVar.arg("value", 0, generic)));
+        t.setCtorArgs(singletonList(EfVar.arg("value", 0, generic)));
       });
-    tNothing = createSimple("Nothing", ctors);
+    tNothing = createSimple("Nothing");
     tMaybe = (EfType.DisjunctiveType) EfType.disjunction(tOne, tNothing);
     
-    tEmpty = createSimple("Empty", ctors);
+    tEmpty = createSimple("Empty");
   }
   
   private ListTypes buildListType(String name, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
@@ -72,7 +67,7 @@ public class PCaseTest {
       Pair<String, EfType> arg = consArgs.get(i);
       consVars.add(EfVar.arg(arg.first(), i, arg.second()));
     }
-    ctors.setCtorArgs(cons, consVars);
+    cons.setCtorArgs(consVars);
     return new ListTypes(cons, list, reification);
   }
   
@@ -82,8 +77,8 @@ public class PCaseTest {
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
     
-    PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative firstIsTrue = simple(cons, mTrue(), any()).build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list);
+    PAlternative firstIsTrue = simple(cons, mTrue(), any()).build();
     // case     List[Bool]
     // of       Cons(True, _)
     // 
@@ -100,8 +95,8 @@ public class PCaseTest {
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative doubleWilds = simple(cons, any(), any()).build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list);
+    PAlternative doubleWilds = simple(cons, any(), any()).build();
     PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
     check(result, "Empty");
   }
@@ -111,8 +106,8 @@ public class PCaseTest {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative doubleWilds = any().build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list);
+    PAlternative doubleWilds = any().build();
     PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
     assertEquals(result, PPossibility.none);
   }
@@ -122,8 +117,8 @@ public class PCaseTest {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative fullyWild = any().build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list);
+    PAlternative fullyWild = any().build();
     PPossibility result = fullyWild.subtractFrom(boolsPossibility);
     assertEquals(result, PPossibility.none);
   }
@@ -136,14 +131,14 @@ public class PCaseTest {
     EfType.SimpleType snoc = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list, ctors);
-    PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build(ctors);
+    PPossibility boolsPossibility = PPossibility.from(list);
+    PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build();
     PAlternative secondIsTrue = simple(snoc,
       simple(snoc,
         any(),
         mTrue()),
       any()
-    ).build(ctors);
+    ).build();
 
     PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
@@ -167,7 +162,7 @@ public class PCaseTest {
     EfType.DisjunctiveType maybeBool = this.tMaybe.reify(boolReifiction);
     EfType.SimpleType cons = listTypes.cons(maybeBool);
     EfType.DisjunctiveType list = listTypes.list(maybeBool);
-    PPossibility possibility = PPossibility.from(list, ctors);
+    PPossibility possibility = PPossibility.from(list);
 
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
     //
@@ -189,7 +184,7 @@ public class PCaseTest {
           any()
         )
       )
-    ).build(ctors);
+    ).build();
     
     PPossibility afterCase0 = case0.subtractFrom(possibility);
     check(afterCase0,
@@ -207,7 +202,7 @@ public class PCaseTest {
     PAlternative case1 = simple(cons,
       simple(tOneBool, any()),
       any()
-    ).build(ctors);
+    ).build();
 
     PPossibility afterCase1 = case1.subtractFrom(afterCase0);
     check(afterCase1,
@@ -220,13 +215,13 @@ public class PCaseTest {
     PAlternative case2 = simple(cons,
       simple(tNothing),
       any()
-    ).build(ctors);
+    ).build();
 
     PPossibility afterCase2 = case2.subtractFrom(afterCase1);
     check(afterCase2,
       "Empty");
     
-    PAlternative case3 = simple(tEmpty).build(ctors);
+    PAlternative case3 = simple(tEmpty).build();
     
     PPossibility afterCase3 = case3.subtractFrom(afterCase2);
     
@@ -235,22 +230,22 @@ public class PCaseTest {
 
   @Test
   public void wildcardFromNone() {
-    PAlternative any = any().build(ctors);
+    PAlternative any = any().build();
     PPossibility subtraction = any.subtractFrom(PPossibility.none);
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
-    PAlternative any = simple(tNothing).build(ctors);
+    PAlternative any = simple(tNothing).build();
     PPossibility subtraction = any.subtractFrom(PPossibility.none);
     assertNull(subtraction);
   }
 
   @Test
   public void nothingFromEmpty() {
-    PAlternative any = simple(tNothing).build(ctors);
-    PPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty, ctors));
+    PAlternative any = simple(tNothing).build();
+    PPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
   
@@ -268,34 +263,33 @@ public class PCaseTest {
 
   @Test
   public void trueNoArgs() {
-    assertNotNull(mTrue().build(ctors));
+    assertNotNull(mTrue().build());
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithAnyArg() {
-    simple(tTrue, any()).build(ctors);
+    simple(tTrue, any()).build();
   }
   
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithFalseArg() {
-    simple(tTrue, simple(tFalse)).build(ctors);
+    simple(tTrue, simple(tFalse)).build();
   }
 
   @Test
   public void createInfinitePossibilities() {
     EfType.SimpleType tInfiniteBools = new EfType.SimpleType("InfiniteInts", Collections.emptyList());
-    ctors.setCtorArgs(
-      tInfiniteBools,
+    tInfiniteBools.setCtorArgs(
       asList(
         EfVar.arg("head", 0, tBool),
         EfVar.arg("tail", 1, tInfiniteBools)));
-    
-    PPossibility from = PPossibility.from(tInfiniteBools, ctors);
+
+    PPossibility from = PPossibility.from(tInfiniteBools);
     assertNotNull(from.toString()); // this is really to check for a stack overflow due to infinite recursion
   }
 
-  private static EfType.SimpleType createSimple(String name, CtorRegistry ctors) {
-    return createSimple(name, Collections.emptyList(), t -> ctors.setCtorArgs(t, Collections.emptyList()));
+  private static EfType.SimpleType createSimple(String name) {
+    return createSimple(name, Collections.emptyList(), t -> t.setCtorArgs(Collections.emptyList()));
   }
 
   private static EfType.SimpleType createSimple(String name, List<String> genericParams, Consumer<EfType.SimpleType> ctorsRegistration) {

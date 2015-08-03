@@ -1,6 +1,5 @@
 package com.yuvalshavit.effes.compile;
 
-import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
 import com.yuvalshavit.effes.compile.node.EfArgs;
 import com.yuvalshavit.effes.compile.node.EfMethod;
@@ -17,6 +16,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class MethodsFinder implements Consumer<Sources> {
@@ -25,17 +25,14 @@ public final class MethodsFinder implements Consumer<Sources> {
   private final CompileErrors errs;
   private final TypeRegistry typeRegistry;
   private final MethodsRegistry<?> builtins;
-  private final CtorRegistry ctors;
 
   public MethodsFinder(TypeRegistry typeRegistry,
                        MethodsRegistry<?> builtins,
                        MethodsRegistry<EffesParser.InlinableBlockContext> methodsRegistry,
-                       CtorRegistry ctors,
                        CompileErrors errs) {
     this.typeRegistry = typeRegistry;
     this.builtins = builtins;
     this.methodsRegistry = methodsRegistry;
-    this.ctors = ctors;
     this.errs = errs;
   }
 
@@ -166,7 +163,8 @@ public final class MethodsFinder implements Consumer<Sources> {
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-      if (declaringType != null && ctors.getArgByName(declaringType, name, t -> t) != null) {
+      Function<EfType.GenericType,EfType> reification = t -> t;
+      if (declaringType != null && declaringType.getArgByName(name, reification) != null) {
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
 
