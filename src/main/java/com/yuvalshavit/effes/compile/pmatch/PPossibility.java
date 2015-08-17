@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.EfType;
@@ -58,7 +59,7 @@ public abstract class PPossibility {
 
   private PPossibility() {}
   
-  public static PPossibility from(EfType type) throws PPossibilityCreationException {
+  public static TypedPossibility<? extends EfType> from(EfType type) throws PPossibilityCreationException {
     if (type instanceof EfType.SimpleType) {
       return fromSimple((EfType.SimpleType) type);
     } else if (type instanceof EfType.DisjunctiveType) {
@@ -81,9 +82,13 @@ public abstract class PPossibility {
       throw new PPossibilityCreationException("not a valid type for a case statement: " + type);
     }
   }
+  
+  public static LazyPossibility lazy(TypedPossibility<? extends EfType> possibility) {
+    return new LazyPossibility(Lazy.forced(possibility), possibility.efType());
+  }
 
   private static Simple fromSimple(EfType.SimpleType type) {
-    TypedValue<Lazy<PPossibility>> value;
+    TypedValue<LazyPossibility> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       value = new TypedValue.LargeDomainValue<>(type);
@@ -93,14 +98,14 @@ public abstract class PPossibility {
       //    Preconditions.checkArgument(args != null, "unknown type: " + type);
       //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
       List<EfVar> ctorVars = type.getArgs(type.getReification());
-      List<Lazy<PPossibility>> args  = new ArrayList<>(ctorVars.size());
+      List<LazyPossibility> args  = new ArrayList<>(ctorVars.size());
       for (EfVar ctorVar : ctorVars) {
-        args.add(Lazy.lazy(() -> from(ctorVar.getType())));
+        args.add(lazy(from(ctorVar.getType())));
       }
       value = new TypedValue.StandardValue<>(type, args);
       argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
     }
-    return new Simple(value, argNames);
+    return new Simple(type, value, argNames);
   }
 
   public static final PPossibility none = new PPossibility() {
@@ -136,11 +141,24 @@ public abstract class PPossibility {
     }
   };
 
-  static class Simple extends PPossibility {
-    private final TypedValue<Lazy<PPossibility>> value;
+  public static abstract class TypedPossibility<T extends EfType> extends PPossibility {
+    private final T type;
+
+    private TypedPossibility(T type) {
+      this.type = type;
+    }
+
+    public T efType() {
+      return type;
+    }
+  }
+
+  static class Simple extends TypedPossibility<EfType.SimpleType> {
+    private final TypedValue<LazyPossibility> value;
     private final List<String> argNames;
 
-    private Simple(TypedValue<Lazy<PPossibility>> value, List<String> argNames) {
+    private Simple(EfType.SimpleType type, TypedValue<LazyPossibility> value, List<String> argNames) {
+      super(type);
       this.value = value;
       this.argNames = argNames;
     }
@@ -161,12 +179,14 @@ public abstract class PPossibility {
     }
 
     @VisibleForTesting
-    TypedValue<Lazy<PPossibility>> typedAndArgs() {
+    TypedValue<LazyPossibility> typedAndArgs() {
       return value;
     }
 
-    public Simple withArgs(List<Lazy<PPossibility>> args) {
-      return new Simple(new TypedValue.StandardValue<>(value.type(), args), argNames);
+    public Simple withArgs(List<LazyPossibility> args) {
+      List<EfType> efArgs = Lists.transform(args, LazyPossibility::efType);
+      EfType.SimpleType newEfType = efType().withCtorArgs(efArgs);
+      return new Simple(newEfType, new TypedValue.StandardValue<>(value.type(), args), argNames);
     }
 
     @Override
@@ -174,7 +194,7 @@ public abstract class PPossibility {
       return value.transform(
         large -> toString(large.type(), verbose),
         std -> {
-          List<Lazy<PPossibility>> args = std.args();
+          List<LazyPossibility> args = std.args();
           if (args.isEmpty()) {
             return toString(std.type(), verbose);
           } else {
@@ -195,7 +215,7 @@ public abstract class PPossibility {
     }
   }
   
-  static class Disjunction extends PPossibility {
+  static class Disjunction extends TypedPossibility<EfType.DisjunctiveType> {
     private final List<PPossibility.Simple> options;
 
     @Nonnull
@@ -209,8 +229,13 @@ public abstract class PPossibility {
     }
 
     public Disjunction(Collection<Simple> options) {
+      super(createDisjunction(options));
       checkArgument(options.size() > 1, options);
       this.options = new ArrayList<>(options);
+    }
+
+    private static EfType.DisjunctiveType createDisjunction(Collection<Simple> options) {
+      return (EfType.DisjunctiveType) EfType.disjunction(Collections2.transform(options, Simple::efType));
     }
 
     public List<Simple> options() {

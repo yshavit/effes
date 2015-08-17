@@ -36,7 +36,7 @@ public class EfCollections {
     };
   }
 
-  public static <T, U, R> Iterable<? extends R> zipF(
+  public static <T, U, R> Iterable<R> zipF(
     Iterable<? extends T> left,
     Iterable<? extends U> right,
     BiFunction<? super T, ? super U, ? extends R> transform)

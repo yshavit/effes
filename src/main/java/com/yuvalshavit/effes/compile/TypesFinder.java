@@ -204,6 +204,7 @@ public class TypesFinder implements Consumer<Sources> {
     public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
       EfType.SimpleType type = registry.getSimpleType(ctx.TYPE_NAME().getText());
       if (type != null) {
+        assert type == type.getGeneric() : String.format("%s != %s", type, type.getGeneric());
         type.setCtorArgs(argsBuilder);
       }
       argsBuilder.clear();

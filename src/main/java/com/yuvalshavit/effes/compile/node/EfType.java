@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.yuvalshavit.util.Dispatcher;
+import com.yuvalshavit.util.EfCollections;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -128,18 +130,20 @@ public abstract class EfType {
   public static final class SimpleType extends EfType {
     private final String name;
     private final List<EfType> params;
-    private final GenericForm genericForm;
+    private final SimpleType genericForm;
+    private List<EfVar> ctorArgs; // TODO find a way to make this be final
 
     public SimpleType(String name, List<String> params) {
       this.name = name;
       this.params = ImmutableList.copyOf(params.stream().map(s -> new GenericType(s, this)).collect(Collectors.toList()));
-      this.genericForm = new GenericForm(this);
+      this.genericForm = this;
     }
 
-    private SimpleType(String name, List<EfType> params, GenericForm genericForm) {
+    private SimpleType(String name, List<EfType> params, List<EfVar> args, SimpleType genericForm) {
       this.name = checkNotNull(name);
       this.params = checkNotNull(params);
       this.genericForm = checkNotNull(genericForm);
+      this.ctorArgs = checkNotNull(args);
     }
     
     public String getName() {
@@ -156,7 +160,7 @@ public abstract class EfType {
         return this;
       }
       List<EfType> reifiedParams = ImmutableList.copyOf(params.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList()));
-      return new SimpleType(name, reifiedParams, genericForm);
+      return new SimpleType(name, reifiedParams, ctorArgs, genericForm);
     }
 
     @Override
@@ -170,7 +174,7 @@ public abstract class EfType {
     }
 
     public SimpleType getGeneric() {
-      return genericForm.type;
+      return genericForm;
     }
 
     public List<GenericType> getGenericsDeclr() {
@@ -190,7 +194,7 @@ public abstract class EfType {
     public String toString() {
       // If this is the generic form, we want to print only the names, not the full toString (which would include this object's toString from the GenericName,
       // and thus cause a stack overflow).
-      if (this == genericForm.type) {
+      if (this == genericForm) {
         return params.isEmpty()
           ? name
           : name + getGenericsDeclr().stream().map(GenericType::getName).collect(Collectors.toList());
@@ -239,7 +243,7 @@ public abstract class EfType {
     }
 
     public Function<GenericType, EfType> getReification() {
-      List<EfType> genericsDeclr = genericForm.type.params;
+      List<EfType> genericsDeclr = genericForm.params;
       return g -> {
         int idx = genericsDeclr.indexOf(g);
         if (idx < 0) {
@@ -251,7 +255,7 @@ public abstract class EfType {
     
     @Nonnull
     public List<EfVar> getArgs(Function<GenericType, EfType> reification) {
-      List<EfVar> args = checkNotNull(genericForm.vars);
+      List<EfVar> args = checkNotNull(ctorArgs);
       return (reification == KEEP_GENERIC)
         ? args
         : args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
@@ -264,7 +268,7 @@ public abstract class EfType {
     
     public void setCtorArgs(List<EfVar> ctorArgs) {
       checkNotNull(ctorArgs);
-      if (genericForm.vars != null) {
+      if (this.ctorArgs != null) {
         // TypesRegistry will complain about the dupe; we don't need to (?)
         return; // TODO try to verify that we ever hit this case
       }
@@ -274,7 +278,7 @@ public abstract class EfType {
           throw new IllegalArgumentException("invalid args list: " + ctorArgs);
         }
       }
-      genericForm.vars = ImmutableList.copyOf(ctorArgs);
+      this.ctorArgs = ImmutableList.copyOf(ctorArgs);
     }
     
     @Nullable
@@ -286,19 +290,11 @@ public abstract class EfType {
       }
       return null;
     }
-    
-    private static class GenericForm {
-      final SimpleType type;
-      List<EfVar> vars;
 
-      public GenericForm(SimpleType type) {
-        this.type = type;
-      }
-
-      @Override
-      public String toString() {
-        return String.valueOf(type) + vars;
-      }
+    public SimpleType withCtorArgs(List<EfType> newArgs) {
+      List<EfVar> currentVars = getArgs();// validate that we have them; TODO validate that the new args match
+      Iterable<EfVar> newVars = EfCollections.zipF(currentVars, newArgs, EfVar::cast);
+      return new SimpleType(name, params, Lists.newArrayList(newVars), genericForm);
     }
   }
 

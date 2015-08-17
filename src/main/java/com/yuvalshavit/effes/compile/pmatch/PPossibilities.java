@@ -59,20 +59,20 @@ public class PPossibilities {
       () -> sb.append("∅"));
   }
 
-  private static void displayTyped(TypedValue<Lazy<PPossibility>> typed, StringBuilder sb) {
-    List<Lazy<PPossibility>> simpleArgs = typed.transform(
-      large -> Collections.<Lazy<PPossibility>>emptyList(),
+  private static void displayTyped(TypedValue<LazyPossibility> typed, StringBuilder sb) {
+    List<LazyPossibility> simpleArgs = typed.transform(
+      large -> Collections.<LazyPossibility>emptyList(),
       TypedValue.StandardValue::args
     );
     displaySimple(typed.type(), simpleArgs, sb);
   }
 
-  private static void displaySimple(EfType.SimpleType type, List<Lazy<PPossibility>> args, StringBuilder sb) {
+  private static void displaySimple(EfType.SimpleType type, List<LazyPossibility> args, StringBuilder sb) {
     sb.append(type.getName());
     if (!args.isEmpty()) {
       sb.append('(');
-      for (Iterator<Lazy<PPossibility>> iter = args.iterator(); iter.hasNext(); ) {
-        displayLazyPossibility(iter.next(), sb);
+      for (Iterator<LazyPossibility> iter = args.iterator(); iter.hasNext(); ) {
+        displayLazyPossibility(iter.next().possibility(), sb);
         if (iter.hasNext()) {
           sb.append(", ");
         }

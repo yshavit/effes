@@ -77,13 +77,13 @@ public class PCaseTest {
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
     
-    PPossibility boolsPossibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build();
     // case     List[Bool]
     // of       Cons(True, _)
     // 
     // result   Cons(False, _) | Empty
-    PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
+    ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
       "Cons(False, ...)",
       "Empty");
@@ -95,9 +95,9 @@ public class PCaseTest {
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = simple(cons, any(), any()).build();
-    PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
+    ForcedPossibility result = doubleWilds.subtractFrom(boolsPossibility);
     check(result, "Empty");
   }
 
@@ -106,10 +106,11 @@ public class PCaseTest {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = any().build();
-    PPossibility result = doubleWilds.subtractFrom(boolsPossibility);
-    assertEquals(result, PPossibility.none);
+    ForcedPossibility result = doubleWilds.subtractFrom(boolsPossibility);
+    assertNotNull(result);
+    assertEquals(result.possibility(), PPossibility.none);
   }
 
   @Test
@@ -117,10 +118,11 @@ public class PCaseTest {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative fullyWild = any().build();
-    PPossibility result = fullyWild.subtractFrom(boolsPossibility);
-    assertEquals(result, PPossibility.none);
+    ForcedPossibility result = fullyWild.subtractFrom(boolsPossibility);
+    assertNotNull(result);
+    assertEquals(result.possibility(), PPossibility.none);
   }
   
   @Test
@@ -131,7 +133,7 @@ public class PCaseTest {
     EfType.SimpleType snoc = listTypes.cons(tBool);
     EfType.DisjunctiveType list = listTypes.list(tBool);
 
-    PPossibility boolsPossibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build();
     PAlternative secondIsTrue = simple(snoc,
       simple(snoc,
@@ -140,11 +142,12 @@ public class PCaseTest {
       any()
     ).build();
 
-    PPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
+    ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
       "Cons(..., False)",
       "Empty");
-    PPossibility second = secondIsTrue.subtractFrom(result);
+    assertNotNull(result);
+    ForcedPossibility second = secondIsTrue.subtractFrom(result.efType(), result.possibility());
     check(second,
       "Cons(Empty, False)",
       "Cons(Cons(..., False), False)",
@@ -162,7 +165,7 @@ public class PCaseTest {
     EfType.DisjunctiveType maybeBool = this.tMaybe.reify(boolReifiction);
     EfType.SimpleType cons = listTypes.cons(maybeBool);
     EfType.DisjunctiveType list = listTypes.list(maybeBool);
-    PPossibility possibility = PPossibility.from(list);
+    PPossibility.TypedPossibility<?> possibility = PPossibility.from(list);
 
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
     //
@@ -186,8 +189,9 @@ public class PCaseTest {
       )
     ).build();
     
-    PPossibility afterCase0 = case0.subtractFrom(possibility);
-    check(afterCase0,
+    ForcedPossibility afterCase0 = case0.subtractFrom(possibility);
+    check(
+      afterCase0,
       "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
       "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
       "Cons(Nothing, Cons(..., Empty))",
@@ -204,7 +208,8 @@ public class PCaseTest {
       any()
     ).build();
 
-    PPossibility afterCase1 = case1.subtractFrom(afterCase0);
+    assertNotNull(afterCase0);
+    ForcedPossibility afterCase1 = case1.subtractFrom(afterCase0.efType(), afterCase0.possibility());
     check(afterCase1,
       "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
       "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
@@ -217,43 +222,46 @@ public class PCaseTest {
       any()
     ).build();
 
-    PPossibility afterCase2 = case2.subtractFrom(afterCase1);
+    assertNotNull(afterCase1);
+    ForcedPossibility afterCase2 = case2.subtractFrom(afterCase1.efType(), afterCase1.possibility());
     check(afterCase2,
       "Empty");
     
     PAlternative case3 = simple(tEmpty).build();
     
-    PPossibility afterCase3 = case3.subtractFrom(afterCase2);
+    assertNotNull(afterCase2);
+    ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2.efType(), afterCase2.possibility());
     
-    assertEquals(afterCase3, PPossibility.none);
+    assertNotNull(afterCase3);
+    assertEquals(afterCase3.possibility(), PPossibility.none);
   }
 
   @Test
   public void wildcardFromNone() {
     PAlternative any = any().build();
-    PPossibility subtraction = any.subtractFrom(PPossibility.none);
+    ForcedPossibility subtraction = any.subtractFrom(null, PPossibility.none);
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
     PAlternative any = simple(tNothing).build();
-    PPossibility subtraction = any.subtractFrom(PPossibility.none);
+    ForcedPossibility subtraction = any.subtractFrom(null, PPossibility.none);
     assertNull(subtraction);
   }
 
   @Test
   public void nothingFromEmpty() {
     PAlternative any = simple(tNothing).build();
-    PPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty));
+    ForcedPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
   
 
-  private void check(PPossibility possibility, String... expected) {
+  private void check(ForcedPossibility possibility, String... expected) {
     List<String> expectedList = Lists.newArrayList(expected);
     Collections.sort(expectedList);
-    List<String> actualList = PPossibilities.toStrings(possibility);
+    List<String> actualList = PPossibilities.toStrings(possibility.possibility());
     EfAssertions.equalLists(actualList, expectedList);
   }
 

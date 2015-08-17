@@ -61,30 +61,37 @@ public abstract class PAlternative {
       return simple;
     };
   }
-  
+
   @Nullable
-  public PPossibility subtractFrom(PPossibility pPossibility) {
+  public ForcedPossibility subtractFrom(EfType type, PPossibility pPossibility) {
     if (PPossibility.none.equals(pPossibility)) {
       return null;
     }
-    StepResult result = subtractFrom(Lazy.forced(pPossibility));
+    StepResult result = subtractFrom(new LazyPossibility(Lazy.forced(pPossibility), type));
     if (result.noneMatched()) {
       return null;
     }
     List<PPossibility.Simple> simples = result.getUnmatched().stream()
-      .map(Lazy::get)
-      .flatMap(p -> p.components().stream())
+      .flatMap(lp -> lp.possibility.get().components().stream())
       .collect(Collectors.toList());
     if (simples.isEmpty()) {
-      return PPossibility.none;
+      return new ForcedPossibility(PPossibility.none, EfType.UNKNOWN);
     } else if (simples.size() == 1) {
-      return Iterables.getOnlyElement(simples);
+      PPossibility.Simple only = Iterables.getOnlyElement(simples);
+      return new ForcedPossibility(only, only.efType());
     } else {
-      return new PPossibility.Disjunction(simples);
+      EfType efDisjunction = EfType.disjunction(Lists.transform(simples, PPossibility.TypedPossibility::efType));
+      PPossibility.Disjunction possibilityDisjunction = new PPossibility.Disjunction(simples);
+      return new ForcedPossibility(possibilityDisjunction, efDisjunction);
     }
   }
+
+  @Nullable
+  public ForcedPossibility subtractFrom(PPossibility.TypedPossibility<? extends EfType> possibility) {
+    return subtractFrom(possibility.efType(), possibility);
+  }
   
-  protected abstract StepResult subtractFrom(Lazy<PPossibility> pPossibility);
+  protected abstract StepResult subtractFrom(LazyPossibility pPossibility);
   
   static class Any extends PAlternative {
     private static final Equality<Any> equality = Equality.forClass(Any.class).with("name", Any::name).exactClassOnly();
@@ -99,7 +106,7 @@ public abstract class PAlternative {
     }
 
     @Override
-    public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
+    public StepResult subtractFrom(LazyPossibility pPossibility) {
       StepResult r = new StepResult();
       r.addMatched(pPossibility);
       return r;
@@ -135,8 +142,8 @@ public abstract class PAlternative {
     }
 
     @Override
-    public StepResult subtractFrom(Lazy<PPossibility> pPossibility) {
-      return pPossibility.get().dispatch(
+    public StepResult subtractFrom(LazyPossibility pPossibility) {
+      return pPossibility.possibility().get().dispatch(
         this::handle,
         s -> handle(pPossibility, s),
         this::handleNone);
@@ -145,8 +152,8 @@ public abstract class PAlternative {
     private StepResult handle(PPossibility.Disjunction disjunction) {
       StepResult result = new StepResult();
       for (PPossibility.Simple option : disjunction.options()) {
-        Lazy<PPossibility> lazyOption = Lazy.forced(option);
-        StepResult step = subtractFrom(lazyOption);
+        LazyPossibility lazyPossibility = new LazyPossibility(Lazy.forced(option), option.efType());
+        StepResult step = subtractFrom(lazyPossibility);
         result.addUnmatched(step.getUnmatched());
         if (step.anyMatched()) {
           result.addMatched(step.getMatched());
@@ -155,8 +162,8 @@ public abstract class PAlternative {
       return result;
     }
 
-    private StepResult handle(Lazy<PPossibility> lazyPossibility, PPossibility.Simple simple) {
-      TypedValue<Lazy<PPossibility>> simpleTypeAndArgs = simple.typedAndArgs();
+    private StepResult handle(LazyPossibility lazyPossibility, PPossibility.Simple simple) {
+      TypedValue<LazyPossibility> simpleTypeAndArgs = simple.typedAndArgs();
       if (!simpleTypeAndArgs.type().equals(value.type())) {
         StepResult r = new StepResult();
         r.addUnmatched(lazyPossibility);
@@ -173,10 +180,18 @@ public abstract class PAlternative {
                 standardAlternative,
                 largePossibility));
           },
-          simplePossibility -> subtractFromStandard(value.type(), standardAlternative.args(), lazyPossibility, simplePossibility, simple::withArgs)));
+          simplePossibility -> subtractFromStandard(
+            value.type(),
+            standardAlternative.args(),
+            lazyPossibility,
+            simplePossibility,
+            args -> {
+              PPossibility.Simple simpleResult = simple.withArgs(args);
+              return new LazyPossibility(Lazy.forced(simpleResult), simpleResult.efType());
+            })));
     }
     
-    private StepResult subtractFromLarge(Lazy<PPossibility> possibility) {
+    private StepResult subtractFromLarge(LazyPossibility possibility) {
       StepResult r = new StepResult();
       r.addMatched(possibility);
       r.addUnmatched(possibility);
@@ -186,11 +201,11 @@ public abstract class PAlternative {
     private StepResult subtractFromStandard(
       EfType.SimpleType type,
       List<PAlternative> alternativeArgs,
-      Lazy<PPossibility> lazyPossibility,
-      TypedValue.StandardValue<Lazy<PPossibility>> possibility,
-      Function<List<Lazy<PPossibility>>, PPossibility> possibilityMaker)
+      LazyPossibility lazyPossibility,
+      TypedValue.StandardValue<LazyPossibility> possibility,
+      Function<List<LazyPossibility>, LazyPossibility> possibilityMaker)
     {
-      List<Lazy<PPossibility>> possibilityArgs = possibility.args();
+      List<LazyPossibility> possibilityArgs = possibility.args();
       int nargs = possibilityArgs.size();
       checkArgument(alternativeArgs.size() == nargs, "mismatched args for %s: %s != %s", type, alternativeArgs, possibilityArgs);
 
@@ -204,7 +219,7 @@ public abstract class PAlternative {
       List<StepResult> resultArgs = new ArrayList<>(nargs);
       for (int i = 0; i < nargs; ++i) {
         PAlternative alternativeArg = alternativeArgs.get(i);
-        Lazy<PPossibility> possibilityArg = possibilityArgs.get(i);
+        LazyPossibility possibilityArg = possibilityArgs.get(i);
         StepResult argResult = alternativeArg.subtractFrom(possibilityArg);
         if (argResult.noneMatched()) {
           StepResult r = new StepResult(); // Do I want some sort of detail-level reporting to the user?
@@ -220,12 +235,12 @@ public abstract class PAlternative {
       exploded.stream()
         .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
         .map(args -> Lists.transform(args, ExplodeArg::value))
-        .map(combo -> Lazy.forced(possibilityMaker.apply(combo)))
+        .map(possibilityMaker::apply)
         .forEach(result::addUnmatched);
       exploded.stream()
         .filter(args -> args.stream().allMatch(ExplodeArg::fromMatched))
         .map(args -> Lists.transform(args, ExplodeArg::value))
-        .map(combo -> Lazy.forced(possibilityMaker.apply(combo)))
+        .map(possibilityMaker::apply)
         .forEach(result::addMatched);
       
       /*
@@ -334,15 +349,15 @@ public abstract class PAlternative {
   }
 
   private static class ExplodeArg {
-    private final Lazy<PPossibility> possibility;
+    private final LazyPossibility possibility;
     private final boolean fromMatched;
 
-    public ExplodeArg(Lazy<PPossibility> possibility, boolean fromMatched) {
+    public ExplodeArg(LazyPossibility possibility, boolean fromMatched) {
       this.possibility = possibility;
       this.fromMatched = fromMatched;
     }
 
-    public Lazy<PPossibility> value() {
+    public LazyPossibility value() {
       return possibility;
     }
     
