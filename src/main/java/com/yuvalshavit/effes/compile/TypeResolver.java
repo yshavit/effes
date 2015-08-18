@@ -91,23 +91,8 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
         type = EfType.UNKNOWN;
       } else {
         EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
-        boolean genericArgsPresent = params.OPEN_BRACKET() != null;
-        if (type instanceof EfType.SimpleType) {
-          EfType.SimpleType simpleType = (EfType.SimpleType) type;
-          if (!genericArgsPresent) {
-            if (simpleType.getParams().isEmpty()) {
-              type = type.reify(EfType.KEEP_GENERIC);
-            } else {
-              List<String> expectedGenericNames = simpleType.getGenericsDeclr().stream().map(EfType.GenericType::getName).collect(Collectors.toList());
-              errs.add(ctx.getStop(), "missing generic parameters for " + simpleType.getName() + expectedGenericNames);
-              type = EfType.UNKNOWN;
-            }
-          } else {
-            type = type.reify(getReification(params.getStart(), simpleType.getGenericsDeclr(), params.type()));
-          }
-        } else if (genericArgsPresent) {
-          throw new UnsupportedOperationException("alias type with generic?"); // TODO
-        }
+        Token token = ctx.getStop();
+        type = reifyOnLookup(type, params, token);
       }
       return type;
     }
@@ -148,5 +133,26 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
       }
       return null;
     }
+  }
+
+  protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, Token token) {
+    boolean genericArgsPresent = params.OPEN_BRACKET() != null;
+    if (type instanceof EfType.SimpleType) {
+      EfType.SimpleType simpleType = (EfType.SimpleType) type;
+      if (!genericArgsPresent) {
+        if (simpleType.getParams().isEmpty()) {
+          type = type.reify(EfType.KEEP_GENERIC);
+        } else {
+          List<String> expectedGenericNames = simpleType.getGenericsDeclr().stream().map(EfType.GenericType::getName).collect(Collectors.toList());
+          errs.add(token, "missing generic parameters for " + simpleType.getName() + expectedGenericNames);
+          type = EfType.UNKNOWN;
+        }
+      } else {
+        type = type.reify(getReification(params.getStart(), simpleType.getGenericsDeclr(), params.type()));
+      }
+    } else if (genericArgsPresent) {
+      throw new UnsupportedOperationException("alias type with generic?"); // TODO
+    }
+    return type;
   }
 }

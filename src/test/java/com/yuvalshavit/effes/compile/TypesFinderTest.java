@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.TUtils;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
@@ -23,6 +24,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertSame;
 
 public final class TypesFinderTest {
   @Test
@@ -41,10 +43,11 @@ public final class TypesFinderTest {
       "type True",
       "type True"
     );
-    TUtils.expectErrors(errs -> {
-      TypeRegistry registry = new TypeRegistry(errs);
-      new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
-    });
+    TUtils.expectErrors(
+      errs -> {
+        TypeRegistry registry = new TypeRegistry(errs);
+        new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+      });
   }
 
   @Test
@@ -95,6 +98,51 @@ public final class TypesFinderTest {
     assertEquals(two.getArgs(reification), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
     assertEquals(two.toString(), "Two");
   }
+  
+  @Test
+  public void dataTypeHasParameterizedArgsForwardReferenced() {
+    // like the non-forwardReferenced version, but with Two declared before One and Another
+    EffesParser parser = ParserUtils.createParser(
+      "type Nested[T](value: One[T])",
+      "type One[T](value: T)"
+    );
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Nested", "One"));
+    EfType.SimpleType one = registry.getSimpleType("One");
+    EfType.SimpleType nested = registry.getSimpleType("Nested");
+    assertNotNull(one);
+    assertNotNull(nested);
+    
+    // check that the T of Nested[T] is the same as the T of its One[T]. That is, when we say
+    // typed Nested[T](value: One[T]), that both T's refer to the same generic param
+    EfType nestedParam = Iterables.getOnlyElement(nested.getParams());
+    assertEquals(nestedParam.getClass(), EfType.GenericType.class);
+    EfVar nestedValue = nested.getArgByName("value", EfType.KEEP_GENERIC);
+    assertNotNull(nestedValue);
+    EfType nestedValueType = nestedValue.getType();
+    assertEquals(nestedValueType, one);
+    EfType oneParam = Iterables.getOnlyElement(((EfType.SimpleType)nestedValueType).getParams());
+    // TODO verify what this should be
+//    assertSame(oneParam, nestedParam);
+  }
+  
+  @Test
+  public void typeIsReifiedConcretely() {
+    // like the non-forwardReferenced version, but with Two declared before One and Another
+    EffesParser parser = ParserUtils.createParser(
+      "type Alpha",
+      "type One[T](value: T)",
+      "type OneAlpha(value: One[Alpha])"
+    );
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Alpha", "One", "OneAlpha"));
+    // TODO verify expected behavior as far as reification in the registry. I would guess it should be as much as possible?
+  }
+  
   @Test
   public void dataTypeHasDisjunctionArg() {
     EffesParser parser = ParserUtils.createParser(
