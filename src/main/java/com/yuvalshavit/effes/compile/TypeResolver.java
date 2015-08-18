@@ -96,7 +96,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
           EfType.SimpleType simpleType = (EfType.SimpleType) type;
           if (!genericArgsPresent) {
             if (simpleType.getParams().isEmpty()) {
-              type = type.reify(t -> t);
+              type = type.reify(EfType.KEEP_GENERIC);
             } else {
               List<String> expectedGenericNames = simpleType.getGenericsDeclr().stream().map(EfType.GenericType::getName).collect(Collectors.toList());
               errs.add(ctx.getStop(), "missing generic parameters for " + simpleType.getName() + expectedGenericNames);
