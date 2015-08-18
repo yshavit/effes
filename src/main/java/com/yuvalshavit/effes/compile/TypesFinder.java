@@ -215,6 +215,8 @@ public class TypesFinder implements Consumer<Sources> {
     public void enterDataTypeArgDeclr(@NotNull EffesParser.DataTypeArgDeclrContext ctx) {
       String argName = ctx.VAR_NAME().getText();
       TypeResolver resolver = new TypeResolver(registry, errs, context);
+      // problem here is recursion. If types form a DAG, we can do some work to make sure it gets handled correctly.
+      // But if not, what do we do? Hmmm!
       EfType argType = resolver.apply(ctx.type());
       EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
       argsBuilder.add(arg);

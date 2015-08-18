@@ -72,6 +72,30 @@ public final class TypesFinderTest {
   }
 
   @Test
+  public void dataTypeHasSimpleArgsForwardReferenced() {
+    // like the non-forwardReferenced version, but with Two declared before One and Another
+    EffesParser parser = ParserUtils.createParser(
+      "type Two(only: One, okay: Another)",
+      "type One",
+      "type Another"
+    );
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("One", "Two", "Another"));
+    EfType.SimpleType one = registry.getSimpleType("One");
+    EfType.SimpleType another = registry.getSimpleType("Another");
+    EfType.SimpleType two = registry.getSimpleType("Two");
+    assertNotNull(two);
+
+    Function<EfType.GenericType, EfType> reification = t -> t;
+    //    List<EfVar> args = argsByType.get(type.getGeneric());
+    //    Preconditions.checkArgument(args != null, "unknown type: " + type);
+    //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+    assertEquals(two.getArgs(reification), Arrays.asList(EfVar.arg("only", 0, one), EfVar.arg("okay", 1, another)));
+    assertEquals(two.toString(), "Two");
+  }
+  @Test
   public void dataTypeHasDisjunctionArg() {
     EffesParser parser = ParserUtils.createParser(
       "type Cat",
