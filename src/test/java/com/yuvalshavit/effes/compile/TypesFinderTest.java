@@ -25,6 +25,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.fail;
 
 public final class TypesFinderTest {
   @Test
@@ -141,6 +142,29 @@ public final class TypesFinderTest {
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Alpha", "One", "OneAlpha"));
     // TODO verify expected behavior as far as reification in the registry. I would guess it should be as much as possible?
+    fail();
+  }
+
+  @Test
+  public void doubleNestedGeneric() {
+    EffesParser parser = ParserUtils.createParser(
+      "type Inner[T](value: T)",
+      "type OuterConcrete(value: Middle[Inner[Alpha]])",
+      "type Middle[T](value: T)",
+      "type Outer[T](value: Middle[Inner[T]])"
+    );
+    fail(); // TODO
+  }
+
+  @Test
+  public void doubleNestedGenericOfConcrete() {
+    EffesParser parser = ParserUtils.createParser(
+      "type OuterConcrete(value: Middle[Inner[Alpha]])",
+      "type Inner[T](value: T)",
+      "type Middle[T](value: T)",
+      "type Alpha"
+    );
+    fail(); // TODO
   }
   
   @Test
