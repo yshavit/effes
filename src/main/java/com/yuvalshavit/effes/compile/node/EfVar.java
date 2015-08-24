@@ -12,7 +12,7 @@ public final class EfVar {
   private final int argPosition;
   private final boolean isArg;
 
-  public static EfVar arg(String name, int argPosition, EfType type) {
+  public static EfVar arg(String name, int argPosition, EfType type) { // TODO deprecate in favor of CtorArgs
     Preconditions.checkArgument(argPosition >= 0, "invalid arg position: %s", argPosition);
     return new EfVar(name, argPosition, type, true);
   }

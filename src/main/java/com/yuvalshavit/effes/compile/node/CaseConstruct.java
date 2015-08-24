@@ -98,11 +98,11 @@ public class CaseConstruct<N extends Node> {
 
   public static class Alternative<N extends Node> {
     private final EfType.SimpleType type;
-    private final List<EfVar> ctorArgs;
+    private final List<CtorArg> ctorArgs;
     private final N ifMatched;
     private final List<EfVar> bindings;
 
-    public Alternative(EfType.SimpleType type, List<EfVar> ctorArgs, List<EfVar> bindings, N ifMatched) {
+    public Alternative(EfType.SimpleType type, List<CtorArg> ctorArgs, List<EfVar> bindings, N ifMatched) {
       this.type = type;
       this.ctorArgs = ctorArgs;
       this.ifMatched = ifMatched;
@@ -117,7 +117,7 @@ public class CaseConstruct<N extends Node> {
       return type;
     }
 
-    public List<EfVar> getCtorArgs() {
+    public List<CtorArg> getCtorArgs() {
       return ctorArgs;
     }
 

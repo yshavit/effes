@@ -21,8 +21,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
+import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Lazy;
@@ -97,13 +97,13 @@ public abstract class PPossibility {
       //    List<EfVar> args = argsByType.get(type.getGeneric());
       //    Preconditions.checkArgument(args != null, "unknown type: " + type);
       //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-      List<EfVar> ctorVars = type.getArgs(type.getReification());
+      List<CtorArg> ctorVars = type.getArgs(type.getReification());
       List<LazyPossibility> args  = new ArrayList<>(ctorVars.size());
-      for (EfVar ctorVar : ctorVars) {
-        args.add(lazy(from(ctorVar.getType())));
+      for (CtorArg ctorVar : ctorVars) {
+        args.add(lazy(from(ctorVar.type())));
       }
       value = new TypedValue.StandardValue<>(type, args);
-      argNames = ctorVars.stream().map(EfVar::getName).collect(Collectors.toList());
+      argNames = ctorVars.stream().map(CtorArg::name).collect(Collectors.toList());
     }
     return new Simple(type, value, argNames);
   }

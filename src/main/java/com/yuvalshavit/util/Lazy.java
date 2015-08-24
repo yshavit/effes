@@ -20,6 +20,11 @@ public class Lazy<T> implements Supplier<T> {
   private static final AtomicInteger ids = new AtomicInteger();
 
   public static <T> Lazy<T> lazy(Supplier<? extends T> supplier) {
+    if (supplier instanceof Lazy) {
+      @SuppressWarnings("unchecked")
+      Lazy<T> ibid = (Lazy<T>) supplier; // its type safety is as good as the input's
+      return ibid;
+    }
     return new Lazy<>(supplier);
   }
 

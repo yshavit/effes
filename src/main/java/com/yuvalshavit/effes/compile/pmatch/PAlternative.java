@@ -21,8 +21,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
+import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
@@ -297,7 +297,7 @@ public abstract class PAlternative {
           //    List<EfVar> args = argsByType.get(type.getGeneric());
           //    Preconditions.checkArgument(args != null, "unknown type: " + type);
           //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-          List<EfType> expecteds = Lists.transform(value.type().getArgs(reification), EfVar::getType);
+          List<EfType> expecteds = Lists.transform(value.type().getArgs(reification), CtorArg::type);
           List<PAlternative> actuals = s.args();
           if (expecteds.size() != actuals.size()) {
             return false;

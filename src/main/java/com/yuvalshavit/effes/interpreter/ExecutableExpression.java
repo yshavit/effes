@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.compile.node.Expression;
@@ -93,9 +94,9 @@ public abstract class ExecutableExpression implements ExecutableElement {
 
   public static class InstanceArg extends ExecutableExpression {
     private final ExecutableExpression target;
-    private final EfVar arg;
+    private final CtorArg arg;
 
-    public InstanceArg(Expression source, ExecutableExpression target, EfVar arg) {
+    public InstanceArg(Expression source, ExecutableExpression target, CtorArg arg) {
       super(source);
       this.target = target;
       this.arg = arg;

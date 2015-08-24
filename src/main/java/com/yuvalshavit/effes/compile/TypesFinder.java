@@ -5,8 +5,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.CompileErrors;
+import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.parser.EffesBaseListener;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class TypesFinder implements Consumer<Sources> {
@@ -187,7 +188,7 @@ public class TypesFinder implements Consumer<Sources> {
   }
 
   private class FindSimpleTypeArgs extends EffesBaseListener {
-    private final List<EfVar> argsBuilder = new ArrayList<>();
+    private final List<CtorArg> argsBuilder = new ArrayList<>();
     private EfType.SimpleType context;
 
     @Override
@@ -217,13 +218,15 @@ public class TypesFinder implements Consumer<Sources> {
       TypeResolver resolver = new TypeResolver(registry, errs, context) {
         @Override
         protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, Token token) {
-          return type;
+          return type; // TODO inner types reify here?
         }
       };
       // problem here is recursion. If types form a DAG, we can do some work to make sure it gets handled correctly.
       // But if not, what do we do? Hmmm!
-      EfType argType = resolver.apply(ctx.type());
-      EfVar arg = EfVar.arg(argName, argsBuilder.size(), argType);
+      EffesParser.TypeContext typeCtx = ctx.type();
+      Supplier<EfType> typeGetter = () -> resolver.apply(typeCtx); // TODO or reify here?
+      
+      CtorArg arg = new CtorArg(argsBuilder.size(), argName, typeGetter);
       argsBuilder.add(arg);
     }
   }

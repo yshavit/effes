@@ -155,10 +155,10 @@ public abstract class Expression extends Node {
 
     @Nullable
     private final EfType.SimpleType simpleType;
-    private final List<EfVar> ctorArgs;
+    private final List<CtorArg> ctorArgs;
     private final List<Expression> args;
 
-    public CtorInvoke(Token token, @Nullable EfType.SimpleType type, List<EfVar> ctorArgs, List<Expression> args) {
+    public CtorInvoke(Token token, @Nullable EfType.SimpleType type, List<CtorArg> ctorArgs, List<Expression> args) {
       super(token, type);
       this.ctorArgs = ctorArgs;
       simpleType = type;
@@ -184,7 +184,7 @@ public abstract class Expression extends Node {
         for (int i = 0, len = Math.min(ctorArgs.size(), args.size()); i < len; ++i) {
           Expression actualArg = args.get(i);
           EfType actualType = actualArg.resultType();
-          EfType expectedType = ctorArgs.get(i).getType();
+          EfType expectedType = ctorArgs.get(i).type();
           expectedType = expectedType.reify(reification);
           if (!expectedType.contains(actualType)) {
             errs.add(actualArg.token(), String.format("expected type %s but found %s", expectedType, actualType));
@@ -214,10 +214,10 @@ public abstract class Expression extends Node {
 
   public static class InstanceArg extends Expression {
     private final Expression target;
-    private final EfVar arg;
+    private final CtorArg arg;
 
-    public InstanceArg(Token token, Expression target, EfVar arg) {
-      super(token, arg.getType());
+    public InstanceArg(Token token, Expression target, CtorArg arg) {
+      super(token, arg.type());
       this.target = target;
       this.arg = arg;
     }
@@ -226,7 +226,7 @@ public abstract class Expression extends Node {
       return target;
     }
 
-    public EfVar getArg() {
+    public CtorArg getArg() {
       return arg;
     }
 

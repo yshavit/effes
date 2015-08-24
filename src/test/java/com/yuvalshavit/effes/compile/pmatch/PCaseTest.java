@@ -23,8 +23,8 @@ import org.testng.internal.collections.Pair;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
+import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.util.EfAssertions;
 import com.yuvalshavit.util.EfFunctions;
 
@@ -47,7 +47,7 @@ public class PCaseTest {
     
     tOne = createSimple("One", singletonList("T"), t -> {
         EfType.GenericType generic = t.getGenericsDeclr().get(0);
-        t.setCtorArgs(singletonList(EfVar.arg("value", 0, generic)));
+        t.setCtorArgs(singletonList(new CtorArg(0, "value", generic)));
       });
     tNothing = createSimple("Nothing");
     tMaybe = (EfType.DisjunctiveType) EfType.disjunction(tOne, tNothing);
@@ -62,10 +62,10 @@ public class PCaseTest {
     Function<EfType, Function<EfType.GenericType, EfType>> reification = g -> Functions.forMap(Collections.singletonMap(genericParam, g))::apply;
 
     List<Pair<String, EfType>> consArgs = consBuilder.apply(genericParam, list);
-    List<EfVar> consVars = new ArrayList<>(consArgs.size());
+    List<CtorArg> consVars = new ArrayList<>(consArgs.size());
     for (int i = 0; i < consArgs.size(); ++i) {
       Pair<String, EfType> arg = consArgs.get(i);
-      consVars.add(EfVar.arg(arg.first(), i, arg.second()));
+      consVars.add(new CtorArg(i, arg.first(), arg::second));
     }
     cons.setCtorArgs(consVars);
     return new ListTypes(cons, list, reification);
@@ -289,8 +289,8 @@ public class PCaseTest {
     EfType.SimpleType tInfiniteBools = new EfType.SimpleType("InfiniteInts", Collections.emptyList());
     tInfiniteBools.setCtorArgs(
       asList(
-        EfVar.arg("head", 0, tBool),
-        EfVar.arg("tail", 1, tInfiniteBools)));
+        new CtorArg(0, "head", tBool),
+        new CtorArg(1, "tail", tInfiniteBools)));
 
     PPossibility from = PPossibility.from(tInfiniteBools);
     assertNotNull(from.toString()); // this is really to check for a stack overflow due to infinite recursion

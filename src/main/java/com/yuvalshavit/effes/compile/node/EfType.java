@@ -131,7 +131,7 @@ public abstract class EfType {
     private final String name;
     private final List<EfType> params;
     private final SimpleType genericForm;
-    private List<EfVar> ctorArgs; // TODO find a way to make this be final
+    private List<CtorArg> ctorArgs; // TODO find a way to make this be final
 
     public SimpleType(String name, List<String> params) {
       this.name = name;
@@ -139,7 +139,7 @@ public abstract class EfType {
       this.genericForm = this;
     }
 
-    private SimpleType(String name, List<EfType> params, List<EfVar> args, SimpleType genericForm) {
+    private SimpleType(String name, List<EfType> params, List<CtorArg> args, SimpleType genericForm) {
       this.name = checkNotNull(name);
       this.params = checkNotNull(params);
       this.genericForm = checkNotNull(genericForm);
@@ -254,37 +254,31 @@ public abstract class EfType {
     }
     
     @Nonnull
-    public List<EfVar> getArgs(Function<GenericType, EfType> reification) {
-      List<EfVar> args = checkNotNull(ctorArgs);
+    public List<CtorArg> getArgs(Function<GenericType, EfType> reification) {
+      List<CtorArg> args = checkNotNull(ctorArgs);
       return (reification == KEEP_GENERIC)
         ? args
-        : args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
+        : Lists.transform(args, arg -> arg.reify(reification));
     }
     
     @Nonnull
-    public List<EfVar> getArgs() {
+    public List<CtorArg> getArgs() {
       return getArgs(KEEP_GENERIC);
     }
     
-    public void setCtorArgs(List<EfVar> ctorArgs) {
+    public void setCtorArgs(List<CtorArg> ctorArgs) {
       checkNotNull(ctorArgs);
       if (this.ctorArgs != null) {
         // TypesRegistry will complain about the dupe; we don't need to (?)
         return; // TODO try to verify that we ever hit this case
       }
-      for (int pos = 0; pos < ctorArgs.size(); ++pos) {
-        EfVar arg = ctorArgs.get(pos);
-        if (pos != arg.getArgPosition() || !arg.isArg()) {
-          throw new IllegalArgumentException("invalid args list: " + ctorArgs);
-        }
-      }
       this.ctorArgs = ImmutableList.copyOf(ctorArgs);
     }
     
     @Nullable
-    public EfVar getArgByName(String name, Function<EfType.GenericType, EfType> reification) {
-      for (EfVar arg : getArgs()) {
-        if (arg.getName().equals(name)) {
+    public CtorArg getArgByName(String name, Function<EfType.GenericType, EfType> reification) {
+      for (CtorArg arg : getArgs()) {
+        if (arg.name().equals(name)) {
           return arg.reify(reification);
         }
       }
@@ -292,8 +286,8 @@ public abstract class EfType {
     }
 
     public SimpleType withCtorArgs(List<EfType> newArgs) {
-      List<EfVar> currentVars = getArgs();// validate that we have them; TODO validate that the new args match
-      Iterable<EfVar> newVars = EfCollections.zipF(currentVars, newArgs, EfVar::cast);
+      List<CtorArg> currentVars = getArgs();
+      Iterable<CtorArg> newVars = EfCollections.zipF(currentVars, newArgs, CtorArg::castTo);
       return new SimpleType(name, params, Lists.newArrayList(newVars), genericForm);
     }
   }

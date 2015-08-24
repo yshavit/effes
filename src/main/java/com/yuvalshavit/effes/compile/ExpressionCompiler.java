@@ -87,7 +87,7 @@ public final class ExpressionCompiler {
       String varName = varNode.getText();
       if (declaringType != null) {
         Function<EfType.GenericType, EfType> reification = t -> t;
-        EfVar arg = declaringType.getArgByName(varName, reification);
+        CtorArg arg = declaringType.getArgByName(varName, reification);
         if (arg != null) {
           return new Expression.InstanceArg(ctx.getStart(), declaringObject(ctx.getStart()), arg);
         }
@@ -178,7 +178,7 @@ public final class ExpressionCompiler {
           return new Expression.VarExpression(ctx.getStart(), var);
         }
         else if (target != null) {
-          EfVar arg = lookOn.getArgByName(methodName, lookOn.getReification());
+          CtorArg arg = lookOn.getArgByName(methodName, lookOn.getReification());
           if (arg == null) {
             errs.add(ctx.methodName().getStart(), "no such method or variable: '" + methodName + '\'');
           } else {
@@ -287,7 +287,7 @@ public final class ExpressionCompiler {
     List<EfType.GenericType> typeParams = typeRegistry.getSimpleTypeParams(typeName);
     final EfType.SimpleType type;
     final List<Expression> args;
-    final List<EfVar> ctorArgs;
+    final List<CtorArg> ctorArgs;
     if (typeParams == null) {
       errs.add(ctx.getStart(), "unknown type: " + typeName);
       type = null;
@@ -442,7 +442,7 @@ public final class ExpressionCompiler {
     //    List<EfVar> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    List<EfVar> matchtypeArgs = matchType.getArgs();
+    List<CtorArg> matchtypeArgs = matchType.getArgs();
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
@@ -453,7 +453,7 @@ public final class ExpressionCompiler {
       Pair<Token, String> bindingToken = bindingTokens.get(i);
       String bindingName = bindingToken.b;
       EfType bindingType = i < matchtypeArgs.size()
-        ? matchtypeArgs.get(i).getType()
+        ? matchtypeArgs.get(i).type()
         : EfType.UNKNOWN;
       EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
       vars.add(binding, bindingToken.a);
