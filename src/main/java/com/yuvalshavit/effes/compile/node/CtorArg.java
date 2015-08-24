@@ -5,9 +5,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
 
 public class CtorArg {
+  private static final Equality<CtorArg> equality = Equality.forClass(CtorArg.class)
+    .with("pos", CtorArg::getArgPosition)
+    .with("name", CtorArg::name)
+    .with("type", CtorArg::type)
+    .exactClassOnly();
   private final int pos;
   private final String name;
   private final Lazy<EfType> type;
@@ -47,4 +53,14 @@ public class CtorArg {
     return String.format("%s: %s", name, type);
   }
 
+  @Override
+  public int hashCode() {
+    return equality.hash(this);
+  }
+
+  @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+  @Override
+  public boolean equals(Object obj) {
+    return equality.areEqual(this, obj);
+  }
 }

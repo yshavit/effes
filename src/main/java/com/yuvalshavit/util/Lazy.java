@@ -13,6 +13,9 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class Lazy<T> implements Supplier<T> {
+  
+  private static final Equality<Lazy> equality = Equality.forClass(Lazy.class).with("value", Lazy::getWithoutForcing).exactClassOnly();
+  
   public static final String UNFORCED_DESC = "...";
   private Supplier<? extends T> unforced;
   private T forced;
@@ -52,6 +55,30 @@ public class Lazy<T> implements Supplier<T> {
       : forced(transformation.apply(get()));
   }
 
+  /**
+   * <p>Gets the lazy value, without making this instance appear forced if it wasn't before. If this instance was already forced, this behaves exactly like
+   * {@code get()}.</p>
+   * 
+   * <p>Of course, it <em>will</em> be forced, in the sense of the underlying supplier having been called. But it will not appear to be in any other sense.
+   * Specifically, {@code isUnforced} will still return {@code false}, and {@code toString} will not show the value.</p>
+   * 
+   * <p>One way in which this <em>will</em> seem forced: the underlying supplier's value will be cached, so the supplier will not be invoked again.</p>
+   * 
+   * <p>The primary use case is to get the value, e.g. for testing or debugging, while maintaining lazy behavior that functionality or usability may require.
+   * For instance, a test may want to check that a given instance of Lazy has not been forced.</p>
+   * @return the value to supply
+   */
+  public T getWithoutForcing() {
+    final T value;
+    if (isUnforced()) {
+      value = unforced.get();
+      unforced = Lazy.forced(value);
+    } else {
+      value = forced;
+    }
+    return value;
+  }
+
   @Override
   public T get() {
     if (isUnforced()) {
@@ -72,6 +99,23 @@ public class Lazy<T> implements Supplier<T> {
     } else {
       return UNFORCED_DESC;
     }
+  }
+
+  /**
+   * Derives the hash from the underlying supplier's value, which is obtained via {@link #getWithoutForcing()}
+   */
+  @Override
+  public int hashCode() {
+    return equality.hash(this);
+  }
+
+  /**
+   * Derives equality from the underlying supplier's value, which is obtained via {@link #getWithoutForcing()}
+   */
+  @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+  @Override
+  public boolean equals(Object obj) {
+    return equality.areEqual(this, obj);
   }
 
   public int getId() {
