@@ -19,4 +19,9 @@ public class LazyPossibility {
   public EfType efType() {
     return efType;
   }
+
+  @Override
+  public String toString() {
+    return efType.toString();
+  }
 }

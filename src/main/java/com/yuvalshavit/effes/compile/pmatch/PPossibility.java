@@ -83,10 +83,6 @@ public abstract class PPossibility {
     }
   }
   
-  public static LazyPossibility lazy(TypedPossibility<? extends EfType> possibility) {
-    return new LazyPossibility(Lazy.forced(possibility), possibility.efType());
-  }
-
   private static Simple fromSimple(EfType.SimpleType type) {
     TypedValue<LazyPossibility> value;
     List<String> argNames;
@@ -97,10 +93,11 @@ public abstract class PPossibility {
       //    List<EfVar> args = argsByType.get(type.getGeneric());
       //    Preconditions.checkArgument(args != null, "unknown type: " + type);
       //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-      List<CtorArg> ctorVars = type.getArgs(type.getReification());
+      List<CtorArg> ctorVars = type.getArgs();
       List<LazyPossibility> args  = new ArrayList<>(ctorVars.size());
       for (CtorArg ctorVar : ctorVars) {
-        args.add(lazy(from(ctorVar.type())));
+        LazyPossibility argPossibility = new LazyPossibility(Lazy.lazy(() -> from(ctorVar.type())), ctorVar.type());
+        args.add(argPossibility);
       }
       value = new TypedValue.StandardValue<>(type, args);
       argNames = ctorVars.stream().map(CtorArg::name).collect(Collectors.toList());
