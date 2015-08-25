@@ -223,7 +223,7 @@ public class TypesFinder implements Consumer<Sources> {
           // for One[T] (to resolve the ctor arg), and context/enclosingType would be Wrapped[T]
           return type.reify(g -> {
               String targetName = g.getName();
-              for (EfType.GenericType enclosingGeneric : enclosingType.getGenericsDeclr()) {
+              for (EfType.GenericType enclosingGeneric : enclosingType.getGenericsDeclr()) { // TODO O(N) loop
                 if (enclosingGeneric.getName().equals(targetName)) {
                   return enclosingGeneric;
                 }

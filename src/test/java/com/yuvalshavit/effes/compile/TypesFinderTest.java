@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.TUtils;
@@ -8,6 +9,8 @@ import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.effes.parser.ParserUtils;
+import com.yuvalshavit.util.EfFunctions;
+
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -18,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -214,6 +218,53 @@ public final class TypesFinderTest {
     assertEquals(infinity.getArgs(reification), Collections.singletonList(new CtorArg(0, "forever", infinity)));
   }
 
+  @Test
+  public void infiniteRecursionWithGeneric() {
+    EffesParser parser = ParserUtils.createParser(
+      "type One",
+      "type InfiniteList[T](head: T, tail: InfiniteList[T])"
+    );
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+    
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("InfiniteList", "One"));
+    EfType.SimpleType list = registry.getSimpleType("InfiniteList");
+    assertNotNull(list);
+
+    EfType generic = Iterables.getOnlyElement(list.getParams());
+
+    Consumer<EfType> checker = (reifyTo) -> {
+      EfType.SimpleType listType;
+      if (reifyTo != null) {
+        listType = list.reify(EfFunctions.fromGuava(Functions.forMap(Collections.singletonMap(generic, reifyTo))));
+      } else {
+        reifyTo = generic;
+        listType = list;
+      }
+      // iterate a few levels in
+      for (int i = 0; i < 17; ++i) {
+        String desc = "at iteration " + i;
+        CtorArg headArg = listType.getArgByName("head", EfType.KEEP_GENERIC);
+        assertNotNull(headArg, desc);
+        assertEquals(headArg.getArgPosition(), 0, desc);
+        assertSame(headArg.type(), reifyTo, desc);
+        
+        CtorArg tailArg = listType.getArgByName("tail", EfType.KEEP_GENERIC);
+        assertNotNull(tailArg, desc);
+        assertEquals(tailArg.getArgPosition(), 1, desc);
+        assertThat(desc, tailArg.type(), instanceOf(EfType.SimpleType.class));
+        listType = ((EfType.SimpleType) tailArg.type());
+        assertSame(listType.getGeneric(), list.getGeneric(), desc);
+        EfType listTypeGeneric = Iterables.getOnlyElement(listType.getParams());
+        assertEquals(listTypeGeneric, reifyTo, desc);
+      }
+    };
+    checker.accept(null);
+    checker.accept(generic);
+    checker.accept(registry.getSimpleType("One"));
+    checker.accept(list);
+  }
+  
   @Test
   public void normalRecursion() {
     EffesParser parser = ParserUtils.createParser(

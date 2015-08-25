@@ -159,8 +159,9 @@ public abstract class EfType {
       if (reificationFunc == KEEP_GENERIC) {
         return this;
       }
-      List<EfType> reifiedParams = ImmutableList.copyOf(params.stream().map(p -> p.reify(reificationFunc)).collect(Collectors.toList()));
-      return new SimpleType(name, reifiedParams, ctorArgs, genericForm);
+      List<EfType> reifiedParams = ImmutableList.copyOf(Lists.transform(params, p -> p.reify(reificationFunc)));
+      List<CtorArg> reifiedArgs = ImmutableList.copyOf(Lists.transform(ctorArgs, arg -> arg.reify(reificationFunc)));
+      return new SimpleType(name, reifiedParams, reifiedArgs, genericForm);
     }
 
     @Override
