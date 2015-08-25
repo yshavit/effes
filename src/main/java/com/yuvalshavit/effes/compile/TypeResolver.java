@@ -92,7 +92,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
       } else {
         EffesParser.SingleTypeParametersContext params = ctx.singleTypeParameters();
         Token token = ctx.getStop();
-        type = reifyOnLookup(type, params, token);
+        type = reifyOnLookup(type, params, context, token);
       }
       return type;
     }
@@ -135,7 +135,7 @@ public class TypeResolver implements Function<EffesParser.TypeContext, EfType> {
     }
   }
 
-  protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, Token token) {
+  protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, EfType.SimpleType context, Token token) {
     boolean genericArgsPresent = params.OPEN_BRACKET() != null;
     if (type instanceof EfType.SimpleType) {
       EfType.SimpleType simpleType = (EfType.SimpleType) type;

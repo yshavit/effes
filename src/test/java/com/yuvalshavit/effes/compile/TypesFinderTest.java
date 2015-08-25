@@ -20,10 +20,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.fail;
 
 public final class TypesFinderTest {
@@ -110,6 +113,7 @@ public final class TypesFinderTest {
     new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Nested", "One"));
+    
     EfType.SimpleType one = registry.getSimpleType("One");
     EfType.SimpleType nested = registry.getSimpleType("Nested");
     assertNotNull(one);
@@ -122,10 +126,10 @@ public final class TypesFinderTest {
     CtorArg nestedValue = nested.getArgByName("value", EfType.KEEP_GENERIC);
     assertNotNull(nestedValue);
     EfType nestedValueType = nestedValue.type();
-    assertEquals(nestedValueType, one);
+    assertThat(nestedValueType, instanceOf(EfType.SimpleType.class));
+    assertEquals(((EfType.SimpleType) nestedValueType).getGeneric(), one.getGeneric());
     EfType oneParam = Iterables.getOnlyElement(((EfType.SimpleType)nestedValueType).getParams());
-    // TODO verify what this should be
-//    assertSame(oneParam, nestedParam);
+    assertSame(oneParam, nestedParam);
   }
   
   @Test

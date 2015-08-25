@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -217,14 +218,24 @@ public class TypesFinder implements Consumer<Sources> {
       String argName = ctx.VAR_NAME().getText();
       TypeResolver resolver = new TypeResolver(registry, errs, context) {
         @Override
-        protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, Token token) {
-          return type; // TODO inner types reify here?
+        protected EfType reifyOnLookup(EfType type, EffesParser.SingleTypeParametersContext params, EfType.SimpleType enclosingType, Token token) {
+          // enclosing type is the "context" value, captured. For instance, if we're in Wrapped[T](value: One[T]), then we would invoke enterDataTypeArgDeclr
+          // for One[T] (to resolve the ctor arg), and context/enclosingType would be Wrapped[T]
+          return type.reify(g -> {
+              String targetName = g.getName();
+              for (EfType.GenericType enclosingGeneric : enclosingType.getGenericsDeclr()) {
+                if (enclosingGeneric.getName().equals(targetName)) {
+                  return enclosingGeneric;
+                }
+              }
+              throw new NoSuchElementException(String.format("%s doesn't have any generic named %s", enclosingType.getName(), targetName));
+            });
         }
       };
       // problem here is recursion. If types form a DAG, we can do some work to make sure it gets handled correctly.
       // But if not, what do we do? Hmmm!
       EffesParser.TypeContext typeCtx = ctx.type();
-      Supplier<EfType> typeGetter = () -> resolver.apply(typeCtx); // TODO or reify here?
+      Supplier<EfType> typeGetter = () -> resolver.apply(typeCtx);
       
       CtorArg arg = new CtorArg(argsBuilder.size(), argName, typeGetter);
       argsBuilder.add(arg);
