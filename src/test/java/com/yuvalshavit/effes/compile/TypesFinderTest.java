@@ -17,21 +17,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
-import static org.testng.Assert.fail;
 
 public final class TypesFinderTest {
   @Test
@@ -170,25 +172,88 @@ public final class TypesFinderTest {
   @Test
   public void doubleNestedGeneric() {
     EffesParser parser = ParserUtils.createParser(
-      "type Inner[T](value: T)",
-      "type OuterConcrete(value: Middle[Inner[Alpha]])",
-      "type Middle[T](value: T)",
-      "type Outer[T](value: Middle[Inner[T]])"
+      "type Foo",
+      "type Inner[T](valueI: T)",
+      "type Middle[T](valueM: T)",
+      "type Outer[T](valueO: Middle[Inner[T]])"
     );
-    fail(); // TODO
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Foo", "Inner", "Middle", "Outer"));
+    
+    EfType.SimpleType outer = registry.getSimpleType("Outer");
+    assertNotNull(outer);
+    assertEquals(outer.getParams().size(), 1);
+    EfType outerGeneric = outer.getParams().get(0);
+    assertThat(outerGeneric, instanceOf(EfType.GenericType.class));
+    assertEquals(((EfType.GenericType) outerGeneric).getName(), "T");
+
+    Consumer<EfType> checker = reifyTo -> {
+      EfType.SimpleType outerReified = outer.reify(singletonReification(outerGeneric, reifyTo));
+      assertEquals(outerReified.getArgs().size(), 1);
+      CtorArg valueO = outerReified.getArgByName("valueO", EfType.KEEP_GENERIC);
+      assertNotNull(valueO);
+      
+      assertThat(valueO.type(), instanceOf(EfType.SimpleType.class));
+      EfType.SimpleType simpleMiddle = (EfType.SimpleType) valueO.type();
+      assertEquals(simpleMiddle.getGeneric(), registry.getSimpleType("Middle"));
+      
+      assertEquals(simpleMiddle.getParams().size(), 1);
+      EfType inner = simpleMiddle.getParams().get(0);
+      assertThat(inner, instanceOf(EfType.SimpleType.class));
+      EfType.SimpleType simpleInner = (EfType.SimpleType) inner;
+      assertEquals(simpleInner.getGeneric(), registry.getSimpleType("Inner"));
+      
+      assertEquals(simpleInner.getParams(), Collections.singletonList(reifyTo)); // the T in Inner[T], at last!
+    };
+    checker.accept(outerGeneric); // ie, KEEP_GENERIC
+    checker.accept(registry.getSimpleType("Foo"));
   }
 
   @Test
-  public void doubleNestedGenericOfConcrete() {
+  public void recursiveGenericWithDisjunction() {
     EffesParser parser = ParserUtils.createParser(
-      "type OuterConcrete(value: Middle[Inner[Alpha]])",
-      "type Inner[T](value: T)",
-      "type Middle[T](value: T)",
-      "type Alpha"
+      "type Foo",
+      "type Empty",
+      "type Sequence[T](head: T, tail: Sequence[T] | Empty)"
     );
-    fail(); // TODO
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+    assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Foo", "Empty", "Sequence"));
+    
+    EfType.SimpleType seq = registry.getSimpleType("Sequence");
+    assertNotNull(seq);
+    assertEquals(seq.getParams().size(), 1);
+    EfType seqGeneric = seq.getParams().get(0);
+    assertThat(seqGeneric, instanceOf(EfType.GenericType.class));
+    assertEquals(((EfType.GenericType) seqGeneric).getName(), "T");
+    
+    Consumer<EfType> checker = reifyTo -> {
+      EfType.SimpleType seqReified = seq.reify(singletonReification(seqGeneric, reifyTo));
+      List<CtorArg> seqArgs = seqReified.getArgs();
+      
+      assertEquals(seqReified.getParams().size(), 1);
+      assertEquals(Collections.singletonList(reifyTo), seqReified.getParams());
+      assertSame(seqArgs.get(0).type(), reifyTo);
+
+      EfType tail = seqArgs.get(1).type();
+      assertThat(tail, instanceOf(EfType.DisjunctiveType.class));
+      EfType.DisjunctiveType tailDisjunction = (EfType.DisjunctiveType) tail;
+      Set<EfType> tailAlternatives = new HashSet<>(tailDisjunction.getAlternatives());
+      assertThat(tailAlternatives, hasItem(registry.getSimpleType("Empty")));
+      tailAlternatives.remove(registry.getSimpleType("Empty"));
+      
+      EfType tailSeq = Iterables.getOnlyElement(tailAlternatives);
+      assertThat(tailSeq, instanceOf(EfType.SimpleType.class));
+      EfType.SimpleType simpleTail = (EfType.SimpleType) tailSeq;
+      assertSame(simpleTail.getGeneric(), registry.getSimpleType("Sequence"));
+      assertEquals(simpleTail.getParams().size(), 1);
+      assertEquals(Collections.singletonList(reifyTo), simpleTail.getParams());
+    };
+    checker.accept(seqGeneric); // ie, KEEP_GENERIC
+    checker.accept(registry.getSimpleType("Foo"));
   }
-  
+
   @Test
   public void dataTypeHasDisjunctionArg() {
     EffesParser parser = ParserUtils.createParser(
@@ -279,7 +344,7 @@ public final class TypesFinderTest {
     checker.accept(registry.getSimpleType("One"));
     checker.accept(list);
   }
-  
+
   @Test
   public void normalRecursion() {
     EffesParser parser = ParserUtils.createParser(
@@ -437,5 +502,13 @@ public final class TypesFinderTest {
     };
     typesFinder.accept(SourcesFactory.withoutBuiltins(parser));
     return registry;
+  }
+
+  Function<EfType.GenericType, EfType> singletonReification(EfType generic, EfType reifyTo) {
+    assertThat(generic, instanceOf(EfType.GenericType.class));
+    return g -> {
+      assertSame(g, generic);
+      return reifyTo;
+    };
   }
 }
