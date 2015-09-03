@@ -141,15 +141,30 @@ public final class TypesFinderTest {
     // like the non-forwardReferenced version, but with Two declared before One and Another
     EffesParser parser = ParserUtils.createParser(
       "type Alpha",
-      "type One[T](value: T)",
-      "type OneAlpha(value: One[Alpha])"
+      "type One[T](value1: T)",
+      "type OneAlpha(valueA: One[Alpha])"
     );
     TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
     new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
 
     assertEquals(registry.getAllSimpleTypeNames(), Sets.newHashSet("Alpha", "One", "OneAlpha"));
-    // TODO verify expected behavior as far as reification in the registry. I would guess it should be as much as possible?
-    fail();
+    
+    // first, check the out-of-the-box reification
+    EfType.SimpleType oneAlpha = registry.getSimpleType("OneAlpha");
+    assertNotNull(oneAlpha);
+    assertEquals(oneAlpha.getParams(), Collections.emptyList());
+    
+    CtorArg valueA = oneAlpha.getArgByName("valueA", EfType.KEEP_GENERIC);
+    assertNotNull(valueA);
+    assertThat(valueA.type(), instanceOf(EfType.SimpleType.class));
+    EfType.SimpleType valueAType = (EfType.SimpleType) valueA.type();
+    assertEquals(valueAType.getGeneric(), registry.getSimpleType("One"));
+    
+    CtorArg value1 = valueAType.getArgByName("value1", EfType.KEEP_GENERIC);
+    assertNotNull(value1);
+    assertThat(value1.type(), instanceOf(EfType.SimpleType.class));
+    EfType.SimpleType value1Type = (EfType.SimpleType) value1.type();
+    assertEquals(value1Type.getGeneric(), registry.getSimpleType("Alpha"));
   }
 
   @Test
