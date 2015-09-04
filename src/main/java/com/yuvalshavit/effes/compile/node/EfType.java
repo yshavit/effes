@@ -271,10 +271,10 @@ public abstract class EfType {
     }
     
     @Nullable
-    public CtorArg getArgByName(String name, Function<EfType.GenericType, EfType> reification) {  //TODO do we really need the reification here?
+    public CtorArg getArgByName(String name) {
       for (CtorArg arg : getArgs()) {
         if (arg.name().equals(name)) {
-          return arg.reify(reification);
+          return arg;
         }
       }
       return null;

@@ -127,7 +127,7 @@ public final class TypesFinderTest {
     // typed Nested[T](value: One[T]), that both T's refer to the same generic param
     EfType nestedParam = Iterables.getOnlyElement(nested.getParams());
     assertEquals(nestedParam.getClass(), EfType.GenericType.class);
-    CtorArg nestedValue = nested.getArgByName("value", EfType.KEEP_GENERIC);
+    CtorArg nestedValue = nested.getArgByName("value");
     assertNotNull(nestedValue);
     EfType nestedValueType = nestedValue.type();
     assertThat(nestedValueType, instanceOf(EfType.SimpleType.class));
@@ -154,13 +154,13 @@ public final class TypesFinderTest {
     assertNotNull(oneAlpha);
     assertEquals(oneAlpha.getParams(), Collections.emptyList());
     
-    CtorArg valueA = oneAlpha.getArgByName("valueA", EfType.KEEP_GENERIC);
+    CtorArg valueA = oneAlpha.getArgByName("valueA");
     assertNotNull(valueA);
     assertThat(valueA.type(), instanceOf(EfType.SimpleType.class));
     EfType.SimpleType valueAType = (EfType.SimpleType) valueA.type();
     assertEquals(valueAType.getGeneric(), registry.getSimpleType("One"));
     
-    CtorArg value1 = valueAType.getArgByName("value1", EfType.KEEP_GENERIC);
+    CtorArg value1 = valueAType.getArgByName("value1");
     assertNotNull(value1);
     assertThat(value1.type(), instanceOf(EfType.SimpleType.class));
     EfType.SimpleType value1Type = (EfType.SimpleType) value1.type();
@@ -189,7 +189,7 @@ public final class TypesFinderTest {
     Consumer<EfType> checker = reifyTo -> {
       EfType.SimpleType outerReified = outer.reify(singletonReification(outerGeneric, reifyTo));
       assertEquals(outerReified.getArgs().size(), 1);
-      CtorArg valueO = outerReified.getArgByName("valueO", EfType.KEEP_GENERIC);
+      CtorArg valueO = outerReified.getArgByName("valueO");
       assertNotNull(valueO);
       
       assertThat(valueO.type(), instanceOf(EfType.SimpleType.class));
@@ -320,12 +320,12 @@ public final class TypesFinderTest {
       // iterate a few levels in
       for (int i = 0; i < 17; ++i) {
         String desc = "at iteration " + i;
-        CtorArg headArg = listType.getArgByName("head", EfType.KEEP_GENERIC);
+        CtorArg headArg = listType.getArgByName("head");
         assertNotNull(headArg, desc);
         assertEquals(headArg.getArgPosition(), 0, desc);
         assertSame(headArg.type(), reifyTo, desc);
         
-        CtorArg tailArg = listType.getArgByName("tail", EfType.KEEP_GENERIC);
+        CtorArg tailArg = listType.getArgByName("tail");
         assertNotNull(tailArg, desc);
         assertEquals(tailArg.getArgPosition(), 1, desc);
         assertThat(desc, tailArg.type(), instanceOf(EfType.SimpleType.class));
@@ -377,7 +377,7 @@ public final class TypesFinderTest {
 
     EfType.SimpleType one = registry.getSimpleType("One");
     assertNotNull(one);
-    CtorArg arg = one.getArgByName("prev", t -> t);
+    CtorArg arg = one.getArgByName("prev");
     assertNotNull(arg);
     arg.type();
   }

@@ -16,7 +16,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class MethodsFinder implements Consumer<Sources> {
@@ -163,8 +162,7 @@ public final class MethodsFinder implements Consumer<Sources> {
     @Override
     public void enterMethodDeclr(@NotNull EffesParser.MethodDeclrContext ctx) {
       String name = ctx.methodName().getText();
-      Function<EfType.GenericType,EfType> reification = t -> t;
-      if (declaringType != null && declaringType.getArgByName(name, reification) != null) {
+      if (declaringType != null && declaringType.getArgByName(name) != null) {
         errs.add(ctx.methodName().getStart(), "can't declare method that hides a data type arg");
       }
 
