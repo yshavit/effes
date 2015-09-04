@@ -161,8 +161,7 @@ public abstract class EfType {
         return this;
       }
       List<EfType> reifiedParams = ImmutableList.copyOf(Lists.transform(params, p -> p.reify(reificationFunc)));
-      List<CtorArg> reifiedArgs = Lists.transform(ctorArgs, arg -> arg.reify(reificationFunc));// TODO figure out why this has to be lazy; write a test! 
-      reifiedArgs = ImmutableList.copyOf(reifiedArgs); // -Dtest.params=type-alias/type-alias-recursion-through-data-type
+      List<CtorArg> reifiedArgs = Lists.transform(ctorArgs, arg -> arg.reify(reificationFunc));
       return new SimpleType(name, reifiedParams, reifiedArgs, genericForm);
     }
 
@@ -272,7 +271,7 @@ public abstract class EfType {
     }
     
     @Nullable
-    public CtorArg getArgByName(String name, Function<EfType.GenericType, EfType> reification) {
+    public CtorArg getArgByName(String name, Function<EfType.GenericType, EfType> reification) {  //TODO do we really need the reification here?
       for (CtorArg arg : getArgs()) {
         if (arg.name().equals(name)) {
           return arg.reify(reification);

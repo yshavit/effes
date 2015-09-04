@@ -366,6 +366,23 @@ public final class TypesFinderTest {
   }
 
   @Test
+  public void typeRecursesThroughAlias() {
+    EffesParser parser = ParserUtils.createParser(
+      "type One(prev: BoolInt)",
+      "type Zero",
+      "type BoolInt = One | Zero"
+    );
+    TypeRegistry registry = new TypeRegistry(CompileErrors.throwing);
+    new TypesFinder(registry, null).accept(SourcesFactory.withoutBuiltins(parser));
+
+    EfType.SimpleType one = registry.getSimpleType("One");
+    assertNotNull(one);
+    CtorArg arg = one.getArgByName("prev", t -> t);
+    assertNotNull(arg);
+    arg.type();
+  }
+
+  @Test
   public void simpleAlias() {
     CompileErrors errs = new CompileErrors();
     TypeRegistry registry = findTypes(
