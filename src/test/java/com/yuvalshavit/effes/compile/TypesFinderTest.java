@@ -75,11 +75,10 @@ public final class TypesFinderTest {
     EfType.SimpleType two = registry.getSimpleType("Two");
     assertNotNull(two);
 
-    Function<EfType.GenericType, EfType> reification = t -> t;
     //    List<CtorArg> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    assertEquals(two.getArgs(reification), Arrays.asList(new CtorArg(0, "only", one), new CtorArg(1, "okay", another)));
+    assertEquals(two.getArgs(), Arrays.asList(new CtorArg(0, "only", one), new CtorArg(1, "okay", another)));
     assertEquals(two.toString(), "Two");
   }
 
@@ -100,11 +99,10 @@ public final class TypesFinderTest {
     EfType.SimpleType two = registry.getSimpleType("Two");
     assertNotNull(two);
 
-    Function<EfType.GenericType, EfType> reification = t -> t;
     //    List<CtorArg> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    assertEquals(two.getArgs(reification), Arrays.asList(new CtorArg(0, "only", one), new CtorArg(1, "okay", another)));
+    assertEquals(two.getArgs(), Arrays.asList(new CtorArg(0, "only", one), new CtorArg(1, "okay", another)));
     assertEquals(two.toString(), "Two");
   }
   
@@ -271,11 +269,10 @@ public final class TypesFinderTest {
     assertNotNull(pet);
 
     EfType catOrdog = EfType.disjunction(cat, dog);
-    Function<EfType.GenericType, EfType> reification = t -> t;
     //    List<CtorArg> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    assertEquals(pet.getArgs(reification), Collections.singletonList(new CtorArg(0, "species", catOrdog)));
+    assertEquals(pet.getArgs(), Collections.singletonList(new CtorArg(0, "species", catOrdog)));
     assertEquals(pet.toString(), "Pet");
   }
 
@@ -291,11 +288,10 @@ public final class TypesFinderTest {
     EfType.SimpleType infinity = registry.getSimpleType("Infinity");
     assertNotNull(infinity);
 
-    Function<EfType.GenericType, EfType> reification = t -> t;
     //    List<CtorArg> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    assertEquals(infinity.getArgs(reification), Collections.singletonList(new CtorArg(0, "forever", infinity)));
+    assertEquals(infinity.getArgs(), Collections.singletonList(new CtorArg(0, "forever", infinity)));
   }
 
   @Test
@@ -362,11 +358,10 @@ public final class TypesFinderTest {
     EfType.SimpleType elem = registry.getSimpleType("Elem");
     EfType.SimpleType empty = registry.getSimpleType("Empty");
     EfType tailType = EfType.disjunction(cons, empty);
-    Function<EfType.GenericType,EfType> reification = t -> t;
     //    List<CtorArg> args = argsByType.get(type.getGeneric());
     //    Preconditions.checkArgument(args != null, "unknown type: " + type);
     //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    assertEquals(cons.getArgs(reification), Arrays.asList(new CtorArg(0, "head", elem), new CtorArg(1, "tail", tailType)));
+    assertEquals(cons.getArgs(), Arrays.asList(new CtorArg(0, "head", elem), new CtorArg(1, "tail", tailType)));
     assertEquals(cons.toString(), "Cons");
   }
 

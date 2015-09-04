@@ -305,10 +305,11 @@ public final class ExpressionCompiler {
       Token start = ctx.singleTypeParameters().getStart();
       Function<EfType.GenericType,EfType> reification = typeResolver.getReification(start, typeParams, ctorGenericParams);
       type = typeResolver.getSimpleType(typeName, reification);
+      // TODO type might be null?
       //    List<EfVar> args = argsByType.get(type.getGeneric());
       //    Preconditions.checkArgument(args != null, "unknown type: " + type);
       //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-      ctorArgs = type.getArgs(reification);
+      ctorArgs = type.getArgs();
     }
     return new Expression.CtorInvoke(ctx.getStart(), type, ctorArgs, args);
   }

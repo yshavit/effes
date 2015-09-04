@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile.node;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -256,16 +257,9 @@ public abstract class EfType {
     }
     
     @Nonnull
-    public List<CtorArg> getArgs(Function<GenericType, EfType> reification) {
-      List<CtorArg> args = checkNotNull(ctorArgs);
-      return (reification == KEEP_GENERIC)
-        ? args
-        : Lists.transform(args, arg -> arg.reify(reification));
-    }
-    
-    @Nonnull
     public List<CtorArg> getArgs() {
-      return getArgs(KEEP_GENERIC);
+      checkState(ctorArgs != null, "args not set");
+      return ctorArgs;
     }
     
     public void setCtorArgs(List<CtorArg> ctorArgs) {

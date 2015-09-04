@@ -297,7 +297,7 @@ public abstract class PAlternative {
           //    List<EfVar> args = argsByType.get(type.getGeneric());
           //    Preconditions.checkArgument(args != null, "unknown type: " + type);
           //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-          List<EfType> expecteds = Lists.transform(value.type().getArgs(reification), CtorArg::type);
+          List<EfType> expecteds = Lists.transform(value.type().reify(reification).getArgs(), CtorArg::type);
           List<PAlternative> actuals = s.args();
           if (expecteds.size() != actuals.size()) {
             return false;
