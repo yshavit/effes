@@ -220,7 +220,7 @@ public abstract class EfType {
       for (int i = 0, len = params.size(); i < len; ++i) {
         EfType myParam = params.get(i);
         EfType otherParam = otherSimple.params.get(i);
-        if (!myParam.equals(otherParam)) {
+        if (!myParam.contains(otherParam)) { // TODO equality/contains/etc implies covariance rules! Need to flush these out!
           return false;
         }
       }
@@ -284,6 +284,10 @@ public abstract class EfType {
       List<CtorArg> currentVars = getArgs();
       Iterable<CtorArg> newVars = EfCollections.zipF(currentVars, newArgs, CtorArg::castTo);
       return new SimpleType(name, params, Lists.newArrayList(newVars), genericForm);
+    }
+
+    public SimpleType reifyToCtorArgs() {
+      throw new UnsupportedOperationException(); // TODO
     }
   }
 

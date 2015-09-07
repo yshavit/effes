@@ -25,6 +25,7 @@ import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.node.Reifications;
 import com.yuvalshavit.util.EfAssertions;
 import com.yuvalshavit.util.EfFunctions;
 
@@ -87,6 +88,17 @@ public class PCaseTest {
     check(result,
       "Cons(False, ...)",
       "Empty");
+  }
+
+  @Test
+  public void simpleOne() {
+    EfType.SimpleType oneBool = Reifications.reify(tOne, tBool);
+    PPossibility.TypedPossibility<?> possibility = PPossibility.from(oneBool);
+    
+    PAlternative oneOfTrue = simple(Reifications.reify(tOne, tTrue), mTrue()).build();
+    ForcedPossibility result = oneOfTrue.subtractFrom(possibility);
+    check(result,
+      "One[False](False)");
   }
 
   @Test
@@ -259,6 +271,7 @@ public class PCaseTest {
   
 
   private void check(ForcedPossibility possibility, String... expected) {
+    assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
     Collections.sort(expectedList);
     List<String> actualList = PPossibilities.toStrings(possibility.possibility());

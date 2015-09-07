@@ -54,7 +54,7 @@ public abstract class PPossibility {
 
   @Override
   public String toString() {
-    return toString(false);
+    return toString(true);
   }
 
   private PPossibility() {}
@@ -182,8 +182,8 @@ public abstract class PPossibility {
 
     public Simple withArgs(List<LazyPossibility> args) {
       List<EfType> efArgs = Lists.transform(args, LazyPossibility::efType);
-      EfType.SimpleType newEfType = efType().withCtorArgs(efArgs);
-      return new Simple(newEfType, new TypedValue.StandardValue<>(value.type(), args), argNames);
+      EfType.SimpleType newEfType = efType().withCtorArgs(efArgs).reifyToCtorArgs();
+      return new Simple(newEfType, new TypedValue.StandardValue<>(newEfType, args), argNames);
     }
 
     @Override

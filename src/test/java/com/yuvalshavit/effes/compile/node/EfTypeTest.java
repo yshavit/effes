@@ -7,7 +7,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.yuvalshavit.util.EfTestHelper.safely;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
+
+import com.google.common.collect.Iterables;
 
 public final class EfTypeTest {
 
@@ -75,6 +79,37 @@ public final class EfTypeTest {
   @Test
   public void voidDisjunctionIsVoid() {
     Assert.assertEquals(EfType.disjunction(simpleA, simpleB, EfType.VOID), EfType.VOID);
+  }
+
+  @Test
+  public void simpleGenericCtorReification() {
+    EfType.SimpleType box = new EfType.SimpleType("Box", Collections.singletonList("T"));
+    EfType aOrB = EfType.disjunction(simpleA, simpleB);
+    box.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", aOrB)));
+    EfType.SimpleType boxOfAOrB = Reifications.reify(box, aOrB);
+    assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
+    
+    box.withCtorArgs(Collections.singletonList(simpleA));
+    assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
+    
+    EfType.SimpleType constrainedBox = box.reifyToCtorArgs();
+    assertEquals(Iterables.getOnlyElement(constrainedBox.getParams()), simpleA);
+    // TODO fix this shit all up!
+    fail();
+  }
+  
+  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void withCtorArgsWithInapplicableArg() {
+    EfType.SimpleType box = safely(() -> {
+      EfType.SimpleType boxType = new EfType.SimpleType("Box", Collections.singletonList("T"));
+      EfType aOrB = EfType.disjunction(simpleA, simpleB);
+      boxType.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", aOrB)));
+      EfType.SimpleType boxOfAOrB = Reifications.reify(boxType, aOrB);
+      assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
+      return boxType;
+    });
+
+    box.withCtorArgs(Collections.singletonList(simpleC)); // not a or b!
   }
 
   private static int cmp(EfType t1, EfType t2) {

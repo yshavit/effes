@@ -164,7 +164,7 @@ public abstract class PAlternative {
 
     private StepResult handle(LazyPossibility lazyPossibility, PPossibility.Simple simple) {
       TypedValue<LazyPossibility> simpleTypeAndArgs = simple.typedAndArgs();
-      if (!simpleTypeAndArgs.type().equals(value.type())) {
+      if (!simpleTypeAndArgs.type().contains(value.type())) {
         StepResult r = new StepResult();
         r.addUnmatched(lazyPossibility);
         return r;
@@ -339,9 +339,9 @@ public abstract class PAlternative {
         s -> {
           List<PAlternative> args = s.args();
           if (args.isEmpty()) {
-            return s.type().getName();
+            return s.type().toString();
           } else {
-            StringBuilder sb = new StringBuilder(s.type().getName()).append('(');
+            StringBuilder sb = new StringBuilder(s.type().toString()).append('(');
             return Joiner.on(", ").appendTo(sb, args).append(')').toString();
           }
         });
