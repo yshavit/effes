@@ -13,10 +13,14 @@ public class Reifications {
   private Reifications() {}
   
   public static EfType.SimpleType reify(EfType.SimpleType target, EfType onlyGenericReification) {
-    List<EfType> targetParams = target.getGeneric().getParams();
-    checkArgument(targetParams.size() == 1, "target %s must have exactly one generic parameter", target);
-    EfType.GenericType generic = ((EfType.GenericType) targetParams.get(0));
+    EfType.GenericType generic = onlyGenericOf(target);
     Map<EfType.GenericType, EfType> map = Collections.singletonMap(generic, onlyGenericReification);
     return target.reify(EfFunctions.fromGuava(Functions.forMap(map)));
+  }
+
+  public static EfType.GenericType onlyGenericOf(EfType.SimpleType target) {
+    List<EfType> targetParams = target.getGeneric().getParams();
+    checkArgument(targetParams.size() == 1, "target %s must have exactly one generic parameter", target);
+    return ((EfType.GenericType) targetParams.get(0));
   }
 }

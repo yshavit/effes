@@ -76,7 +76,7 @@ public class PCaseTest {
   public void listPattern() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.SimpleType cons = listTypes.cons(tBool);
-    EfType.DisjunctiveType list = listTypes.list(tBool);
+    EfType list = listTypes.list(tBool);
     
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative firstIsTrue = simple(cons, mTrue(), any()).build();
@@ -105,7 +105,7 @@ public class PCaseTest {
   public void listPatternStartsWithTwoWildcardsInCons() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.SimpleType cons = listTypes.cons(tBool);
-    EfType.DisjunctiveType list = listTypes.list(tBool);
+    EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = simple(cons, any(), any()).build();
@@ -116,7 +116,7 @@ public class PCaseTest {
   @Test
   public void listPatternStartsWithWildcards() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
-    EfType.DisjunctiveType list = listTypes.list(tBool);
+    EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = any().build();
@@ -128,7 +128,7 @@ public class PCaseTest {
   @Test
   public void listPatternStartsWithWildcard() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
-    EfType.DisjunctiveType list = listTypes.list(tBool);
+    EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative fullyWild = any().build();
@@ -143,7 +143,7 @@ public class PCaseTest {
     // This means that the infinite recursion is on the first arg (not the second), which tests our lazy evaluation a bit differently.
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("tail", l), create("head", g)));
     EfType.SimpleType snoc = listTypes.cons(tBool);
-    EfType.DisjunctiveType list = listTypes.list(tBool);
+    EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build();
@@ -174,9 +174,9 @@ public class PCaseTest {
       Functions.forMap(
         Collections.singletonMap((EfType.GenericType) this.tOne.getParams().get(0), tBool)));
     EfType.SimpleType tOneBool = this.tOne.reify(boolReifiction);
-    EfType.DisjunctiveType maybeBool = this.tMaybe.reify(boolReifiction);
+    EfType maybeBool = this.tMaybe.reify(boolReifiction);
     EfType.SimpleType cons = listTypes.cons(maybeBool);
-    EfType.DisjunctiveType list = listTypes.list(maybeBool);
+    EfType list = listTypes.list(maybeBool);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(list);
 
     // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
@@ -334,7 +334,7 @@ public class PCaseTest {
       return cons.reify(reification.apply(genericArg));
     }
 
-    EfType.DisjunctiveType list(EfType genericArg) {
+    EfType list(EfType genericArg) {
       checkNotNull(genericArg);
       return list.reify(reification.apply(genericArg));
     }

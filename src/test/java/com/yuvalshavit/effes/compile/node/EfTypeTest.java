@@ -9,16 +9,15 @@ import java.util.List;
 
 import static com.yuvalshavit.util.EfTestHelper.safely;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 import com.google.common.collect.Iterables;
 
 public final class EfTypeTest {
 
-  final EfType simpleA = new EfType.SimpleType("Alpha", Collections.emptyList());
-  final EfType simpleB = new EfType.SimpleType("Bravo", Collections.emptyList());
-  final EfType simpleC = new EfType.SimpleType("Charlie", Collections.emptyList());
-  final EfType simpleD = new EfType.SimpleType("Delta", Collections.emptyList());
+  final EfType simpleA = simpleTypeNamed("Alpha");
+  final EfType simpleB = simpleTypeNamed("Bravo");
+  final EfType simpleC = simpleTypeNamed("Charlie");
+  final EfType simpleD = simpleTypeNamed("Delta");
 
   @Test
   public void simpleOrdering() {
@@ -82,22 +81,53 @@ public final class EfTypeTest {
   }
 
   @Test
-  public void simpleGenericCtorReification() {
-    EfType.SimpleType box = new EfType.SimpleType("Box", Collections.singletonList("T"));
+  public void reifyToCtorsInSimpleCase() {
+    EfType.SimpleType genericBox = new EfType.SimpleType("Box", Collections.singletonList("T"));
+    genericBox.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", Reifications.onlyGenericOf(genericBox))));
+    
     EfType aOrB = EfType.disjunction(simpleA, simpleB);
-    box.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", aOrB)));
-    EfType.SimpleType boxOfAOrB = Reifications.reify(box, aOrB);
+    EfType.SimpleType boxOfAOrB = Reifications.reify(genericBox, aOrB);
     assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
-    
-    box.withCtorArgs(Collections.singletonList(simpleA));
+
+    EfType.SimpleType boxOfA = genericBox.withCtorArgs(Collections.singletonList(simpleA));
     assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
+    assertEquals(Iterables.getOnlyElement(boxOfA.getArgs()).type(), simpleA);
     
-    EfType.SimpleType constrainedBox = box.reifyToCtorArgs();
+    EfType.SimpleType constrainedBox = genericBox.reifyToCtorArgs();
     assertEquals(Iterables.getOnlyElement(constrainedBox.getParams()), simpleA);
-    // TODO fix this shit all up!
-    fail();
+    assertEquals(Iterables.getOnlyElement(constrainedBox.getArgs()).type(), simpleA);
   }
-  
+
+  @Test
+  public void reifyToCtorsWhenGenericIsInDisjunction() {
+    EfType.SimpleType genericMaybe = new EfType.SimpleType("Maybe", Collections.singletonList("T"));
+    EfType.GenericType genericArg = Reifications.onlyGenericOf(genericMaybe);
+    genericMaybe.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", EfType.disjunction(genericArg, simpleA, simpleB))));
+
+    EfType.SimpleType maybeB = Reifications.reify(genericMaybe, EfType.disjunction(simpleB, simpleC));
+    assertEquals(Iterables.getOnlyElement(maybeB.getParams()), EfType.disjunction(simpleB, simpleC));
+    assertEquals(Iterables.getOnlyElement(maybeB.getArgs()).type(), EfType.disjunction(simpleA, simpleB, simpleC));
+
+    EfType.SimpleType actuallyB = maybeB.withCtorArgs(Collections.singletonList(simpleB));
+    assertEquals(Iterables.getOnlyElement(actuallyB.getParams()), EfType.disjunction(simpleB, simpleC));
+    assertEquals(Iterables.getOnlyElement(actuallyB.getArgs()).type(), simpleB);
+
+    EfType.SimpleType constrained = actuallyB.reifyToCtorArgs();
+    assertEquals(Iterables.getOnlyElement(constrained.getParams()), simpleB);
+    assertEquals(Iterables.getOnlyElement(constrained.getArgs()).type(), simpleB);
+  }
+
+  @Test
+  public void reificationShadowsDisjunction() {
+    EfType.SimpleType genericMaybe = new EfType.SimpleType("Maybe", Collections.singletonList("T"));
+    EfType.GenericType genericArg = Reifications.onlyGenericOf(genericMaybe);
+    genericMaybe.setCtorArgs(Collections.singletonList(new CtorArg(0, "value", EfType.disjunction(genericArg, simpleA))));
+
+    EfType.SimpleType maybeA = Reifications.reify(genericMaybe, simpleA);
+    assertEquals(Iterables.getOnlyElement(maybeA.getParams()), simpleA);
+    assertEquals(Iterables.getOnlyElement(maybeA.getArgs()).type(), simpleA);
+  }
+
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void withCtorArgsWithInapplicableArg() {
     EfType.SimpleType box = safely(() -> {
@@ -114,5 +144,11 @@ public final class EfTypeTest {
 
   private static int cmp(EfType t1, EfType t2) {
     return EfType.comparator.compare(t1, t2);
+  }
+
+  private static EfType.SimpleType simpleTypeNamed(String name) {
+    EfType.SimpleType type = new EfType.SimpleType(name, Collections.emptyList());
+    type.setCtorArgs(Collections.emptyList());
+    return type;
   }
 }

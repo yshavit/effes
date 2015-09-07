@@ -157,6 +157,7 @@ public abstract class EfType {
 
     @Override
     public EfType.SimpleType reify(Function<GenericType, EfType> reificationFunc) {
+      checkNotNull(ctorArgs); // check it eagerly, since the resulting list is computed lazily
       if (reificationFunc == KEEP_GENERIC) {
         return this;
       }
@@ -346,8 +347,8 @@ public abstract class EfType {
     }
 
     @Override
-    public EfType.DisjunctiveType reify(Function<GenericType, EfType> reification) {
-      return new DisjunctiveType(options.stream().map(r -> r.reify(reification)).collect(Collectors.toSet()));
+    public EfType reify(Function<GenericType, EfType> reification) {
+      return disjunction(options.stream().map(r -> r.reify(reification)).collect(Collectors.toSet()));
     }
 
     @Override
