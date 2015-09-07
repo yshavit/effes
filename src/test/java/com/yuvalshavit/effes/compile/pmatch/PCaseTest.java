@@ -92,10 +92,10 @@ public class PCaseTest {
 
   @Test
   public void simpleOne() {
-    EfType.SimpleType oneBool = Reifications.reify(tOne, tBool);
+    EfType.SimpleType oneBool = Reifications.reifyOnlyGenericOf(tOne).to(tBool);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(oneBool);
-    
-    PAlternative oneOfTrue = simple(Reifications.reify(tOne, tTrue), mTrue()).build();
+
+    PAlternative oneOfTrue = simple(Reifications.reifyOnlyGenericOf(tOne).to(tTrue), mTrue()).build();
     ForcedPossibility result = oneOfTrue.subtractFrom(possibility);
     check(result,
       "One[False](False)");
