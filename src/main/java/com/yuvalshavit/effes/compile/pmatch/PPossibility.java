@@ -182,7 +182,7 @@ public abstract class PPossibility {
 
     public Simple withArgs(List<LazyPossibility> args) {
       List<EfType> efArgs = Lists.transform(args, LazyPossibility::efType);
-      EfType.SimpleType newEfType = efType().withCtorArgs(efArgs).reifyToCtorArgs();
+      EfType.SimpleType newEfType = efType().withCtorArgs(efArgs).constrainReificationByCtorArgs();
       return new Simple(newEfType, new TypedValue.StandardValue<>(newEfType, args), argNames);
     }
 

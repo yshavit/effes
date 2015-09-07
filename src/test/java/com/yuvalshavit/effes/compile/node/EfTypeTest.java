@@ -97,7 +97,7 @@ public final class EfTypeTest {
     assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
     assertEquals(Iterables.getOnlyElement(boxOfA.getArgs()).type(), simpleA);
     
-    EfType.SimpleType constrainedBox = genericBox.reifyToCtorArgs();
+    EfType.SimpleType constrainedBox = genericBox.constrainReificationByCtorArgs();
     assertEquals(Iterables.getOnlyElement(constrainedBox.getParams()), simpleA);
     assertEquals(Iterables.getOnlyElement(constrainedBox.getArgs()).type(), simpleA);
   }
@@ -116,7 +116,7 @@ public final class EfTypeTest {
     assertEquals(Iterables.getOnlyElement(actuallyB.getParams()), disjunction(simpleB, simpleC));
     assertEquals(Iterables.getOnlyElement(actuallyB.getArgs()).type(), simpleB);
 
-    EfType.SimpleType constrained = actuallyB.reifyToCtorArgs();
+    EfType.SimpleType constrained = actuallyB.constrainReificationByCtorArgs();
     assertEquals(Iterables.getOnlyElement(constrained.getParams()), simpleB);
     assertEquals(Iterables.getOnlyElement(constrained.getArgs()).type(), simpleB);
   }
@@ -135,7 +135,7 @@ public final class EfTypeTest {
     assertEquals(Iterables.getOnlyElement(outerAOrB.getParams()), disjunction(simpleA, simpleB));
     assertEquals(Iterables.getOnlyElement(outerAOrB.getArgs()).type(), simpleA);
 
-    EfType.SimpleType constrained = outerAOrB.reifyToCtorArgs();
+    EfType.SimpleType constrained = outerAOrB.constrainReificationByCtorArgs();
     assertEquals(Iterables.getOnlyElement(constrained.getParams()), simpleA);
     assertEquals(Iterables.getOnlyElement(constrained.getArgs()).type(), simpleA);
   }

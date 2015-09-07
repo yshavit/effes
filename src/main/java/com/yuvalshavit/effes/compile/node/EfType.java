@@ -287,7 +287,7 @@ public abstract class EfType {
       return new SimpleType(name, params, Lists.newArrayList(newVars), genericForm);
     }
 
-    public SimpleType reifyToCtorArgs() {
+    public SimpleType constrainReificationByCtorArgs() {
       throw new UnsupportedOperationException(); // TODO
     }
   }
