@@ -2,9 +2,7 @@ package com.yuvalshavit.util;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
-
-import com.google.common.base.Suppliers;
+import java.util.stream.Stream;
 
 public class EfFunctions {
   private EfFunctions() {}
@@ -22,5 +20,21 @@ public class EfFunctions {
       consumer.accept(t);
       return null;
     };
+  }
+
+  /**
+   * <p>Returns a Function that takes an input and checks it against some type. If the input is an instance of that type, the result is a single-element Stream
+   * of that input cast as that type; otherwise, the result is an empty stream.</p>
+   * 
+   * <p>This is intended to be used in flatMap. For instance, to get a stream of uppercased Strings out of a stream of Objects, you could do:</p>
+   * 
+   * <pre>
+   *   objectStream.flatMap(instancesOf(String.class)).map(String::toUpperCase);
+   * </pre>
+   */
+  public static <I, O extends I> Function<I, Stream<O>> instancesOf(Class<O> clazz) {
+    return input -> clazz.isInstance(input)
+      ? Stream.of(clazz.cast(input))
+      : Stream.empty();
   }
 }

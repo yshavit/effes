@@ -3,9 +3,11 @@ package com.yuvalshavit.effes.compile.node;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.yuvalshavit.effes.compile.node.EfType.disjunction;
 import static com.yuvalshavit.effes.compile.node.Reifications.onlyGenericOf;
@@ -15,6 +17,7 @@ import static java.util.Collections.singletonList;
 import static org.testng.Assert.assertEquals;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public final class EfTypeTest {
 
@@ -93,7 +96,7 @@ public final class EfTypeTest {
     EfType.SimpleType boxOfAOrB = reifyOnlyGenericOf(genericBox).to(aOrB);
     assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
 
-    EfType.SimpleType boxOfA = genericBox.withCtorArgs(singletonList(simpleA));
+    EfType.SimpleType boxOfA = genericBox.withCtorArgs(simpleA);
     assertEquals(Iterables.getOnlyElement(boxOfAOrB.getParams()), aOrB);
     assertEquals(Iterables.getOnlyElement(boxOfA.getArgs()).type(), simpleA);
     
@@ -112,7 +115,7 @@ public final class EfTypeTest {
     assertEquals(Iterables.getOnlyElement(maybeB.getParams()), disjunction(simpleB, simpleC));
     assertEquals(Iterables.getOnlyElement(maybeB.getArgs()).type(), disjunction(simpleA, simpleB, simpleC));
 
-    EfType.SimpleType actuallyB = maybeB.withCtorArgs(singletonList(simpleB));
+    EfType.SimpleType actuallyB = maybeB.withCtorArgs(simpleB);
     assertEquals(Iterables.getOnlyElement(actuallyB.getParams()), disjunction(simpleB, simpleC));
     assertEquals(Iterables.getOnlyElement(actuallyB.getArgs()).type(), simpleB);
 
@@ -131,13 +134,61 @@ public final class EfTypeTest {
     outerGeneric.setCtorArgs(singletonList(new CtorArg(0, "outerVal", reifyOnlyGenericOf(innerGeneric).to(onlyGenericOf(outerGeneric)))));
 
     EfType.SimpleType outerAOrB = reifyOnlyGenericOf(outerGeneric).to(disjunction(simpleA, simpleB))
-      .withCtorArgs(singletonList(simpleA));
+      .withCtorArgs(simpleA);
     assertEquals(Iterables.getOnlyElement(outerAOrB.getParams()), disjunction(simpleA, simpleB));
     assertEquals(Iterables.getOnlyElement(outerAOrB.getArgs()).type(), simpleA);
 
     EfType.SimpleType constrained = outerAOrB.constrainReificationByCtorArgs();
     assertEquals(Iterables.getOnlyElement(constrained.getParams()), simpleA);
     assertEquals(Iterables.getOnlyElement(constrained.getArgs()).type(), simpleA);
+  }
+
+  @Test
+  public void constrainUnionWhenSameType() {
+    EfType.SimpleType union = createUnionType("T", "E");
+    EfType.SimpleType reified = Reifications.reify(union)
+      .with("T", disjunction(simpleA, simpleB))
+      .with("E", disjunction(simpleB, simpleC))
+      .get()
+      .withCtorArgs(simpleB);
+    assertEquals(Lists.transform(reified.getArgs(), CtorArg::type), singletonList(simpleB));
+    assertEquals(reified.getParams(), Arrays.asList(disjunction(simpleA, simpleB), disjunction(simpleB, simpleC)));
+
+    EfType.SimpleType constrained = reified.constrainReificationByCtorArgs();
+    assertEquals(Lists.transform(constrained.getArgs(), CtorArg::type), singletonList(simpleB));
+    assertEquals(constrained.getParams(), Arrays.asList(simpleB, disjunction(simpleB)));
+  }
+
+  @Test
+  public void constrainUnionWhenDifferentTypes() {
+    EfType.SimpleType union = createUnionType("T", "E");
+    EfType.SimpleType reified = Reifications.reify(union)
+      .with("T", disjunction(simpleA, simpleB))
+      .with("E", disjunction(simpleB, simpleC))
+      .get()
+      .withCtorArgs(simpleA);
+    assertEquals(Lists.transform(reified.getArgs(), CtorArg::type), singletonList(simpleA));
+    assertEquals(reified.getParams(), Arrays.asList(disjunction(simpleA, simpleB), disjunction(simpleB, simpleC)));
+
+    EfType.SimpleType constrained = reified.constrainReificationByCtorArgs();
+    assertEquals(Lists.transform(constrained.getArgs(), CtorArg::type), singletonList(simpleA));
+    assertEquals(constrained.getParams(), Arrays.asList(simpleA, disjunction(simpleB, simpleC)));
+  }
+
+  @Test
+  public void constrainUnionWhenMutuallyExclusiveType() {
+    EfType.SimpleType union = createUnionType("T", "E");
+    EfType.SimpleType reified = Reifications.reify(union)
+      .with("T", disjunction(simpleA, simpleB))
+      .with("E", disjunction(simpleC, simpleD))
+      .get()
+      .withCtorArgs(simpleB);
+    assertEquals(Lists.transform(reified.getArgs(), CtorArg::type), singletonList(simpleB));
+    assertEquals(reified.getParams(), Arrays.asList(disjunction(simpleA, simpleB), disjunction(simpleC, simpleD)));
+
+    EfType.SimpleType constrained = reified.constrainReificationByCtorArgs();
+    assertEquals(Lists.transform(constrained.getArgs(), CtorArg::type), singletonList(simpleB));
+    assertEquals(constrained.getParams(), Arrays.asList(simpleB, disjunction(simpleC, simpleD)));
   }
   
   @Test
@@ -162,7 +213,7 @@ public final class EfTypeTest {
       return boxType;
     });
 
-    box.withCtorArgs(singletonList(simpleC)); // not a or b!
+    box.withCtorArgs(simpleC); // not a or b!
   }
 
   private static int cmp(EfType t1, EfType t2) {
@@ -173,5 +224,19 @@ public final class EfTypeTest {
     EfType.SimpleType type = new EfType.SimpleType(name, Collections.emptyList());
     type.setCtorArgs(Collections.emptyList());
     return type;
+  }
+
+  private EfType.SimpleType createUnionType(String first, String second, String... rest) {
+    List<String> all = new ArrayList<>(rest.length + 2);
+    all.addAll(Arrays.asList(first, second));
+    all.addAll(Arrays.asList(rest));
+    if (all.stream().distinct().count() != all.size()) {
+      throw new IllegalArgumentException("must provide all distinct names: " + all);
+    }
+    // type Union[T, E] (value: T | E)
+    EfType.SimpleType union = new EfType.SimpleType("Union", all);
+    List<EfType.GenericType> allGenerics = all.stream().map(name -> Reifications.genericByName(union, name)).collect(Collectors.toList());
+    union.setCtorArgs(singletonList(new CtorArg(0, "value", disjunction(allGenerics))));
+    return union;
   }
 }

@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile.node;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -9,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.yuvalshavit.util.Dispatcher;
 import com.yuvalshavit.util.EfCollections;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -283,11 +285,38 @@ public abstract class EfType {
 
     public SimpleType withCtorArgs(List<EfType> newArgs) {
       List<CtorArg> currentVars = getArgs();
+      checkArgument(newArgs.size() == currentVars.size(), "mismatch in number of args between %s and %s", currentVars, newArgs);
       Iterable<CtorArg> newVars = EfCollections.zipF(currentVars, newArgs, CtorArg::castTo);
       return new SimpleType(name, params, Lists.newArrayList(newVars), genericForm);
     }
+    
+    public SimpleType withCtorArgs(EfType... newArgs) {
+      return withCtorArgs(Arrays.asList(newArgs));
+    }
 
+    /**
+     * <p>Returns a SimpleType derived from this one, but with params constrained as tightly as possible, given the ctor args. For instance, consider a type:
+     * </p>
+     * <pre>
+     *   type Box[T](value: T)
+     * </pre>
+     * 
+     * <p>... which has been reified to <tt>True | False</tt>, but whose ctor arg has been set specifically to <tt>True</tt>:</p>
+     * 
+     * <pre>
+     *   type Box[True|False](value: True)
+     * </pre>
+     * 
+     * <p>This method would return:</p>
+     * 
+     * <pre>
+     *   type Box[True](value: True)
+     * </pre>
+     * 
+     * <p>If this type is already as constrained as it can be, this method may (but does not have to) return <code>this</code>.</p>
+     */
     public SimpleType constrainReificationByCtorArgs() {
+      
       throw new UnsupportedOperationException(); // TODO
     }
   }
