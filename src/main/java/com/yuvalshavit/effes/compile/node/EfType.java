@@ -14,8 +14,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -250,7 +252,7 @@ public abstract class EfType {
     public Function<GenericType, EfType> getReification() {
       List<EfType> genericsDeclr = genericForm.params;
       return g -> {
-        int idx = genericsDeclr.indexOf(g);
+        int idx = genericsDeclr.indexOf(g); // TODO O(N)
         if (idx < 0) {
           throw new IllegalArgumentException("unrecognized generic " + g); // TODO is this right?
         }
@@ -316,6 +318,33 @@ public abstract class EfType {
      * <p>If this type is already as constrained as it can be, this method may (but does not have to) return <code>this</code>.</p>
      */
     public SimpleType constrainReificationByCtorArgs() {
+      Map<GenericType, EfType> reificationMap = new HashMap<>();
+      buildConstrainedReifications(getGeneric(), this, reificationMap);
+      Function<GenericType, EfType> existingReification = getReification();
+      return reify(g -> {
+        EfType reified = reificationMap.get(g);
+        return reified == null
+          ? existingReification.apply(g)
+          : reified;
+      });
+    }
+
+    private void buildConstrainedReifications(EfType fromGeneric, EfType fromReified, Map<GenericType, EfType> map) {
+      // base case: fromGeneric *is* the generic type, so the mapping is trivial
+      // if fromGeneric is simple, ... TODO
+      // if it's disjunctive, ... TODO
+      if (fromGeneric instanceof GenericType) {
+        map.put(((GenericType) fromGeneric), fromReified);
+        return;
+      } else if (fromGeneric instanceof SimpleType) {
+        SimpleType simpleFromGeneric = (SimpleType) fromGeneric;
+        throw new UnsupportedOperationException("simpleFromGeneric"); // TODO
+      } else if (fromGeneric instanceof DisjunctiveType) {
+        DisjunctiveType disjunctionFromGeneric = (DisjunctiveType) fromGeneric;
+        throw new UnsupportedOperationException("disjunctionFromGeneric"); // TODO
+      }
+      // recursive cases:
+      
       
       throw new UnsupportedOperationException(); // TODO
     }
@@ -371,7 +400,7 @@ public abstract class EfType {
       this.options = optionsBuilder;
     }
 
-    public Set<EfType> getAlternatives() {
+    public Set<EfType> getAlternatives() { // TODO how is this different from simpleTypes? It came in later, so maybe this is obsolete?
       return Collections.unmodifiableSet(options);
     }
 
