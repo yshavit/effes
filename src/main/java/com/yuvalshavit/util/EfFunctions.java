@@ -1,23 +1,41 @@
 package com.yuvalshavit.util;
 
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class EfFunctions {
   private EfFunctions() {}
   
-  public static <T> Consumer<? super T> emptyConsumer() {
-    return v -> { /*nothing*/ };
+  public static <T> Supplier<T> throwingSupplier() {
+    return () -> { throw new UnsupportedOperationException(); };
+  }
+  
+  public static <T> Consumer<T> throwingConsumer() {
+    return t -> { throw new UnsupportedOperationException(); };
+  }
+  
+  public static <T, R> Function<T, R> throwingFunction() {
+    return t -> { throw new UnsupportedOperationException(); };
   }
   
   public static <T, R> Function<T, R> fromGuava(com.google.common.base.Function<? super T, ? extends R> f) {
     return f::apply;
   }
   
-  public static <T> Function<? super T, ? extends Void> from(Consumer<? super T> consumer) {
+  public static <T> Function<? super T, ? extends Void> toFunction(Consumer<? super T> consumer) {
     return t -> {
       consumer.accept(t);
+      return null;
+    };
+  }
+  
+  public static <T, R> BiFunction<? super T, ? super R, ? extends Void> toFunction(BiConsumer<? super T, ? super R> consumer) {
+    return (t, r) -> {
+      consumer.accept(t, r);
       return null;
     };
   }

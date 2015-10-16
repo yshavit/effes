@@ -1,7 +1,5 @@
 package com.yuvalshavit.effes.compile.node;
 
-import java.util.function.Function;
-
 public interface EfTypeHandler<T> {
   T simple(EfType.SimpleType type);
   T disjunction(EfType.DisjunctiveType type);

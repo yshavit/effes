@@ -269,7 +269,6 @@ public class PCaseTest {
     assertNull(subtraction);
   }
   
-
   private void check(ForcedPossibility possibility, String... expected) {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
