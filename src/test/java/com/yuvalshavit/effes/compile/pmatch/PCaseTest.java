@@ -86,7 +86,7 @@ public class PCaseTest {
     // result   Cons(False, _) | Empty
     ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
-      "Cons(False, ...)",
+      "Cons[False | True](False, ...)",
       "Empty");
   }
 
@@ -156,13 +156,13 @@ public class PCaseTest {
 
     ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
-      "Cons(..., False)",
+      "Cons[False | True](..., False)",
       "Empty");
     assertNotNull(result);
     ForcedPossibility second = secondIsTrue.subtractFrom(result.efType(), result.possibility());
     check(second,
-      "Cons(Empty, False)",
-      "Cons(Cons(..., False), False)",
+      "Cons[False](Empty, False)",
+      "Cons[False | True](Cons[False | True](..., False), False)",
       "Empty");
   }
 
@@ -202,6 +202,7 @@ public class PCaseTest {
     ).build();
     
     ForcedPossibility afterCase0 = case0.subtractFrom(possibility);
+    assertNotNull(afterCase0);
     check(
       afterCase0,
       "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
@@ -220,8 +221,8 @@ public class PCaseTest {
       any()
     ).build();
 
-    assertNotNull(afterCase0);
     ForcedPossibility afterCase1 = case1.subtractFrom(afterCase0.efType(), afterCase0.possibility());
+    assertNotNull(afterCase1);
     check(afterCase1,
       "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
       "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
@@ -234,17 +235,16 @@ public class PCaseTest {
       any()
     ).build();
 
-    assertNotNull(afterCase1);
     ForcedPossibility afterCase2 = case2.subtractFrom(afterCase1.efType(), afterCase1.possibility());
+    assertNotNull(afterCase2);
     check(afterCase2,
       "Empty");
     
     PAlternative case3 = simple(tEmpty).build();
     
-    assertNotNull(afterCase2);
     ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2.efType(), afterCase2.possibility());
-    
     assertNotNull(afterCase3);
+    
     assertEquals(afterCase3.possibility(), PPossibility.none);
   }
 
