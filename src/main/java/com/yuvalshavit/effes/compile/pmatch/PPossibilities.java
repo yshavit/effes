@@ -5,20 +5,30 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.util.GreekCounter;
 import com.yuvalshavit.util.Lazy;
 
 public class PPossibilities {
   private PPossibilities() {}
   
   public static List<String> toStrings(PPossibility possibility) {
+    GreekCounter.Assigner<EfType> assigner = new GreekCounter.Assigner<>();
+    Function<? super PPossibility, String> stringFunction = PPossibilityStringer.usingAssigner(assigner);
     List<String> ret = new ArrayList<>(possibility.dispatch(
-      d -> Lists.transform(d.options(), Object::toString),
-      s -> Collections.singletonList(s.toString()),
+      d -> Lists.transform(d.options(), stringFunction::apply),
+      s -> Collections.singletonList(stringFunction.apply(s)),
       () -> Collections.singletonList("∅")));
-    Collections.sort(ret);
+    
+    Map<String, EfType> assignerMappings = assigner.getMappings();
+    if (!assignerMappings.isEmpty()) {
+      ret.add("---");
+      assignerMappings.forEach((name, type) -> ret.add(String.format("%s: %s", name, type)));
+    }
     return ret;
   }
 

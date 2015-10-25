@@ -58,7 +58,7 @@ public abstract class PPossibility {
 
   @Override
   public String toString() {
-    PPossibilityStringer stringer = new PPossibilityStringer(true);
+    PPossibilityStringer stringer = new PPossibilityStringer();
     accept(stringer);
     return stringer.toString();
   }

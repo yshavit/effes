@@ -1,5 +1,12 @@
 package com.yuvalshavit.util;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
+
 public class GreekCounter {
   private static final char ALPHA = 'α';
   private static final char OMEGA = 'ω';
@@ -10,7 +17,7 @@ public class GreekCounter {
    * to a String each time.
    */
   private final StringBuilder sb = new StringBuilder(4); // 4 digits should be more than enough for most use cases
-  
+
   public String next() {
     // Go right-to-left, incrementing each char by 1 if you can. For each digit, if you can't increment it, then set it to alpha and go to the next one.
     // If you fall off the edge, prepend another.
@@ -34,4 +41,31 @@ public class GreekCounter {
     return sb.toString();
   }
 
+  public static class Assigner<T> implements Function<T, String> {
+    private final GreekCounter counter = new GreekCounter();
+    private final Map<T, String> seen = new HashMap<>();
+
+    public Map<String, T> getMappings() {
+      Comparator<String> shorterFirst = (a, b) -> {
+        int lenCmp = Integer.compare(a.length(), b.length());
+        return lenCmp == 0
+          ? a.compareTo(b)
+          : lenCmp;
+      };
+      Map<String, T> toStringMap = new TreeMap<>(shorterFirst);
+      seen.forEach((k, v) -> toStringMap.put(v, k));
+      return Collections.unmodifiableMap(toStringMap);
+    }
+
+    @Override
+    public String apply(T t) {
+      return seen.computeIfAbsent(t, ignored -> counter.next());
+    }
+
+    @Override
+    public String toString() {
+      Map<String, T> toStringMap = getMappings();
+      return toStringMap.toString();
+    }
+  }
 }

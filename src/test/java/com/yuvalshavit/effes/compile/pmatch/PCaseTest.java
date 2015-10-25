@@ -273,6 +273,7 @@ public class PCaseTest {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
     Collections.sort(expectedList);
+    
     List<String> actualList = PPossibilities.toStrings(possibility.possibility());
     EfAssertions.equalLists(actualList, expectedList);
   }
