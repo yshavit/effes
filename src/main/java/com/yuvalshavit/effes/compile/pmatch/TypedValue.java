@@ -1,10 +1,12 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.base.Joiner;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.util.EfFunctions;
 
 public abstract class TypedValue<T> {
   private final EfType.SimpleType type;
@@ -20,6 +22,10 @@ public abstract class TypedValue<T> {
   public abstract <R> R transform(
     Function<? super LargeDomainValue<T>, ? extends R> whenLargeDomainValue,
     Function<? super StandardValue<T>, ? extends R> whenStandardValue);
+  
+  public void consume(Consumer<? super LargeDomainValue<T>> whenLargeDomainValue, Consumer<? super StandardValue<T>> whenStandardValue) {
+    transform(EfFunctions.toFunction(whenLargeDomainValue), EfFunctions.toFunction(whenStandardValue));
+  }
   
   @Override public abstract String toString();
 

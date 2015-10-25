@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +18,6 @@ import javax.annotation.Nonnull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -54,13 +52,15 @@ public abstract class PPossibility {
     );
   }
   
-  public abstract String toString(boolean verbose);
+  public abstract void accept(PPossibilityVisitor visitor);
   
   public abstract Collection<Simple> components();
 
   @Override
   public String toString() {
-    return toString(true);
+    PPossibilityStringer stringer = new PPossibilityStringer(true);
+    accept(stringer);
+    return stringer.toString();
   }
 
   private PPossibility() {}
@@ -132,15 +132,15 @@ public abstract class PPossibility {
     public boolean equals(Object other) {
       return this == other;
     }
-
-    @Override
-    public String toString(boolean verbose) {
-      return "∅";
-    }
-
+    
     @Override
     public Collection<Simple> components() {
       return Collections.emptyList();
+    }
+
+    @Override
+    public void accept(PPossibilityVisitor visitor) {
+      visitor.visitNone();
     }
   };
 
@@ -218,22 +218,10 @@ public abstract class PPossibility {
     }
 
     @Override
-    public String toString(boolean verbose) {
-      return value.transform(
-        large -> toString(large.type(), verbose),
-        std -> {
-          List<LazyPossibility> args = std.args();
-          if (args.isEmpty()) {
-            return toString(std.type(), verbose);
-          } else {
-            StringBuilder sb = new StringBuilder(toString(std.type(), verbose)).append('(');
-            Function<LazyPossibility, ?> desc = a -> a.possibility().transform(p -> p.toString(verbose));
-            Iterator<?> namedArgs = args.stream().map(desc).iterator();
-            return Joiner.on(", ").appendTo(sb, namedArgs).append(')').toString();
-          }
-        });
+    public void accept(PPossibilityVisitor visitor) {
+      visitor.visit(this);
     }
-
+    
     private static void reifySimple(EfType.SimpleType type, EfType actualArg, Multimap<EfType.GenericType, EfType> toMap) {
       // Look at the params on the type. Here, "type" is a component of the generic and "actualArg" is the actual, reified type.
       // For instance, if we had an actualType of (Cons[Foo] | Empty), then we'd invoke this twice, once with type=Cons[T] and once with type=Empty, but with
@@ -255,12 +243,6 @@ public abstract class PPossibility {
         .onVoid(EfFunctions.throwingSupplier())
         .onUnknown(EfFunctions.throwingSupplier())
         .apply(actualArg);
-    }
-
-    private static String toString(EfType.SimpleType type, boolean verbose) {
-      return verbose
-        ? type.toString()
-        : type.getName();
     }
   }
   
@@ -299,9 +281,8 @@ public abstract class PPossibility {
     }
 
     @Override
-    public String toString(boolean verbose) {
-      List<String> verboseOptions = Lists.transform(options, s -> s.toString(verbose));
-      return Joiner.on(" | ").join(verboseOptions);
+    public void accept(PPossibilityVisitor visitor) {
+      visitor.visit(this);
     }
   }
 }

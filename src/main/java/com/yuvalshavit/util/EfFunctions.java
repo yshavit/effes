@@ -1,5 +1,6 @@
 package com.yuvalshavit.util;
 
+import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -38,6 +39,21 @@ public class EfFunctions {
       consumer.accept(t, r);
       return null;
     };
+  }
+  
+  public static <T> void interleaveC(Iterable<? extends  T> elements, Consumer<? super T> consumer, Runnable delimiter) {
+    Iterator<? extends T> iter = elements.iterator();
+    if (!iter.hasNext()) {
+      return;
+    }
+    while (true) {
+      consumer.accept(iter.next());
+      if (iter.hasNext()) {
+        delimiter.run();
+      } else {
+        break;
+      }
+    }
   }
 
   /**
