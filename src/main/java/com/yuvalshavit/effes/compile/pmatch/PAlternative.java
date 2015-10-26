@@ -247,24 +247,8 @@ public abstract class PAlternative {
         .map(args -> Lists.transform(args, ExplodeArg::value))
         .map(possibilityMaker::apply)
         .forEach(result::addMatched);
-      
-      /*
-      
-      Collection<List<Lazy<PPossibility>>> unmatchedArgCombos = exploded.stream()
-        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
-        .map(args -> Lists.transform(args, ExplodeArg::value))
-        .collect(Collectors.toList());
-      return Collections2.transform(unmatchedArgCombos, args -> Lazy.forced(typeMaker.apply(args)));
-       */
-
-      //      result.addMatched(fromMatched(possibilityMaker, resultArgs));
-      //      result.addUnmatched(fromUnmatched(possibilityMaker, resultArgs));
       return result;
     }
-
-//    private Collection<Lazy<PPossibility>> fromMatched(Function<List<Lazy<PPossibility>>, PPossibility> typeMaker, List<StepResult> stepArgs) {
-//      return Lazy.forced(typeMaker.apply(Lists.transform(stepArgs, StepResult::getMatched)));
-//    }
 
     private Collection<List<ExplodeArg>> explode(List<StepResult> stepArgs) {
       Iterator<StepResult> iter = stepArgs.iterator();

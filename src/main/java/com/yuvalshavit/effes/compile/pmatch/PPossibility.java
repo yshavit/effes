@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -58,9 +59,7 @@ public abstract class PPossibility {
 
   @Override
   public String toString() {
-    PPossibilityStringer stringer = new PPossibilityStringer();
-    accept(stringer);
-    return stringer.toString();
+    return Joiner.on('\n').join(PPossibilities.toStrings(this));
   }
 
   private PPossibility() {}
