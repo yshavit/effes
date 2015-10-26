@@ -63,7 +63,7 @@ public abstract class PAlternative {
   }
 
   @Nullable
-  public ForcedPossibility subtractFrom(EfType type, PPossibility pPossibility) {
+  private ForcedPossibility subtractFrom(EfType type, PPossibility pPossibility) {
     if (PPossibility.none.equals(pPossibility)) {
       return null;
     }
@@ -89,6 +89,11 @@ public abstract class PAlternative {
   @Nullable
   public ForcedPossibility subtractFrom(PPossibility.TypedPossibility<? extends EfType> possibility) {
     return subtractFrom(possibility.efType(), possibility);
+  }
+  
+  @Nullable
+  public ForcedPossibility subtractFrom(ForcedPossibility possibility) {
+    return subtractFrom(possibility.efType(), possibility.possibility());
   }
   
   protected abstract StepResult subtractFrom(LazyPossibility pPossibility);

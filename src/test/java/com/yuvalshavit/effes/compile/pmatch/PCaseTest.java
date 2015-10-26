@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
@@ -165,7 +166,7 @@ public class PCaseTest {
       "---",
       "α: False | True");
     assertNotNull(result);
-    ForcedPossibility second = secondIsTrue.subtractFrom(result.efType(), result.possibility());
+    ForcedPossibility second = secondIsTrue.subtractFrom(result);
     check(second,
       "Cons[α](Cons[α](..., False), False)",
       "Cons[β](Empty, False)",
@@ -234,34 +235,59 @@ public class PCaseTest {
       "ζ: False | True",
       "η: True",
       "θ: One[False | True]");
-    
+
+    // So, now we have T as a disjunction of: 
+    //           [One(_), _]                    = Cons(One(_), _)
+    //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
+    //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
+    //           [Nothing, _]                   = Cons(Nothing, _)
+    //           []                             = Empty
+    //
+    // And we do
+    // case of  [One(True | False), _]          = Cons(One(True | False), _)
+    //
+    // This means that the One(_) alternative is fully matched, and the others are unaffected:
+    //
+    // result:   [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
+    //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
+    //           [Nothing, _]                   = Cons(Nothing, _)
+    //           []                             = Empty
+
     PAlternative case1 = simple(cons,
       simple(tOneBool, any()),
       any()
     ).build();
 
-    ForcedPossibility afterCase1 = case1.subtractFrom(afterCase0.efType(), afterCase0.possibility());
+    ForcedPossibility afterCase1 = case1.subtractFrom(afterCase0);
     assertNotNull(afterCase1);
     check(afterCase1,
-      "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
-      "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
-      "Cons(Nothing, Cons(..., Empty))",
-      "Cons(Nothing, Empty)",
-      "Empty");
+      "Cons[α](Nothing, Cons[α](..., Cons[α](Nothing, ...)))",
+      "Cons[β](Nothing, Cons[β](..., Cons[β](One[γ](False), ...)))",
+      "Cons[α](Nothing, Cons[α](..., Empty))",
+      "Cons[δ](Nothing, Empty)",
+      "Empty",
+      "---",
+      "α: Nothing | One[False | True]",
+      "β: Nothing | One[False | True] | One[False]",
+      "γ: False",
+      "δ: Nothing",
+      "ε: One[False | True]");
+    
+    fail("TODO");
     
     PAlternative case2 = simple(cons,
       simple(tNothing),
       any()
     ).build();
 
-    ForcedPossibility afterCase2 = case2.subtractFrom(afterCase1.efType(), afterCase1.possibility());
+    ForcedPossibility afterCase2 = case2.subtractFrom(afterCase1);
     assertNotNull(afterCase2);
     check(afterCase2,
       "Empty");
     
     PAlternative case3 = simple(tEmpty).build();
     
-    ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2.efType(), afterCase2.possibility());
+    ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
     
     assertEquals(afterCase3.possibility(), PPossibility.none);
@@ -270,14 +296,14 @@ public class PCaseTest {
   @Test
   public void wildcardFromNone() {
     PAlternative any = any().build();
-    ForcedPossibility subtraction = any.subtractFrom(null, PPossibility.none);
+    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null));
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
     PAlternative any = simple(tNothing).build();
-    ForcedPossibility subtraction = any.subtractFrom(null, PPossibility.none);
+    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null));
     assertNull(subtraction);
   }
 
