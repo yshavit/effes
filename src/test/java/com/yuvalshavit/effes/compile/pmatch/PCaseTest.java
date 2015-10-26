@@ -193,6 +193,7 @@ public class PCaseTest {
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
+    //           [Nothing, _]                   = Cons(Nothing, _)
     //           []                             = Empty
     //
     // This gets expanded a bit
@@ -214,16 +215,25 @@ public class PCaseTest {
     assertNotNull(afterCase0);
     check(
       afterCase0,
-      "Cons(Nothing, Cons(..., Cons(Nothing, ...)))",
-      "Cons(Nothing, Cons(..., Cons(One(False), ...)))",
-      "Cons(Nothing, Cons(..., Empty))",
-      "Cons(Nothing, Empty)",
-      "Cons(One(...), Cons(..., Cons(One(True), ...)))",
-      "Cons(One(...), Cons(..., Cons(Nothing, ...)))",
-      "Cons(One(...), Cons(..., Cons(One(False), ...)))",
-      "Cons(One(...), Cons(..., Empty))",
-      "Cons(One(...), Empty)",
-      "Empty");
+      "Cons[α](Nothing, Cons[α](..., Cons[α](Nothing, ...)))",
+      "Cons[β](Nothing, Cons[β](..., Cons[β](One[γ](False), ...)))",
+      "Cons[α](Nothing, Cons[α](..., Empty))",
+      "Cons[δ](Nothing, Empty)",
+      "Cons[ε](One[ζ](...), Cons[ε](..., Cons[ε](One[η](True), ...)))",
+      "Cons[α](One[ζ](...), Cons[α](..., Cons[α](Nothing, ...)))",
+      "Cons[β](One[ζ](...), Cons[β](..., Cons[β](One[γ](False), ...)))",
+      "Cons[α](One[ζ](...), Cons[α](..., Empty))",
+      "Cons[θ](One[ζ](...), Empty)",
+      "Empty",
+      "---",
+      "α: Nothing | One[False | True]",
+      "β: Nothing | One[False | True] | One[False]",
+      "γ: False",
+      "δ: Nothing",
+      "ε: Nothing | One[False | True] | One[True]",
+      "ζ: False | True",
+      "η: True",
+      "θ: One[False | True]");
     
     PAlternative case1 = simple(cons,
       simple(tOneBool, any()),
