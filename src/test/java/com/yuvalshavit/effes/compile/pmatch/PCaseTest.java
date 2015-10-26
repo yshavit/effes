@@ -86,8 +86,10 @@ public class PCaseTest {
     // result   Cons(False, _) | Empty
     ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
-      "Cons[False | True](False, ...)",
-      "Empty");
+      "Cons[α](False, ...)",
+      "Empty",
+      "---",
+      "α: False | True");
   }
 
   @Test
@@ -98,7 +100,9 @@ public class PCaseTest {
     PAlternative oneOfTrue = simple(Reifications.reifyOnlyGenericOf(tOne).to(tTrue), mTrue()).build();
     ForcedPossibility result = oneOfTrue.subtractFrom(possibility);
     check(result,
-      "One[False](False)");
+      "One[α](False)",
+      "---",
+      "α: False");
   }
 
   @Test
@@ -156,14 +160,19 @@ public class PCaseTest {
 
     ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
-      "Cons[False | True](..., False)",
-      "Empty");
+      "Cons[α](..., False)",
+      "Empty",
+      "---",
+      "α: False | True");
     assertNotNull(result);
     ForcedPossibility second = secondIsTrue.subtractFrom(result.efType(), result.possibility());
     check(second,
-      "Cons[False](Empty, False)",
-      "Cons[False | True](Cons[False | True](..., False), False)",
-      "Empty");
+      "Cons[α](Cons[α](..., False), False)",
+      "Cons[β](Empty, False)",
+      "Empty",
+      "---",
+      "α: False | True",
+      "β: False");
   }
 
   @Test
@@ -272,7 +281,6 @@ public class PCaseTest {
   private void check(ForcedPossibility possibility, String... expected) {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
-    Collections.sort(expectedList);
     
     List<String> actualList = PPossibilities.toStrings(possibility.possibility());
     EfAssertions.equalLists(actualList, expectedList);
