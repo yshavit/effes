@@ -41,31 +41,4 @@ public class GreekCounter {
     return sb.toString();
   }
 
-  public static class Assigner<T> implements Function<T, String> {
-    private final GreekCounter counter = new GreekCounter();
-    private final Map<T, String> seen = new HashMap<>();
-
-    public Map<String, T> getMappings() {
-      Comparator<String> shorterFirst = (a, b) -> {
-        int lenCmp = Integer.compare(a.length(), b.length());
-        return lenCmp == 0
-          ? a.compareTo(b)
-          : lenCmp;
-      };
-      Map<String, T> toStringMap = new TreeMap<>(shorterFirst);
-      seen.forEach((k, v) -> toStringMap.put(v, k));
-      return Collections.unmodifiableMap(toStringMap);
-    }
-
-    @Override
-    public String apply(T t) {
-      return seen.computeIfAbsent(t, ignored -> counter.next());
-    }
-
-    @Override
-    public String toString() {
-      Map<String, T> toStringMap = getMappings();
-      return toStringMap.toString();
-    }
-  }
 }

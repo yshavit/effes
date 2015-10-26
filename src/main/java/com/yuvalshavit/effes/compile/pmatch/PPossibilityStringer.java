@@ -7,19 +7,20 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.util.EfFunctions;
-import com.yuvalshavit.util.GreekCounter;
+import com.yuvalshavit.util.GreekMapping;
 import com.yuvalshavit.util.Lazy;
+import com.yuvalshavit.util.Mapping;
 
 public class PPossibilityStringer implements PPossibilityVisitor {
-  private final GreekCounter.Assigner<EfType> typeAssigner;
+  private final Function<EfType, String> typeAssigner;
   private final StringBuilder sb = new StringBuilder();
   
-  public PPossibilityStringer(GreekCounter.Assigner<EfType> typeAssigner) {
-    this.typeAssigner = typeAssigner;
+  public PPossibilityStringer(Function<EfType, String> efTypeStringer) {
+    this.typeAssigner = efTypeStringer;
   }
   
   public PPossibilityStringer() {
-    this(new GreekCounter.Assigner<>());
+    this(new GreekMapping<>());
   }
   
   @Override
@@ -76,7 +77,7 @@ public class PPossibilityStringer implements PPossibilityVisitor {
     }
   }
 
-  public static Function<? super PPossibility, String> usingAssigner(GreekCounter.Assigner<EfType> assigner) {
+  public static Function<? super PPossibility, String> usingMapping(Mapping<EfType, String> assigner) {
     return p -> {
       PPossibilityStringer stringer = new PPossibilityStringer(assigner);
       p.accept(stringer);

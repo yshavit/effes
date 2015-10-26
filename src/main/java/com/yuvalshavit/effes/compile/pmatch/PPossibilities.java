@@ -10,21 +10,22 @@ import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.EfType;
-import com.yuvalshavit.util.GreekCounter;
+import com.yuvalshavit.util.GreekMapping;
 import com.yuvalshavit.util.Lazy;
+import com.yuvalshavit.util.Mapping;
 
 public class PPossibilities {
   private PPossibilities() {}
   
   public static List<String> toStrings(PPossibility possibility) {
-    GreekCounter.Assigner<EfType> assigner = new GreekCounter.Assigner<>();
-    Function<? super PPossibility, String> stringFunction = PPossibilityStringer.usingAssigner(assigner);
+    Mapping<EfType, String> assigner = new GreekMapping<>();
+    Function<? super PPossibility, String> stringFunction = PPossibilityStringer.usingMapping(assigner);
     List<String> ret = new ArrayList<>(possibility.dispatch(
       d -> Lists.transform(d.options(), stringFunction::apply),
       s -> Collections.singletonList(stringFunction.apply(s)),
       () -> Collections.singletonList("∅")));
     
-    Map<String, EfType> assignerMappings = assigner.getMappings();
+    Map<String, EfType> assignerMappings = assigner.mappings();
     if (!assignerMappings.isEmpty()) {
       ret.add("---");
       assignerMappings.forEach((name, type) -> ret.add(String.format("%s: %s", name, type)));
