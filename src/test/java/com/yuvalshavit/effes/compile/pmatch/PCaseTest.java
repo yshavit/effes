@@ -270,8 +270,7 @@ public class PCaseTest {
       "α: Nothing | One[False | True]",
       "β: Nothing | One[False | True] | One[False]",
       "γ: False",
-      "δ: Nothing",
-      "ε: One[False | True]");
+      "δ: Nothing");
     
     fail("TODO");
     

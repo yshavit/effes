@@ -169,7 +169,7 @@ public abstract class PAlternative {
 
     private StepResult handle(LazyPossibility lazyPossibility, PPossibility.Simple simple) {
       TypedValue<LazyPossibility> simpleTypeAndArgs = simple.typedAndArgs();
-      if (!simpleTypeAndArgs.type().contains(value.type())) {
+      if (!EfType.sameRawType(simpleTypeAndArgs.type(), value.type())) {
         StepResult r = new StepResult();
         r.addUnmatched(lazyPossibility);
         return r;

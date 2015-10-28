@@ -50,6 +50,12 @@ public abstract class EfType {
     return getClass().equals(UnknownType.class);
   }
 
+  public static boolean sameRawType(EfType first, EfType second) {
+    return (first instanceof SimpleType)
+      && (second instanceof SimpleType)
+      && ((SimpleType) first).getGeneric().equals(((SimpleType) second).getGeneric());
+  }
+  
   private EfType() {}
 
   /**
