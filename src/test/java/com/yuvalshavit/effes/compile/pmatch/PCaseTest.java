@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
@@ -272,8 +271,7 @@ public class PCaseTest {
       "γ: False",
       "δ: Nothing");
     
-    fail("TODO");
-    
+    // Now we match against Cons(Nothing, _). We should expect Empty back
     PAlternative case2 = simple(cons,
       simple(tNothing),
       any()
@@ -284,12 +282,49 @@ public class PCaseTest {
     check(afterCase2,
       "Empty");
     
+    // Now match against Empty, which is the only alternative left
     PAlternative case3 = simple(tEmpty).build();
     
     ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
-    
     assertEquals(afterCase3.possibility(), PPossibility.none);
+  }
+
+  @Test
+  public void consTrueMatchedAgainstConsFalse() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType listOfTrue = listTypes.list(tTrue);
+    EfType.SimpleType consOfFalse = listTypes.cons(tFalse);
+    PPossibility.TypedPossibility<?> possibility = PPossibility.from(listOfTrue);
+    
+    // case Cons[True] of Cons[True](_, _)
+    PAlternative caseOfConsFalse = simple(consOfFalse,
+      simple(tFalse),
+      any()
+    ).build();
+
+    ForcedPossibility afterCase = caseOfConsFalse.subtractFrom(possibility);
+    assertNull(afterCase);
+  }
+  
+  @Test
+  public void consTrueMatchedAgainstConsFalseOfAny() {
+    ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
+    EfType listOfTrue = listTypes.list(tTrue);
+    EfType.SimpleType consOfFalse = listTypes.cons(tFalse);
+    PPossibility.TypedPossibility<?> possibility = PPossibility.from(listOfTrue);
+
+    // case Cons[True] of Cons[True](_, _)
+    PAlternative caseOfConsFalse = simple(consOfFalse,
+      any(),
+      any()
+    ).build();
+
+    ForcedPossibility afterCase = caseOfConsFalse.subtractFrom(possibility);
+    assertNotNull(afterCase);
+    
+    check(afterCase,
+      "Empty");
   }
 
   @Test
