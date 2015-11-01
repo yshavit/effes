@@ -88,6 +88,10 @@ public class Lazy<T> implements Supplier<T> {
     return forced;
   }
   
+  public boolean isForced() {
+    return unforced == null;
+  }
+  
   public boolean isUnforced() {
     return unforced != null;
   }

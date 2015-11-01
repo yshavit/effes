@@ -14,10 +14,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -300,59 +298,6 @@ public abstract class EfType {
     
     public SimpleType withCtorArgs(EfType... newArgs) {
       return withCtorArgs(Arrays.asList(newArgs));
-    }
-
-    /**
-     * <p>Returns a SimpleType derived from this one, but with params constrained as tightly as possible, given the ctor args. For instance, consider a type:
-     * </p>
-     * <pre>
-     *   type Box[T](value: T)
-     * </pre>
-     * 
-     * <p>... which has been reified to <tt>True | False</tt>, but whose ctor arg has been set specifically to <tt>True</tt>:</p>
-     * 
-     * <pre>
-     *   type Box[True|False](value: True)
-     * </pre>
-     * 
-     * <p>This method would return:</p>
-     * 
-     * <pre>
-     *   type Box[True](value: True)
-     * </pre>
-     * 
-     * <p>If this type is already as constrained as it can be, this method may (but does not have to) return <code>this</code>.</p>
-     */
-    public SimpleType constrainReificationByCtorArgs() {
-      Map<GenericType, EfType> reificationMap = new HashMap<>();
-      buildConstrainedReifications(getGeneric(), this, reificationMap);
-      Function<GenericType, EfType> existingReification = getReification();
-      return reify(g -> {
-        EfType reified = reificationMap.get(g);
-        return reified == null
-          ? existingReification.apply(g)
-          : reified;
-      });
-    }
-
-    private void buildConstrainedReifications(EfType fromGeneric, EfType fromReified, Map<GenericType, EfType> map) {
-      // base case: fromGeneric *is* the generic type, so the mapping is trivial
-      // if fromGeneric is simple, ... TODO
-      // if it's disjunctive, ... TODO
-      if (fromGeneric instanceof GenericType) {
-        map.put(((GenericType) fromGeneric), fromReified);
-        return;
-      } else if (fromGeneric instanceof SimpleType) {
-        SimpleType simpleFromGeneric = (SimpleType) fromGeneric;
-        throw new UnsupportedOperationException("simpleFromGeneric"); // TODO
-      } else if (fromGeneric instanceof DisjunctiveType) {
-        DisjunctiveType disjunctionFromGeneric = (DisjunctiveType) fromGeneric;
-        throw new UnsupportedOperationException("disjunctionFromGeneric"); // TODO
-      }
-      // recursive cases:
-      
-      
-      throw new UnsupportedOperationException(); // TODO
     }
   }
 

@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile.node;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.function.Function;
@@ -40,8 +41,12 @@ public class CtorArg {
     return new CtorArg(pos, name, type.transform(t -> t.reify(reification)));
   }
 
-  public CtorArg castTo(EfType newArg) {
-    return new CtorArg(pos, name, newArg);
+  public CtorArg castTo(EfType newType) {
+    EfType myType = type();
+    if (myType.equals(newType)) {
+      return this;
+    }
+    return new CtorArg(pos, name, newType);
   }
 
   public int getArgPosition() {
