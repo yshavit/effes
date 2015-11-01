@@ -50,7 +50,7 @@ public class CtorArg {
 
   @Override
   public String toString() {
-    return String.format("%s: %s", name, type);
+    return String.format("[%d] %s: %s", pos, name, type);
   }
 
   @Override

@@ -9,7 +9,7 @@ def unwrap (b: AWrap) -> False | True:
               VarExpression
                 arg: b
                 pos: 0
-            arg: value (pos=0)
+            arg: [0] value: AFalse | ATrue
       of AFalse:
         MethodInvoke
           method: AFalse::mapped

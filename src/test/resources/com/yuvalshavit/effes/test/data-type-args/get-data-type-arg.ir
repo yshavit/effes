@@ -5,4 +5,4 @@ def unwrap (wrapped: BoolWrap) -> False | True:
         VarExpression
           arg: wrapped
           pos: 0
-      arg: value (pos=0)
+      arg: [0] value: False | True

@@ -7,4 +7,4 @@ def One[T]::describeMe () -> no result type:
           VarExpression
             arg: $this$
             pos: 0
-        arg: value (pos=0)
+        arg: [0] value: T on One[T]

@@ -35,4 +35,4 @@ def Foo::push (v: Void) (ob: False | True) -> False | True:
         VarExpression
           arg: $this$
           pos: 0
-      arg: bool (pos=0)
+      arg: [0] bool: False | True

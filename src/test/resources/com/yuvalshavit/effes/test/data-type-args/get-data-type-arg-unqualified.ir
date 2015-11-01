@@ -5,4 +5,4 @@ def BoolWrap::unwrap () -> False | True:
         VarExpression
           arg: $this$
           pos: 0
-      arg: value (pos=0)
+      arg: [0] value: False | True
