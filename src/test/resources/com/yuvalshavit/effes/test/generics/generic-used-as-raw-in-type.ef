@@ -1,3 +1,2 @@
 type One[T] (value: T)
-
 type Two (value: One)

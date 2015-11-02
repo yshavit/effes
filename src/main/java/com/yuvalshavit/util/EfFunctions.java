@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@SuppressWarnings("unused")
 public class EfFunctions {
   private EfFunctions() {}
   
@@ -24,6 +25,10 @@ public class EfFunctions {
   }
   
   public static <T, R> Function<T, R> fromGuava(com.google.common.base.Function<? super T, ? extends R> f) {
+    return f::apply;
+  }
+  
+  public static <T, R> com.google.common.base.Function<T, R> toGuava(Function<? super T, ? extends R> f) {
     return f::apply;
   }
   
@@ -70,5 +75,20 @@ public class EfFunctions {
     return input -> clazz.isInstance(input)
       ? Stream.of(clazz.cast(input))
       : Stream.empty();
+  }
+
+  public static <T> Function<? super Object, T> ofConst(T result) {
+    return ignored -> result;
+  }
+
+  public static <T> Supplier<T> constSupplier(T result) {
+    return () -> result;
+  }
+  
+  public static <T> Supplier<T> constSupplier(T result, Runnable action) {
+    return () -> {
+      action.run();
+      return result;
+    };
   }
 }

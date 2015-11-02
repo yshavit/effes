@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 class EfTypeHandlerBuilders {
   
-  public static <T> SimpleHandler<T> create(Class<T> cls) {
+  public static <T> SimpleHandler<T> create(@SuppressWarnings("unused") Class<T> cls) { // just to help type inference
     return new HandlerBuilder<>();
   }
   
@@ -26,11 +26,15 @@ class EfTypeHandlerBuilders {
   }
   
   public interface UnknownHandler<T> {
-    Function<EfType, ? extends T> onUnknown(Supplier<T> supplier);
+    HandlerFunction<T> onUnknown(Supplier<T> supplier);
+  }
+  
+  public interface HandlerFunction<T> extends Function<EfType, T> {
+    EfTypeHandler<T> build();
   }
   
   private static class HandlerBuilder<T> implements
-    Function<EfType, T>,
+    HandlerFunction<T>,
     SimpleHandler<T>,
     DisjunctionHandler<T>,
     GenericHandler<T>,
@@ -74,8 +78,14 @@ class EfTypeHandlerBuilders {
       return this;
     }
 
+    @Override
     public T apply(EfType type) {
-      return type.handle(new EfTypeHandler<T>() {
+      return type.handle(build());
+    }
+
+    @Override
+    public EfTypeHandler<T> build() {
+      return new EfTypeHandler<T>() {
         @Override
         public T simple(EfType.SimpleType type) {
           return onSimple.apply(type);
@@ -100,7 +110,7 @@ class EfTypeHandlerBuilders {
         public T voidType() {
           return onVoid.get();
         }
-      });
+      };
     }
   }
   

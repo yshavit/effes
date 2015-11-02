@@ -1,0 +1,3 @@
+type One[T] (value: T)
+type Two[T] (value: One[T])
+type Three  (value: Two[One])

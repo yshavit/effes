@@ -44,6 +44,7 @@ public class TypesFinder implements Consumer<Sources> {
     sources.forEach(source -> ParserUtils.walk(new FindTypeNames(source.isBuiltin()), source.getParseUnit()));
     sources.forEach(source -> ParserUtils.walk(new FindSimpleTypeArgs(), source.getParseUnit()));
     sources.forEach(source -> ParserUtils.walk(new FindOpenTypes(), source.getParseUnit()).finish());
+    sources.forEach(source -> ParserUtils.walk(new CheckTypeParams(), source.getParseUnit()));
   }
 
   @VisibleForTesting
@@ -302,6 +303,30 @@ public class TypesFinder implements Consumer<Sources> {
           registry.registerAlias(entry.getValue(), entry.getKey(), EfType.UNKNOWN);
         }
       });
+    }
+  }
+
+  /**
+   * Quick check to make sure that all the args are parsed. For instance, if I have Box[T], and some other type has an arg "value: Box" (without any generic
+   * param), then that should be a compile-time error.
+   */
+  private class CheckTypeParams extends EffesBaseListener {
+    private EfType.SimpleType context;
+
+    @Override
+    public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      context = registry.getSimpleType(ctx.TYPE_NAME().getText());
+    }
+    
+    @Override
+    public void exitDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
+      context = null;
+    }
+
+    @Override
+    public void enterDataTypeArgDeclr(@NotNull EffesParser.DataTypeArgDeclrContext ctx) {
+      assert context != null;
+      new TypeResolver(registry, errs, context).apply(ctx.type());
     }
   }
 }
