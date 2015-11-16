@@ -390,8 +390,9 @@ public final class ExpressionCompiler {
       return EfType.UNKNOWN;
     });
 
-    List<Pair<Token, String>> bindings
-      = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
+    List<Pair<Token, String>> bindings = Collections.emptyList();
+    if (true) throw new UnsupportedOperationException(); // TODO
+//      = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
 
     return new CasePattern(matchType, bindings, casePattern.getStart());
   }
