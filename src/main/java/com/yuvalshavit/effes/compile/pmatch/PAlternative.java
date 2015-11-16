@@ -1,6 +1,7 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +29,9 @@ import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PAlternative {
+
+  public static final String NON_CAPTURING_WILD = "_";
+
   private PAlternative() {}
   
   @Override public abstract int hashCode();
@@ -40,11 +44,12 @@ public abstract class PAlternative {
   }
   
   public static Builder any(String name) {
+    checkNotNull(name, "name");
     return () -> new Any(name);
   }
 
   public static Builder any() {
-    return any("_");
+    return any(NON_CAPTURING_WILD);
   }
   
   public static Builder simple(EfType.SimpleType type, Builder... args) {
@@ -75,14 +80,14 @@ public abstract class PAlternative {
       .flatMap(lp -> lp.possibility.get().components().stream())
       .collect(Collectors.toList());
     if (simples.isEmpty()) {
-      return new ForcedPossibility(PPossibility.none, EfType.UNKNOWN);
+      return new ForcedPossibility(PPossibility.none, EfType.UNKNOWN, result.bindings());
     } else if (simples.size() == 1) {
       PPossibility.Simple only = Iterables.getOnlyElement(simples);
-      return new ForcedPossibility(only, only.efType());
+      return new ForcedPossibility(only, only.efType(), result.bindings());
     } else {
       EfType efDisjunction = EfType.disjunction(Lists.transform(simples, PPossibility.TypedPossibility::efType));
       PPossibility.Disjunction possibilityDisjunction = new PPossibility.Disjunction(simples);
-      return new ForcedPossibility(possibilityDisjunction, efDisjunction);
+      return new ForcedPossibility(possibilityDisjunction, efDisjunction, result.bindings());
     }
   }
 
@@ -103,7 +108,7 @@ public abstract class PAlternative {
     private final String name;
 
     private Any(String name) {
-      this.name = name;
+      this.name = checkNotNull(name, "name");
     }
 
     private String name() {
@@ -114,6 +119,9 @@ public abstract class PAlternative {
     public StepResult subtractFrom(LazyPossibility pPossibility) {
       StepResult r = new StepResult();
       r.addMatched(pPossibility);
+      if (!NON_CAPTURING_WILD.equals(name)) {
+        r.addBinding(name, pPossibility.efType());
+      }
       return r;
     }
 
@@ -163,6 +171,7 @@ public abstract class PAlternative {
         if (step.anyMatched()) {
           result.addMatched(step.getMatched());
         }
+        result.addBindings(step.bindings());
       }
       return result;
     }
@@ -220,7 +229,8 @@ public abstract class PAlternative {
         result.addMatched(lazyPossibility);
         return result;
       }
-      
+
+      StepResult result = new StepResult();
       List<StepResult> resultArgs = new ArrayList<>(nargs);
       for (int i = 0; i < nargs; ++i) {
         PAlternative alternativeArg = alternativeArgs.get(i);
@@ -231,12 +241,12 @@ public abstract class PAlternative {
           r.addUnmatched(lazyPossibility);
           return r;
         }
+        result.addBindings(argResult.bindings());
         resultArgs.add(argResult);
       }
 
       Collection<List<ExplodeArg>> exploded = explode(resultArgs);
 
-      StepResult result = new StepResult();
       exploded.stream()
         .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
         .map(args -> Lists.transform(args, ExplodeArg::value))

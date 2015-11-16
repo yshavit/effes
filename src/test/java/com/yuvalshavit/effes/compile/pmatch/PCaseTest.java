@@ -12,6 +12,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.internal.collections.Pair.create;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -79,9 +80,9 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
     
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative firstIsTrue = simple(cons, mTrue(), any()).build();
+    PAlternative firstIsTrue = simple(cons, mTrue(), any("a")).build();
     // case     List[Bool]
-    // of       Cons(True, _)
+    // of       Cons(True, a)
     // 
     // result   Cons(False, _) | Empty
     ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
@@ -89,7 +90,9 @@ public class PCaseTest {
       "Cons[α](False, ...)",
       "Empty",
       "---",
-      "α: False | True");
+      "α: False | True",
+      "---",
+      "bound a: Cons[False | True] | Empty");
   }
 
   @Test
@@ -188,7 +191,7 @@ public class PCaseTest {
     EfType list = listTypes.list(maybeBool);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(list);
 
-    // case of   [Nothing, _, One(True), _]     = Cons(Nothing, Cons(_, Cons(One(True)), _))
+    // case of   [Nothing, foo, One(True), _]     = Cons(Nothing, Cons(foo, Cons(One(True)), _))
     //
     // expected: [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
@@ -196,12 +199,14 @@ public class PCaseTest {
     //           [Nothing, _]                   = Cons(Nothing, _)
     //           []                             = Empty
     //
+    // with foo: Nothing | One[False | True]
+    //
     // This gets expanded a bit
     
     PAlternative case0 = simple(cons,
       simple(tNothing),
       simple(cons,
-        any(),
+        any("foo"),
         simple(cons,
           simple(
             tOneBool,
@@ -233,7 +238,9 @@ public class PCaseTest {
       "ε: Nothing | One[False | True] | One[True]",
       "ζ: False | True",
       "η: True",
-      "θ: One[False | True]");
+      "θ: One[False | True]",
+      "---",
+      "bound foo: Nothing | One[False | True]");
 
     // So, now we have T as a disjunction of: 
     //           [One(_), _]                    = Cons(One(_), _)
@@ -253,7 +260,7 @@ public class PCaseTest {
     //           []                             = Empty
 
     PAlternative case1 = simple(cons,
-      simple(tOneBool, any()),
+      simple(tOneBool, any("ft")),
       any()
     ).build();
 
@@ -269,7 +276,9 @@ public class PCaseTest {
       "α: Nothing | One[False | True]",
       "β: Nothing | One[False | True] | One[False]",
       "γ: False",
-      "δ: Nothing");
+      "δ: Nothing",
+      "---",
+      "bound ft: False | True");
     
     // Now we match against Cons(Nothing, _). We should expect Empty back
     PAlternative case2 = simple(cons,
@@ -314,7 +323,7 @@ public class PCaseTest {
     EfType.SimpleType consOfFalse = listTypes.cons(tFalse);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(listOfTrue);
 
-    // case Cons[True] of Cons[True](_, _)
+    // case Cons[True] of Cons[False](_, _)
     PAlternative caseOfConsFalse = simple(consOfFalse,
       any(),
       any()
@@ -328,16 +337,36 @@ public class PCaseTest {
   }
 
   @Test
+  public void boundWildcardUsedTwice() {
+    EfType.SimpleType multiBox = createSimple("MultiBox", Collections.emptyList(), t -> t.setCtorArgs(Arrays.asList(
+      new CtorArg(0, "myTrue", tTrue),
+      new CtorArg(1, "myFalse", tFalse),
+      new CtorArg(2, "myNothing", tNothing))));
+
+    PAlternative alternative = simple(multiBox,
+      any("a"),
+      any("a"),
+      any("b")
+    ).build();
+    ForcedPossibility result = alternative.subtractFrom(PPossibility.from(multiBox));
+    check(result,
+      "∅",
+      "---",
+      "bound a: False | True",
+      "bound b: Nothing");
+  }
+
+  @Test
   public void wildcardFromNone() {
     PAlternative any = any().build();
-    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null));
+    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null, Collections.emptyMap()));
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
     PAlternative any = simple(tNothing).build();
-    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null));
+    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null, Collections.emptyMap()));
     assertNull(subtraction);
   }
 
@@ -353,6 +382,10 @@ public class PCaseTest {
     List<String> expectedList = Lists.newArrayList(expected);
     
     List<String> actualList = PPossibilities.toStrings(possibility.possibility());
+    if (!possibility.bindings().isEmpty()) {
+      actualList.add("---");
+      possibility.bindings().forEach((k, v) -> actualList.add(String.format("bound %s: %s", k, v)));
+    }
     EfAssertions.equalLists(actualList, expectedList);
   }
 
