@@ -1,13 +1,12 @@
 package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.yuvalshavit.effes.compile.NodeStateVisitor;
+import com.yuvalshavit.effes.compile.pmatch.ForcedPossibility;
+
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CaseConstruct<N extends Node> {
 
@@ -41,28 +40,7 @@ public class CaseConstruct<N extends Node> {
     // 4) each matcher matches the right number of args
     EfType matchType = matchAgainst.resultType();
     if (matchType instanceof EfType.DisjunctiveType) {
-      EfType.DisjunctiveType dis = (EfType.DisjunctiveType) matchType;
-      Set<EfType> matchAgainstTypes = dis.getAlternatives();
-      Set<EfType> patternTypes = patterns
-        .stream()
-        .map(Alternative::getType)
-        .collect(Collectors.toSet());
-      // extra types
-      Sets.difference(patternTypes, matchAgainstTypes).forEach(t -> errs.add(
-        matchAgainst.token(),
-        String.format("pattern type (%s) can never match expression type (%s)", t, matchType)));
-      // missing types
-      Sets.difference(matchAgainstTypes, patternTypes).forEach(t -> errs.add(
-        matchAgainst.token(),
-        "expression alternative is never matched: " + t));
-      patterns.forEach(alt -> {
-        int expected = alt.getCtorArgs().size();
-        int actual = alt.getBindings().size();
-        if (expected != actual) {
-          String plural = expected == 1 ? "" : "s";
-          errs.add(token, String.format("expected %d binding%s but found %d", expected, plural, actual));
-        }
-      });
+      // TODO any validation needed?
     } else {
       errs.add(token, "case requires a disjunctive type (found " + matchType + ")");
     }
@@ -70,7 +48,7 @@ public class CaseConstruct<N extends Node> {
 
   public void state(NodeStateVisitor out) {
     out.visitChild("case", matchAgainst);
-    patterns.forEach(p -> out.visitChild("of " + p.getType(), p.getIfMatched()));
+    patterns.forEach(p -> out.visitChild(" of " + p.getPossibility().possibility(), p.getIfMatched()));
   }
 
   @Override
@@ -97,32 +75,20 @@ public class CaseConstruct<N extends Node> {
   }
 
   public static class Alternative<N extends Node> {
-    private final EfType.SimpleType type;
-    private final List<CtorArg> ctorArgs;
+    private final ForcedPossibility possibility;
     private final N ifMatched;
-    private final List<EfVar> bindings;
 
-    public Alternative(EfType.SimpleType type, List<CtorArg> ctorArgs, List<EfVar> bindings, N ifMatched) {
-      this.type = type;
-      this.ctorArgs = ctorArgs;
+    public Alternative(ForcedPossibility possibility, N ifMatched) {
+      this.possibility = possibility;
       this.ifMatched = ifMatched;
-      this.bindings = ImmutableList.copyOf(bindings);
     }
 
     public N getIfMatched() {
       return ifMatched;
     }
 
-    public EfType.SimpleType getType() {
-      return type;
-    }
-
-    public List<CtorArg> getCtorArgs() {
-      return ctorArgs;
-    }
-
-    public List<EfVar> getBindings() {
-      return bindings;
+    public ForcedPossibility getPossibility() {
+      return possibility;
     }
   }
 }

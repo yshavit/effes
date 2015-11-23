@@ -37,5 +37,9 @@ public abstract class Node {
   @Override
   public abstract String toString(); // force overrides
   public abstract void validate(CompileErrors errs);
+  /**
+   * Describes this node's state; used for debugging, toString, etc.
+   * @param out the state visitor
+   */
   public abstract void state(NodeStateVisitor out);
 }

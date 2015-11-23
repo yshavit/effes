@@ -3,6 +3,8 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.*;
+import com.yuvalshavit.effes.compile.pmatch.ForcedPossibility;
+import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
@@ -144,17 +146,18 @@ public final class ExpressionCompiler {
               return null;
             }
             EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
-            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), inMatcher.token());
-            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
-            return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
-              null,
-              matchAgainstVarClosure,
-              ignored1 -> casePattern,
-              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, downcast, matchAgainstType)
-            );
+            throw new UnsupportedOperationException(); // TODO
+//            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), inMatcher.token());
+//            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
+//            return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
+//              null,
+//              matchAgainstVarClosure,
+//              ignored1 -> casePattern,
+//              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, downcast, matchAgainstType)
+//            );
           })
-          .filter(Objects::nonNull).collect(Collectors.toList());
-        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
+          .filter(Objects::nonNull).collect(null); throw new UnsupportedOperationException(); // TODO
+//        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
       });
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
@@ -366,38 +369,32 @@ public final class ExpressionCompiler {
         : new Expression.UnrecognizedExpression(c.getStart()));
   }
 
-  private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, CasePattern> casePatternDispatcher
-    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.CasePatternContext.class, CasePattern.class)
+  private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, PAlternative> casePatternDispatcher
+    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.CasePatternContext.class, PAlternative.class)
     .put(EffesParser.SingleTypePatternMatchContext.class, ExpressionCompiler::casePattern)
     .put(EffesParser.IntLiteralPatternMatchContext.class, ExpressionCompiler::casePattern)
+    .put(EffesParser.VarBindingPatternMatchContext.class, ExpressionCompiler::casePattern)
+    .put(EffesParser.UnboundWildPatternMatchContext.class, ExpressionCompiler::casePattern)
     .build(ExpressionCompiler::casePatternErr);
     
   
-  public CasePattern casePattern(EffesParser.CasePatternContext casePattern) {
+  @Nullable
+  public PAlternative casePattern(EffesParser.CasePatternContext casePattern) {
     return casePatternDispatcher.apply(this, casePattern);
   }
   
-  private CasePattern casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
-    TerminalNode tok = casePattern.TYPE_NAME();
-    TypeResolver resolver = new TypeResolver(typeRegistry, errs, declaringType);
-    EfType.SimpleType matchType = resolver.getSimpleType(tok, casePattern.singleTypeParameters().type());
-    if (matchType == null) {
-      errs.add(tok.getSymbol(), String.format("unrecognized type '%s' for pattern matcher", tok.getText()));
-      return null;
+  @Nullable
+  private PAlternative casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
+    TerminalNode typeNameTok = casePattern.TYPE_NAME();
+    String typeName = typeNameTok.getText();
+    EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
+    if (type == null) {
+      errs.add(typeNameTok.getSymbol(), "unknown type: " + typeName);
     }
-    matchType = matchType.reify(g -> {
-      errs.add(tok.getSymbol(), "can't have generic types in case statements");
-      return EfType.UNKNOWN;
-    });
-
-    List<Pair<Token, String>> bindings = Collections.emptyList();
-    if (true) throw new UnsupportedOperationException(); // TODO
-//      = casePattern.VAR_NAME().stream().map(t -> new Pair<>(t.getSymbol(), t.getText())).collect(Collectors.toList());
-
-    return new CasePattern(matchType, bindings, casePattern.getStart());
+    return PAlternative.simple(type, casePattern.casePattern().stream().map(this::casePattern).toArray(PAlternative.Builder[]::new)).build();
   }
   
-  private CasePattern casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
+  private PAlternative casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
     long literalValue;
     try {
       literalValue = Long.parseLong(casePattern.getText());
@@ -405,15 +402,21 @@ public final class ExpressionCompiler {
       errs.add(casePattern.getStart(), "number out of range: " + casePattern.getText());
       return null;
     }
-    if (literalValue == 0) {
-      return new CasePattern(BuiltinType.IntZero.getEfType(), Collections.emptyList(), casePattern.getStart());
-    } else {
-      errs.add(casePattern.getStart(), "non-0 int literals are unsupported as pattern matchers");
-      return null;
-    }
+    EfType.SimpleType type = literalValue == 0
+      ? BuiltinType.IntZero.getEfType()
+      : BuiltinType.IntValue.getEfType();
+    return PAlternative.simple(type).build();
+  }
+  
+  private PAlternative casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
+    return PAlternative.any(casePattern.VAR_NAME().getText()).build();
+  }
+  
+  private PAlternative casePattern(EffesParser.UnboundWildPatternMatchContext casePattern) {
+    return PAlternative.any().build();
   }
 
-  private CasePattern casePatternErr(EffesParser.CasePatternContext casePattern) {
+  private PAlternative casePatternErr(EffesParser.CasePatternContext casePattern) {
     Class<?> clazz;
     Token tok;
     if (casePattern == null) {
@@ -423,73 +426,34 @@ public final class ExpressionCompiler {
       clazz = casePattern.getClass();
       tok = casePattern.getStart();
     }
-    errs.add(tok, String.format("unknown error in handling pattern of type " + clazz));
+    errs.add(tok, "unknown error in handling pattern of type " + clazz);
     return null;
   }
   
   @Nullable
   public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
+    ForcedPossibility targetIfMatched,
     C ctx,
     @Nullable EfVar matchAgainst,
-    Function<C, CasePattern> patternExtractor,
+    Function<C, ForcedPossibility> patternExtractor,
     Function<C, N> ifMatchesExtractor)
   {
-    CasePattern casePattern = patternExtractor.apply(ctx);
+    ForcedPossibility casePattern = patternExtractor.apply(ctx);
     if (casePattern == null) {
       return null;
     }
-    EfType.SimpleType matchType = casePattern.matchType();
-    List<Pair<Token, String>> bindingTokens = casePattern.bindings();
-    //    List<EfVar> args = argsByType.get(type.getGeneric());
-    //    Preconditions.checkArgument(args != null, "unknown type: " + type);
-    //    return args.stream().map(v -> v.reify(reification)).collect(Collectors.toList());
-    List<CtorArg> matchtypeArgs = matchType.getArgs();
+    EfType matchType = targetIfMatched.efType();
     vars.pushScope();
     if (matchAgainst != null) {
       EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
       vars.replace(matchAgainstDowncast);
     }
-    List<EfVar> bindingArgs = new ArrayList<>(bindingTokens.size());
-    for (int i = 0; i < bindingTokens.size(); ++i) {
-      Pair<Token, String> bindingToken = bindingTokens.get(i);
-      String bindingName = bindingToken.b;
-      EfType bindingType = i < matchtypeArgs.size()
-        ? matchtypeArgs.get(i).type()
-        : EfType.UNKNOWN;
-      EfVar binding = EfVar.var(bindingName, vars.countElems(), bindingType);
-      vars.add(binding, bindingToken.a);
-      bindingArgs.add(binding);
-    }
     N ifMatches = ifMatchesExtractor.apply(ctx);
     vars.popScope();
     if (ifMatches == null) {
-      errs.add(casePattern.token(), "unrecognized alternative for pattern " + matchType);
+      errs.add(null, "unrecognized alternative for pattern " + matchType); // TODO get the token
     }
-    return new CaseConstruct.Alternative<>(matchType, matchtypeArgs, bindingArgs, ifMatches);
-  }
-
-  public static class CasePattern {
-    private final EfType.SimpleType matchType;
-    private final List<Pair<Token, String>> bindings;
-    private final Token token;
-
-    public CasePattern(EfType.SimpleType matchType, List<Pair<Token, String>> bindings, Token token) {
-      this.matchType = matchType;
-      this.bindings = ImmutableList.copyOf(bindings);
-      this.token = token;
-    }
-
-    public EfType.SimpleType matchType() {
-      return matchType;
-    }
-
-    public List<Pair<Token, String>> bindings() {
-      return bindings;
-    }
-
-    public Token token() {
-      return token;
-    }
+    return new CaseConstruct.Alternative<>(casePattern, ifMatches);
   }
 
   private static class MethodLookup {

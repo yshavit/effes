@@ -51,7 +51,7 @@ public abstract class PAlternative {
   public static Builder any() {
     return any(NON_CAPTURING_WILD);
   }
-  
+
   public static Builder simple(EfType.SimpleType type, Builder... args) {
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       checkArgument(args.length == 0, "%s doesn't take any arguments", type);
