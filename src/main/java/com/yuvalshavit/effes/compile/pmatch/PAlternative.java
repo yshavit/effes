@@ -68,7 +68,7 @@ public abstract class PAlternative {
   }
 
   @Nullable
-  private ForcedPossibility subtractFrom(EfType type, PPossibility pPossibility) {
+  private PAlternativeSubtractionResult subtractFrom(EfType type, PPossibility pPossibility) {
     if (PPossibility.none.equals(pPossibility)) {
       return null;
     }
@@ -80,28 +80,27 @@ public abstract class PAlternative {
       .flatMap(lp -> lp.possibility.get().components().stream())
       .collect(Collectors.toList());
     if (simples.isEmpty()) {
-      return new ForcedPossibility(PPossibility.none, EfType.UNKNOWN, result.bindings());
+      return new PAlternativeSubtractionResult(PPossibility.none, EfType.UNKNOWN, result.bindings());
     } else if (simples.size() == 1) {
       PPossibility.Simple only = Iterables.getOnlyElement(simples);
-      return new ForcedPossibility(only, only.efType(), result.bindings());
+      return new PAlternativeSubtractionResult(only, only.efType(), result.bindings());
     } else {
       EfType efDisjunction = EfType.disjunction(Lists.transform(simples, PPossibility.TypedPossibility::efType));
       PPossibility.Disjunction possibilityDisjunction = new PPossibility.Disjunction(simples);
-      return new ForcedPossibility(possibilityDisjunction, efDisjunction, result.bindings());
+      return new PAlternativeSubtractionResult(possibilityDisjunction, efDisjunction, result.bindings());
     }
   }
 
   @Nullable
-  public ForcedPossibility subtractFrom(PPossibility.TypedPossibility<? extends EfType> possibility) {
+  public PAlternativeSubtractionResult subtractFrom(PPossibility.TypedPossibility<? extends EfType> possibility) {
     return subtractFrom(possibility.efType(), possibility);
   }
-  
+
   @Nullable
-  public ForcedPossibility subtractFrom(ForcedPossibility possibility) {
-    // TODO also return the matched type
+  public PAlternativeSubtractionResult subtractFrom(PAlternativeSubtractionResult possibility) {
     return subtractFrom(possibility.efType(), possibility.possibility());
   }
-  
+
   protected abstract StepResult subtractFrom(LazyPossibility pPossibility);
   
   static class Any extends PAlternative {

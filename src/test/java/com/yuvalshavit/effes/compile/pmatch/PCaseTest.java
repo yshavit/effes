@@ -85,7 +85,7 @@ public class PCaseTest {
     // of       Cons(True, a)
     // 
     // result   Cons(False, _) | Empty
-    ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
+    PAlternativeSubtractionResult result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
       "Cons[α](False, ...)",
       "Empty",
@@ -101,7 +101,7 @@ public class PCaseTest {
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(oneBool);
 
     PAlternative oneOfTrue = simple(Reifications.reifyOnlyGenericOf(tOne).to(tTrue), mTrue()).build();
-    ForcedPossibility result = oneOfTrue.subtractFrom(possibility);
+    PAlternativeSubtractionResult result = oneOfTrue.subtractFrom(possibility);
     check(result,
       "One[α](False)",
       "---",
@@ -116,7 +116,7 @@ public class PCaseTest {
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = simple(cons, any(), any()).build();
-    ForcedPossibility result = doubleWilds.subtractFrom(boolsPossibility);
+    PAlternativeSubtractionResult result = doubleWilds.subtractFrom(boolsPossibility);
     check(result, "Empty");
   }
 
@@ -127,7 +127,7 @@ public class PCaseTest {
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative doubleWilds = any().build();
-    ForcedPossibility result = doubleWilds.subtractFrom(boolsPossibility);
+    PAlternativeSubtractionResult result = doubleWilds.subtractFrom(boolsPossibility);
     assertNotNull(result);
     assertEquals(result.possibility(), PPossibility.none);
   }
@@ -139,7 +139,7 @@ public class PCaseTest {
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative fullyWild = any().build();
-    ForcedPossibility result = fullyWild.subtractFrom(boolsPossibility);
+    PAlternativeSubtractionResult result = fullyWild.subtractFrom(boolsPossibility);
     assertNotNull(result);
     assertEquals(result.possibility(), PPossibility.none);
   }
@@ -161,14 +161,14 @@ public class PCaseTest {
       any()
     ).build();
 
-    ForcedPossibility result = firstIsTrue.subtractFrom(boolsPossibility);
+    PAlternativeSubtractionResult result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
       "Cons[α](..., False)",
       "Empty",
       "---",
       "α: False | True");
     assertNotNull(result);
-    ForcedPossibility second = secondIsTrue.subtractFrom(result);
+    PAlternativeSubtractionResult second = secondIsTrue.subtractFrom(result);
     check(second,
       "Cons[α](Cons[α](..., False), False)",
       "Cons[β](Empty, False)",
@@ -216,7 +216,7 @@ public class PCaseTest {
       )
     ).build();
     
-    ForcedPossibility afterCase0 = case0.subtractFrom(possibility);
+    PAlternativeSubtractionResult afterCase0 = case0.subtractFrom(possibility);
     assertNotNull(afterCase0);
     check(
       afterCase0,
@@ -264,7 +264,7 @@ public class PCaseTest {
       any()
     ).build();
 
-    ForcedPossibility afterCase1 = case1.subtractFrom(afterCase0);
+    PAlternativeSubtractionResult afterCase1 = case1.subtractFrom(afterCase0);
     assertNotNull(afterCase1);
     check(afterCase1,
       "Cons[α](Nothing, Cons[α](..., Cons[α](Nothing, ...)))",
@@ -286,7 +286,7 @@ public class PCaseTest {
       any()
     ).build();
 
-    ForcedPossibility afterCase2 = case2.subtractFrom(afterCase1);
+    PAlternativeSubtractionResult afterCase2 = case2.subtractFrom(afterCase1);
     assertNotNull(afterCase2);
     check(afterCase2,
       "Empty");
@@ -294,7 +294,7 @@ public class PCaseTest {
     // Now match against Empty, which is the only alternative left
     PAlternative case3 = simple(tEmpty).build();
     
-    ForcedPossibility afterCase3 = case3.subtractFrom(afterCase2);
+    PAlternativeSubtractionResult afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
     assertEquals(afterCase3.possibility(), PPossibility.none);
   }
@@ -312,7 +312,7 @@ public class PCaseTest {
       any()
     ).build();
 
-    ForcedPossibility afterCase = caseOfConsFalse.subtractFrom(possibility);
+    PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNull(afterCase);
   }
   
@@ -329,7 +329,7 @@ public class PCaseTest {
       any()
     ).build();
 
-    ForcedPossibility afterCase = caseOfConsFalse.subtractFrom(possibility);
+    PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNotNull(afterCase);
     
     check(afterCase,
@@ -348,7 +348,7 @@ public class PCaseTest {
       any("a"),
       any("b")
     ).build();
-    ForcedPossibility result = alternative.subtractFrom(PPossibility.from(multiBox));
+    PAlternativeSubtractionResult result = alternative.subtractFrom(PPossibility.from(multiBox));
     check(result,
       "∅",
       "---",
@@ -359,25 +359,25 @@ public class PCaseTest {
   @Test
   public void wildcardFromNone() {
     PAlternative any = any().build();
-    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null, Collections.emptyMap()));
+    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap()));
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
     PAlternative any = simple(tNothing).build();
-    ForcedPossibility subtraction = any.subtractFrom(new ForcedPossibility(PPossibility.none, null, Collections.emptyMap()));
+    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap()));
     assertNull(subtraction);
   }
 
   @Test
   public void nothingFromEmpty() {
     PAlternative any = simple(tNothing).build();
-    ForcedPossibility subtraction = any.subtractFrom(PPossibility.from(tEmpty));
+    PAlternativeSubtractionResult subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
   
-  private void check(ForcedPossibility possibility, String... expected) {
+  private void check(PAlternativeSubtractionResult possibility, String... expected) {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
     

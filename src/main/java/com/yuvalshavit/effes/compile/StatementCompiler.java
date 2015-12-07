@@ -16,7 +16,7 @@ import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.compile.node.Expression;
 import com.yuvalshavit.effes.compile.node.Node;
 import com.yuvalshavit.effes.compile.node.Statement;
-import com.yuvalshavit.effes.compile.pmatch.ForcedPossibility;
+import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
 import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
@@ -62,7 +62,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
   private Statement caseStatement(EffesParser.CaseStatContext ctx) {
     Expression matchAgainst = expressionCompiler.apply(ctx.expr());
     EfVar matchAgainstVar = expressionCompiler.tryGetEfVar(matchAgainst);
-    ForcedPossibility matchAgainstPossibility = new ForcedPossibility(matchAgainst.resultType());
+    PAlternativeSubtractionResult matchAgainstPossibility = new PAlternativeSubtractionResult(matchAgainst.resultType());
     List<CaseConstruct.Alternative<Block>> alternatives = new ArrayList<>(ctx.caseStatAlternative().size());
     for (EffesParser.CaseStatAlternativeContext caseStatAltCtx : ctx.caseStatAlternative()) {
       CaseConstruct.Alternative<Block> step = caseAlternative(
@@ -71,7 +71,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
         matchAgainstVar,
         () -> new Block(caseStatAltCtx.inlinableBlock().getStart(), Lists.transform(caseStatAltCtx.inlinableBlock().stat(), this::apply)));
       alternatives.add(step);
-      ForcedPossibility nextPossibility = step.getPAlternative().subtractFrom(matchAgainstPossibility);
+      PAlternativeSubtractionResult nextPossibility = step.getPAlternative().subtractFrom(matchAgainstPossibility);
       if (nextPossibility == null) {
         throw new UnsupportedOperationException("register the error, substitute UNKNOWN"); // TODO
       }

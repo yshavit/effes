@@ -5,18 +5,18 @@ import java.util.Map;
 
 import com.yuvalshavit.effes.compile.node.EfType;
 
-public class ForcedPossibility {
+public class PAlternativeSubtractionResult {
   final PPossibility possibility;
   final EfType efType;
   private final Map<String, EfType> bindings;
 
-  public ForcedPossibility(PPossibility possibility, EfType efType, Map<String, EfType> bindings) {
+  public PAlternativeSubtractionResult(PPossibility possibility, EfType efType, Map<String, EfType> bindings) {
     this.possibility = possibility;
     this.efType = efType;
     this.bindings = bindings;
   }
 
-  public ForcedPossibility(EfType type) {
+  public PAlternativeSubtractionResult(EfType type) {
     this(PPossibility.from(type), type, Collections.emptyMap());
   }
 

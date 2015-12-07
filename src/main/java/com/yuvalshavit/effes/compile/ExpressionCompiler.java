@@ -3,8 +3,8 @@ package com.yuvalshavit.effes.compile;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.*;
-import com.yuvalshavit.effes.compile.pmatch.ForcedPossibility;
 import com.yuvalshavit.effes.compile.pmatch.PAlternative;
+import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import org.antlr.v4.runtime.Token;
@@ -335,17 +335,17 @@ public final class ExpressionCompiler {
     EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
 
     List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
-    ForcedPossibility possibility = new ForcedPossibility(matchAgainst.resultType());
+    PAlternativeSubtractionResult subtractionResult = new PAlternativeSubtractionResult(matchAgainst.resultType());
     for (EffesParser.CaseAlternativeContext alternativeCtx : ctx.caseAlternative()) {
       PAlternative alternative = alternative(alternativeCtx);
-      ForcedPossibility nextPossibility = alternative.subtractFrom(possibility);
+      PAlternativeSubtractionResult nextPossibility = alternative.subtractFrom(subtractionResult);
       if (nextPossibility == null) {
-        errs.add(ctx.getStart(), String.format("%s can't match against %s", alternative, possibility));
+        errs.add(ctx.getStart(), String.format("%s can't match against %s", alternative, subtractionResult));
         // TODO mark result as "| Unknown" somehow?
       }
       if (matchAgainstVar != null) {
         vars.pushScope();
-        // TODO get matched type from ForcedPossibility, use that here
+        // TODO get matched type from PAlternativeSubtractionResult, use that here
 //        EfVar matchAgainstDowncast = matchAgainstVar.cast(whatever);
 //        vars.replace(matchAgainstDowncast);
       }
