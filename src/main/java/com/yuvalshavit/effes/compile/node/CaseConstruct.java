@@ -2,7 +2,7 @@ package com.yuvalshavit.effes.compile.node;
 
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.NodeStateVisitor;
-import com.yuvalshavit.effes.compile.pmatch.ForcedPossibility;
+import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 
 import org.antlr.v4.runtime.Token;
 
@@ -48,7 +48,7 @@ public class CaseConstruct<N extends Node> {
 
   public void state(NodeStateVisitor out) {
     out.visitChild("case", matchAgainst);
-    patterns.forEach(p -> out.visitChild(" of " + p.getPossibility().possibility(), p.getIfMatched()));
+    patterns.forEach(p -> out.visitChild(" of " + p, p.getIfMatched()));
   }
 
   @Override
@@ -75,11 +75,11 @@ public class CaseConstruct<N extends Node> {
   }
 
   public static class Alternative<N extends Node> {
-    private final ForcedPossibility possibility;
+    private final PAlternative matcher;
     private final N ifMatched;
 
-    public Alternative(ForcedPossibility possibility, N ifMatched) {
-      this.possibility = possibility;
+    public Alternative(PAlternative matcher, N ifMatched) {
+      this.matcher = matcher;
       this.ifMatched = ifMatched;
     }
 
@@ -87,8 +87,8 @@ public class CaseConstruct<N extends Node> {
       return ifMatched;
     }
 
-    public ForcedPossibility getPossibility() {
-      return possibility;
+    public PAlternative getPAlternative() {
+      return matcher;
     }
   }
 }

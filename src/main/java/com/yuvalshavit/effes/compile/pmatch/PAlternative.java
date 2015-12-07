@@ -98,6 +98,7 @@ public abstract class PAlternative {
   
   @Nullable
   public ForcedPossibility subtractFrom(ForcedPossibility possibility) {
+    // TODO also return the matched type
     return subtractFrom(possibility.efType(), possibility.possibility());
   }
   

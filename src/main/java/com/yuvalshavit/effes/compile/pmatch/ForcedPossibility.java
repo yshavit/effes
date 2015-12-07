@@ -1,5 +1,6 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
+import java.util.Collections;
 import java.util.Map;
 
 import com.yuvalshavit.effes.compile.node.EfType;
@@ -13,6 +14,10 @@ public class ForcedPossibility {
     this.possibility = possibility;
     this.efType = efType;
     this.bindings = bindings;
+  }
+
+  public ForcedPossibility(EfType type) {
+    this(PPossibility.from(type), type, Collections.emptyMap());
   }
 
   public PPossibility possibility() {

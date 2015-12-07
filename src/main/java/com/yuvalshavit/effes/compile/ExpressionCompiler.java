@@ -333,12 +333,35 @@ public final class ExpressionCompiler {
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
     EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
-    List<CaseConstruct.Alternative<Expression>> patterns = ctx.caseAlternative().stream()
-      .map(c -> caseAlternative(c, matchAgainstVar))
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+
+    List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
+    ForcedPossibility possibility = new ForcedPossibility(matchAgainst.resultType());
+    for (EffesParser.CaseAlternativeContext alternativeCtx : ctx.caseAlternative()) {
+      PAlternative alternative = alternative(alternativeCtx);
+      ForcedPossibility nextPossibility = alternative.subtractFrom(possibility);
+      if (nextPossibility == null) {
+        errs.add(ctx.getStart(), String.format("%s can't match against %s", alternative, possibility));
+        // TODO mark result as "| Unknown" somehow?
+      }
+      if (matchAgainstVar != null) {
+        vars.pushScope();
+        // TODO get matched type from ForcedPossibility, use that here
+//        EfVar matchAgainstDowncast = matchAgainstVar.cast(whatever);
+//        vars.replace(matchAgainstDowncast);
+      }
+      Expression ifMatched = apply(alternativeCtx.exprBlock().expr());
+      if (matchAgainstVar != null) {
+        vars.popScope();
+      }
+      CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched);
+      patterns.add(caseAlt);
+    }
     CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
     return new Expression.CaseExpression(ctx.getStart(), construct);
+  }
+
+  private PAlternative alternative(EffesParser.CaseAlternativeContext ctx) {
+    throw new UnsupportedOperationException(); // TODO
   }
 
   @Nullable
@@ -355,18 +378,6 @@ public final class ExpressionCompiler {
 
   private Expression exprLineErr(EffesParser.ExprLineContext ctx) {
     return new Expression.UnrecognizedExpression(ctx.getStart());
-  }
-
-  @Nullable
-  private CaseConstruct.Alternative<Expression> caseAlternative(EffesParser.CaseAlternativeContext ctx,
-                                                                @Nullable EfVar matchAgainst) {
-    return caseAlternative(
-      ctx,
-      matchAgainst,
-      t-> casePattern(t.casePattern()),
-      c -> c.exprBlock() != null
-        ? apply(c.exprBlock().expr())
-        : new Expression.UnrecognizedExpression(c.getStart()));
   }
 
   private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, PAlternative> casePatternDispatcher
@@ -429,31 +440,61 @@ public final class ExpressionCompiler {
     errs.add(tok, "unknown error in handling pattern of type " + clazz);
     return null;
   }
-  
-  @Nullable
-  public <C, N extends Node> CaseConstruct.Alternative<N> caseAlternative(
-    ForcedPossibility targetIfMatched,
-    C ctx,
-    @Nullable EfVar matchAgainst,
-    Function<C, ForcedPossibility> patternExtractor,
-    Function<C, N> ifMatchesExtractor)
-  {
-    ForcedPossibility casePattern = patternExtractor.apply(ctx);
-    if (casePattern == null) {
+
+  /**
+   * @param ctx the alternative's AST
+   * @param matchAgainstType the type of the target of the "case of", which may affect the EfType element of the result (e.g. if it's a wildcard match)
+   * @return a pair whose first element is the PAlternative compiled from the ctx, and whose second element is the EfType of the match, or <tt>null</tt>
+   * if there was an error
+   */
+  public Pair<PAlternative,EfType> compilePattern(EffesParser.CasePatternContext ctx, EfType matchAgainstType) {
+    if (ctx instanceof EffesParser.SingleTypePatternMatchContext) {
+      EffesParser.SingleTypePatternMatchContext simpleTypePattern = (EffesParser.SingleTypePatternMatchContext) ctx;
+      String typeName = simpleTypePattern.TYPE_NAME().getText();
+      List<EffesParser.CasePatternContext> args = simpleTypePattern.casePattern();
+      EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
+      if (type == null) {
+        errs.add(simpleTypePattern.TYPE_NAME().getSymbol(), "unrecognized type: " + typeName);
+        return null;
+      }
+      if (type.getArgs().size() != args.size()) {
+        String plural = type.getArgs().size() == 1 ? "s" : "";
+        errs.add(ctx.getStart(), String.format("%s should take %d argument%s, but saw %d", typeName, type.getArgs().size(), plural, args.size()));
+        return null;
+      }
+      throw new UnsupportedOperationException("EVERYTHING GOES HERE"); // TODO
+
+    } else if (ctx instanceof EffesParser.VarBindingPatternMatchContext) {
+      String varName = ((EffesParser.VarBindingPatternMatchContext) ctx).VAR_NAME().getText();
+      return new Pair<>(PAlternative.any(varName).build(), matchAgainstType);
+    } else if (ctx instanceof EffesParser.UnboundWildPatternMatchContext) {
+      return new Pair<>(PAlternative.any().build(), matchAgainstType);
+    } else if (ctx instanceof EffesParser.IntLiteralPatternMatchContext) {
+      TerminalNode intNode = ((EffesParser.IntLiteralPatternMatchContext) ctx).INT();
+      long longValue;
+      try {
+        longValue = Long.parseLong(intNode.getText());
+      } catch (NumberFormatException e) {
+        errs.add(intNode.getSymbol(), "number out of range");
+        longValue = Long.MIN_VALUE;
+      }
+      if (longValue == 0) {
+        EfType.SimpleType zeroType = BuiltinType.IntZero.getEfType();
+        if (!matchAgainstType.contains(zeroType)) {
+          return null;
+        }
+        return new Pair<>(PAlternative.simple(zeroType).build(), zeroType);
+      } else {
+        EfType.SimpleType intType = BuiltinType.IntValue.getEfType();
+        if (!matchAgainstType.contains(intType)) {
+          return null;
+        }
+        throw new UnsupportedOperationException("how do I use this number?"); // TODO
+      }
+    } else {
+      errs.add(ctx.getStart(), "compiler error: unhandled " + ctx.getClass().getSimpleName());
       return null;
     }
-    EfType matchType = targetIfMatched.efType();
-    vars.pushScope();
-    if (matchAgainst != null) {
-      EfVar matchAgainstDowncast = matchAgainst.cast(matchType);
-      vars.replace(matchAgainstDowncast);
-    }
-    N ifMatches = ifMatchesExtractor.apply(ctx);
-    vars.popScope();
-    if (ifMatches == null) {
-      errs.add(null, "unrecognized alternative for pattern " + matchType); // TODO get the token
-    }
-    return new CaseConstruct.Alternative<>(casePattern, ifMatches);
   }
 
   private static class MethodLookup {
