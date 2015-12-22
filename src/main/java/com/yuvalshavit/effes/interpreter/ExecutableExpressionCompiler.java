@@ -48,7 +48,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
     ExecutableExpression matchAgainst = apply(expr.construct().getMatchAgainst());
     List<ExecutableCase.CaseMatcher> matchers = expr.construct().getPatterns().stream().map(p -> {
       ExecutableExpression ifMatch = apply(p.getIfMatched());
-      return new ExecutableCase.CaseMatcher(p.getType(), ifMatch);
+      return new ExecutableCase.CaseMatcher(p.getPAlternative(), ifMatch);
     }).collect(Collectors.toList());
     return new ExecutableExpression.CaseExpression(expr, matchAgainst, matchers);
   }

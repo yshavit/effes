@@ -3,19 +3,15 @@ package com.yuvalshavit.effes.compile.pmatch;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.antlr.v4.runtime.misc.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -24,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.BuiltinType;
 import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.interpreter.EfValue;
 import com.yuvalshavit.util.EfCollections;
 import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
@@ -32,17 +29,23 @@ public abstract class PAlternative {
 
   public static final String NON_CAPTURING_WILD = "_";
 
-  private PAlternative() {}
-  
-  @Override public abstract int hashCode();
-  @Override public abstract boolean equals(Object other);
-  @Override public abstract String toString();
-  
+  private PAlternative() {
+  }
+
+  @Override
+  public abstract int hashCode();
+  @Override
+  public abstract boolean equals(Object other);
+  @Override
+  public abstract String toString();
+  // TODO this is a bit backwards -- PAlt shouldn't have a dep on the execution stack's EFValue. Refactor to use visitor or something
+  public abstract boolean matches(EfValue value);
+
   public interface Builder {
     @Nonnull
     PAlternative build();
   }
-  
+
   public static Builder any(String name) {
     checkNotNull(name, "name");
     return () -> new Any(name);
@@ -53,18 +56,20 @@ public abstract class PAlternative {
   }
 
   public static Builder simple(EfType.SimpleType type, Builder... args) {
+    return () -> simple(type, Stream.of(args).map(Builder::build).toArray(PAlternative[]::new));
+  }
+
+  public static PAlternative simple(EfType.SimpleType type, PAlternative... args) {
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       checkArgument(args.length == 0, "%s doesn't take any arguments", type);
-      return () -> new Simple(new TypedValue.LargeDomainValue<>(type));
-    }
-    return () -> {
-      List<PAlternative> builtArgs = Stream.of(args).map(Builder::build).collect(Collectors.toList());
-      Simple simple = new Simple(new TypedValue.StandardValue<>(type, builtArgs));
+      return new Simple(new TypedValue.LargeDomainValue<>(type));
+    } else {
+      Simple simple = new Simple(new TypedValue.StandardValue<>(type, Arrays.asList(args)));
       if (!simple.validate(type.getReification())) {
         throw new IllegalArgumentException(String.format("failed validation for %s(%s)", type, Joiner.on(", ").join(args)));
       }
       return simple;
-    };
+    }
   }
 
   @Nullable
@@ -76,18 +81,23 @@ public abstract class PAlternative {
     if (result.noneMatched()) {
       return null;
     }
-    List<PPossibility.Simple> simples = result.getUnmatched().stream()
-      .flatMap(lp -> lp.possibility.get().components().stream())
-      .collect(Collectors.toList());
+    Pair<PPossibility,EfType> unmatched = collectAndForce(result.getUnmatched());
+    Pair<PPossibility,EfType> matched = collectAndForce(result.getMatched());
+    return new PAlternativeSubtractionResult(unmatched.a, unmatched.b, result.bindings(), matched.b);
+  }
+
+  // TODO do the PPossibility and EfType ever contain different state, or are they the same thing (and thus we can return only the PPossibility)?
+  private Pair<PPossibility,EfType> collectAndForce(Collection<LazyPossibility> possibilities) {
+    List<PPossibility.Simple> simples = possibilities.stream().flatMap(lp -> lp.possibility().get().components().stream()).collect(Collectors.toList());
     if (simples.isEmpty()) {
-      return new PAlternativeSubtractionResult(PPossibility.none, EfType.UNKNOWN, result.bindings());
-    } else if (simples.size() == 1) {
+      return new Pair<>(PPossibility.none, EfType.UNKNOWN);
+    } else if (possibilities.size() == 1) {
       PPossibility.Simple only = Iterables.getOnlyElement(simples);
-      return new PAlternativeSubtractionResult(only, only.efType(), result.bindings());
+      return new Pair<>(only, only.efType());
     } else {
-      EfType efDisjunction = EfType.disjunction(Lists.transform(simples, PPossibility.TypedPossibility::efType));
       PPossibility.Disjunction possibilityDisjunction = new PPossibility.Disjunction(simples);
-      return new PAlternativeSubtractionResult(possibilityDisjunction, efDisjunction, result.bindings());
+      EfType disjunction = EfType.disjunction(Lists.transform(simples, PPossibility.TypedPossibility::efType));
+      return new Pair<>(possibilityDisjunction, disjunction);
     }
   }
 
@@ -98,11 +108,11 @@ public abstract class PAlternative {
 
   @Nullable
   public PAlternativeSubtractionResult subtractFrom(PAlternativeSubtractionResult possibility) {
-    return subtractFrom(possibility.efType(), possibility.possibility());
+    return subtractFrom(possibility.remainingResultType(), possibility.remainingPossibility());
   }
 
   protected abstract StepResult subtractFrom(LazyPossibility pPossibility);
-  
+
   static class Any extends PAlternative {
     private static final Equality<Any> equality = Equality.forClass(Any.class).with("name", Any::name).exactClassOnly();
     private final String name;
@@ -113,6 +123,11 @@ public abstract class PAlternative {
 
     private String name() {
       return name;
+    }
+
+    @Override
+    public boolean matches(EfValue value) {
+      return true;
     }
 
     @Override
@@ -141,7 +156,7 @@ public abstract class PAlternative {
       return equality.areEqual(this, other);
     }
   }
-  
+
   static class Simple extends PAlternative {
     private static final Equality<Simple> equality = Equality.forClass(Simple.class).with("value", Simple::value).exactClassOnly();
     private final TypedValue<PAlternative> value;
@@ -155,13 +170,32 @@ public abstract class PAlternative {
     }
 
     @Override
+    public boolean matches(EfValue efValue) {
+      return value.transform(
+        large -> large.type().equals(efValue.getType()),
+        std -> {
+          if (!std.type().equals(efValue.getType())) {
+            return false;
+          }
+          for (int i = 0, len = std.args().size(); i < len; ++i) {
+            PAlternative argAlt = std.args().get(i);
+            EfValue actualArg = efValue.getState().get(i);
+            if (!argAlt.matches(actualArg)) {
+              return false;
+            }
+          }
+          return true;
+        });
+    }
+
+    @Override
     public StepResult subtractFrom(LazyPossibility pPossibility) {
       return pPossibility.possibility().get().dispatch(
         this::handle,
         s -> handle(pPossibility, s),
         this::handleNone);
     }
-    
+
     private StepResult handle(PPossibility.Disjunction disjunction) {
       StepResult result = new StepResult();
       for (PPossibility.Simple option : disjunction.options()) {
@@ -183,7 +217,7 @@ public abstract class PAlternative {
         r.addUnmatched(lazyPossibility);
         return r;
       }
-      
+
       return value.transform(
         largeAlternative -> subtractFromLarge(lazyPossibility),
         standardAlternative -> simpleTypeAndArgs.transform(
@@ -204,7 +238,7 @@ public abstract class PAlternative {
               return new LazyPossibility(Lazy.forced(simpleResult), simpleResult.efType());
             })));
     }
-    
+
     private StepResult subtractFromLarge(LazyPossibility possibility) {
       StepResult r = new StepResult();
       r.addMatched(possibility);
@@ -217,7 +251,7 @@ public abstract class PAlternative {
       List<PAlternative> alternativeArgs,
       LazyPossibility lazyPossibility,
       TypedValue.StandardValue<LazyPossibility> possibility,
-      Function<List<LazyPossibility>, LazyPossibility> possibilityMaker)
+      Function<List<LazyPossibility>,LazyPossibility> possibilityMaker)
     {
       List<LazyPossibility> possibilityArgs = possibility.args();
       int nargs = possibilityArgs.size();
@@ -248,15 +282,15 @@ public abstract class PAlternative {
       Collection<List<ExplodeArg>> exploded = explode(resultArgs);
 
       exploded.stream()
-        .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
-        .map(args -> Lists.transform(args, ExplodeArg::value))
-        .map(possibilityMaker::apply)
-        .forEach(result::addUnmatched);
+              .filter(args -> args.stream().anyMatch(ExplodeArg::notFromMatched))
+              .map(args -> Lists.transform(args, ExplodeArg::value))
+              .map(possibilityMaker::apply)
+              .forEach(result::addUnmatched);
       exploded.stream()
-        .filter(args -> args.stream().allMatch(ExplodeArg::fromMatched))
-        .map(args -> Lists.transform(args, ExplodeArg::value))
-        .map(possibilityMaker::apply)
-        .forEach(result::addMatched);
+              .filter(args -> args.stream().allMatch(ExplodeArg::fromMatched))
+              .map(args -> Lists.transform(args, ExplodeArg::value))
+              .map(possibilityMaker::apply)
+              .forEach(result::addMatched);
       return result;
     }
 
@@ -275,7 +309,9 @@ public abstract class PAlternative {
         Set<ExplodeArg> addArgs = new HashSet<>(args.getUnmatched().size() + 1);
         args.getMatched().forEach(matched -> addArgs.add(new ExplodeArg(matched, true)));
         args.getUnmatched().forEach(unmatched -> addArgs.add(new ExplodeArg(unmatched, false)));
-        if (addArgs.isEmpty()) throw new UnsupportedOperationException();
+        if (addArgs.isEmpty()) {
+          throw new UnsupportedOperationException();
+        }
         exploded.forEach(prevArgs -> {
           args.getMatched().forEach(matched -> tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(matched, true))));
           args.getUnmatched().forEach(unmatched -> tmp.add(EfCollections.concatList(prevArgs, new ExplodeArg(unmatched, false))));
@@ -289,7 +325,7 @@ public abstract class PAlternative {
       return new StepResult();
     }
 
-    public boolean validate(Function<EfType.GenericType, EfType> reification) {
+    public boolean validate(Function<EfType.GenericType,EfType> reification) {
       return value.transform(
         l -> true,
         s -> {
@@ -359,18 +395,19 @@ public abstract class PAlternative {
     public LazyPossibility value() {
       return possibility;
     }
-    
+
     public boolean fromMatched() {
       return fromMatched;
     }
 
     public boolean notFromMatched() {
-      return ! fromMatched;
+      return !fromMatched;
     }
 
     @Override
     public String toString() {
-      return String.format("%smatched %s",
+      return String.format(
+        "%smatched %s",
         (fromMatched
           ? ""
           : "un"),

@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.interpreter;
 
 import com.google.common.collect.ImmutableList;
-import com.yuvalshavit.effes.compile.node.EfType;
+import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public final class ExecutableCase {
     matchAgainst.execute(stack);
     EfValue peek = stack.peek();
     for (CaseMatcher matcher : caseMatchers) {
-      if (matcher.matchType.equals(peek.getType())) {
+      if (matcher.matchAlternative.matches(peek)) {
         EfValue popped = stack.pop();// the type we matched against
         // put its args on the stack, in reverse order
         List<EfValue> poppedState = popped.getState();
@@ -41,17 +41,17 @@ public final class ExecutableCase {
   }
 
   public static class CaseMatcher {
-    private final EfType.SimpleType matchType;
+    private final PAlternative matchAlternative;
     private final ExecutableElement ifMatches;
 
-    public CaseMatcher(EfType.SimpleType matchType, ExecutableElement ifMatches) {
-      this.matchType = matchType;
+    public CaseMatcher(PAlternative matchType, ExecutableElement ifMatches) {
+      this.matchAlternative = matchType;
       this.ifMatches = ifMatches;
     }
 
     @Override
     public String toString() {
-      return String.format("of %s", matchType);
+      return String.format("of %sø", matchAlternative);
     }
   }
 }

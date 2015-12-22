@@ -67,7 +67,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     for (EffesParser.CaseStatAlternativeContext caseStatAltCtx : ctx.caseStatAlternative()) {
       CaseConstruct.Alternative<Block> step = caseAlternative(
         caseStatAltCtx.casePattern(),
-        matchAgainstPossibility.efType(),
+        matchAgainstPossibility.remainingResultType(),
         matchAgainstVar,
         () -> new Block(caseStatAltCtx.inlinableBlock().getStart(), Lists.transform(caseStatAltCtx.inlinableBlock().stat(), this::apply)));
       alternatives.add(step);

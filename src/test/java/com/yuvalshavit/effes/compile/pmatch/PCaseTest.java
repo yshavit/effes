@@ -42,6 +42,8 @@ public class PCaseTest {
   
   private final EfType.SimpleType tEmpty;
 
+  private static final PAlternative.Builder[] noArgs = new Builder[0]; // TODO only needed cause of ugly overload shit, which I should fix
+
   public PCaseTest() {
     tTrue = createSimple("True");
     tFalse = createSimple("False");
@@ -129,7 +131,7 @@ public class PCaseTest {
     PAlternative doubleWilds = any().build();
     PAlternativeSubtractionResult result = doubleWilds.subtractFrom(boolsPossibility);
     assertNotNull(result);
-    assertEquals(result.possibility(), PPossibility.none);
+    assertEquals(result.remainingPossibility(), PPossibility.none);
   }
 
   @Test
@@ -141,7 +143,7 @@ public class PCaseTest {
     PAlternative fullyWild = any().build();
     PAlternativeSubtractionResult result = fullyWild.subtractFrom(boolsPossibility);
     assertNotNull(result);
-    assertEquals(result.possibility(), PPossibility.none);
+    assertEquals(result.remainingPossibility(), PPossibility.none);
   }
   
   @Test
@@ -204,13 +206,13 @@ public class PCaseTest {
     // This gets expanded a bit
     
     PAlternative case0 = simple(cons,
-      simple(tNothing),
+      simple(tNothing, noArgs),
       simple(cons,
         any("foo"),
         simple(cons,
           simple(
             tOneBool,
-            simple(tTrue)),
+            simple(tTrue, noArgs)),
           any()
         )
       )
@@ -282,7 +284,7 @@ public class PCaseTest {
     
     // Now we match against Cons(Nothing, _). We should expect Empty back
     PAlternative case2 = simple(cons,
-      simple(tNothing),
+      simple(tNothing, noArgs),
       any()
     ).build();
 
@@ -292,11 +294,11 @@ public class PCaseTest {
       "Empty");
     
     // Now match against Empty, which is the only alternative left
-    PAlternative case3 = simple(tEmpty).build();
+    PAlternative case3 = simple(tEmpty, noArgs).build();
     
     PAlternativeSubtractionResult afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
-    assertEquals(afterCase3.possibility(), PPossibility.none);
+    assertEquals(afterCase3.remainingPossibility(), PPossibility.none);
   }
 
   @Test
@@ -308,7 +310,7 @@ public class PCaseTest {
     
     // case Cons[True] of Cons[True](_, _)
     PAlternative caseOfConsFalse = simple(consOfFalse,
-      simple(tFalse),
+      simple(tFalse, noArgs),
       any()
     ).build();
 
@@ -359,20 +361,20 @@ public class PCaseTest {
   @Test
   public void wildcardFromNone() {
     PAlternative any = any().build();
-    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap()));
+    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap(), tNothing));
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
-    PAlternative any = simple(tNothing).build();
-    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap()));
+    PAlternative any = simple(tNothing, noArgs).build();
+    PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap(), tNothing));
     assertNull(subtraction);
   }
 
   @Test
   public void nothingFromEmpty() {
-    PAlternative any = simple(tNothing).build();
+    PAlternative any = simple(tNothing, noArgs).build();
     PAlternativeSubtractionResult subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
@@ -381,7 +383,7 @@ public class PCaseTest {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
     
-    List<String> actualList = PPossibilities.toStrings(possibility.possibility());
+    List<String> actualList = PPossibilities.toStrings(possibility.remainingPossibility());
     if (!possibility.bindings().isEmpty()) {
       actualList.add("---");
       possibility.bindings().forEach((k, v) -> actualList.add(String.format("bound %s: %s", k, v)));
@@ -390,7 +392,7 @@ public class PCaseTest {
   }
 
   private Builder mTrue() {
-    return simple(tTrue);
+    return simple(tTrue, noArgs);
   }
 
   @Test
@@ -405,7 +407,7 @@ public class PCaseTest {
   
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithFalseArg() {
-    simple(tTrue, simple(tFalse)).build();
+    simple(tTrue, simple(tFalse, noArgs)).build();
   }
 
   @Test

@@ -7,6 +7,8 @@ import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
+import com.yuvalshavit.util.EfCollections;
+
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -416,7 +418,7 @@ public final class ExpressionCompiler {
     EfType.SimpleType type = literalValue == 0
       ? BuiltinType.IntZero.getEfType()
       : BuiltinType.IntValue.getEfType();
-    return PAlternative.simple(type).build();
+    return PAlternative.simple(type, new PAlternative[0]); // TODO using an empty array to resolve the overload is uuuuuugly
   }
   
   private PAlternative casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
@@ -462,8 +464,25 @@ public final class ExpressionCompiler {
         errs.add(ctx.getStart(), String.format("%s should take %d argument%s, but saw %d", typeName, type.getArgs().size(), plural, args.size()));
         return null;
       }
-      throw new UnsupportedOperationException("EVERYTHING GOES HERE"); // TODO
-
+      Set<EfType.SimpleType> viableOptions = matchAgainstType.simpleTypes().stream().filter(type::equals).collect(Collectors.toSet());
+      PAlternative[] argAlts = new PAlternative[args.size()];
+      EfType[] argTypes = new EfType[args.size()];
+      for (int i = 0; i < args.size(); ++i) {
+        int argIdx = i;
+        EfType argType = viableOptions.stream().map(t -> t.getArgs().get(argIdx).type()).collect(EfCollections.efTypeCollector());
+        Pair<PAlternative,EfType> altCompiled = compilePattern(args.get(i), argType);
+        if (altCompiled == null) {
+          // TODO confirm that a message was logged already
+          argAlts[i] = PAlternative.any().build(); // TODO not a great option, should really be "none"
+          argTypes[i] = EfType.UNKNOWN;
+        } else {
+          argAlts[i] = altCompiled.a;
+          argTypes[i] = altCompiled.b;
+        }
+      }
+      PAlternative resultAlt = PAlternative.simple(type, argAlts);
+      EfType.SimpleType resultType = type.withCtorArgs(argTypes);
+      return new Pair<>(resultAlt, resultType);
     } else if (ctx instanceof EffesParser.VarBindingPatternMatchContext) {
       String varName = ((EffesParser.VarBindingPatternMatchContext) ctx).VAR_NAME().getText();
       return new Pair<>(PAlternative.any(varName).build(), matchAgainstType);
@@ -483,7 +502,7 @@ public final class ExpressionCompiler {
         if (!matchAgainstType.contains(zeroType)) {
           return null;
         }
-        return new Pair<>(PAlternative.simple(zeroType).build(), zeroType);
+        return new Pair<>(PAlternative.simple(zeroType, new PAlternative[0]), zeroType); // TODO using an empty arg to resolve the overload is uuuuuugly
       } else {
         EfType.SimpleType intType = BuiltinType.IntValue.getEfType();
         if (!matchAgainstType.contains(intType)) {
