@@ -91,7 +91,7 @@ public abstract class PAlternative {
     List<PPossibility.Simple> simples = possibilities.stream().flatMap(lp -> lp.possibility().get().components().stream()).collect(Collectors.toList());
     if (simples.isEmpty()) {
       return new Pair<>(PPossibility.none, EfType.UNKNOWN);
-    } else if (possibilities.size() == 1) {
+    } else if (simples.size() == 1) {
       PPossibility.Simple only = Iterables.getOnlyElement(simples);
       return new Pair<>(only, only.efType());
     } else {
