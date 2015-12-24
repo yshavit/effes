@@ -1,12 +1,8 @@
 package com.yuvalshavit.effes.compile;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,7 +14,10 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.google.common.base.Functions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.yuvalshavit.effes.compile.node.*;
 import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
@@ -344,10 +343,13 @@ public final class ExpressionCompiler {
     List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
     PAlternativeSubtractionResult subtractionResult = new PAlternativeSubtractionResult(matchAgainst.resultType());
     for (EffesParser.CaseAlternativeContext alternativeCtx : ctx.caseAlternative()) {
-      PAlternative alternative = casePattern(alternativeCtx.casePattern());
-      if (alternative == null) {
+      CasePatternCompilation compilation = casePattern(alternativeCtx.casePattern());
+      PAlternative alternative;
+      if (compilation == null) {
         errs.add(alternativeCtx.casePattern().getStart(), "invalid case pattern");
         alternative = PAlternative.any().build();
+      } else {
+        alternative = compilation.pAlternative;
       }
       PAlternativeSubtractionResult nextPossibility = alternative.subtractFrom(subtractionResult);
       if (nextPossibility == null) {
@@ -356,11 +358,20 @@ public final class ExpressionCompiler {
       } else {
         subtractionResult = nextPossibility;
       }
+      boolean newScope = (matchAgainstVar != null) || subtractionResult.bindings().size() > 0;
+      if (newScope) {
+        vars.pushScope();
+      }
       if (matchAgainstVar != null) {
         vars.pushScope();
         EfVar matchAgainstDowncast = matchAgainstVar.cast(subtractionResult.matchedType());
         vars.replace(matchAgainstDowncast);
       }
+      subtractionResult.bindings().forEach((varName, varType) -> {
+        Collection<Token> tokens = compilation.getTokens(varName);
+        Token tok = Iterables.getLast(tokens, alternativeCtx.getStart());
+        vars.add(EfVar.var(varName, vars.countElems(), varType), tok);
+      });
       Expression ifMatched;
       if (alternativeCtx.exprBlock() == null) {
         errs.add(alternativeCtx.exprBlock().getStart(), "couldn't parse block for case pattern");
@@ -368,7 +379,7 @@ public final class ExpressionCompiler {
       } else {
         ifMatched = apply(alternativeCtx.exprBlock().expr());
       }
-      if (matchAgainstVar != null) {
+      if (newScope) {
         vars.popScope();
       }
       CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched);
@@ -394,22 +405,50 @@ public final class ExpressionCompiler {
     return new Expression.UnrecognizedExpression(ctx.getStart());
   }
 
-  private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, PAlternative> casePatternDispatcher
-    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.CasePatternContext.class, PAlternative.class)
+  private static final Dispatcher<ExpressionCompiler, EffesParser.CasePatternContext, CasePatternCompilation> casePatternDispatcher
+    = Dispatcher.builder(ExpressionCompiler.class, EffesParser.CasePatternContext.class, CasePatternCompilation.class)
     .put(EffesParser.SingleTypePatternMatchContext.class, ExpressionCompiler::casePattern)
     .put(EffesParser.IntLiteralPatternMatchContext.class, ExpressionCompiler::casePattern)
     .put(EffesParser.VarBindingPatternMatchContext.class, ExpressionCompiler::casePattern)
     .put(EffesParser.UnboundWildPatternMatchContext.class, ExpressionCompiler::casePattern)
     .build(ExpressionCompiler::casePatternErr);
 
-  @Nullable
-  public PAlternative casePattern(EffesParser.CasePatternContext casePattern) {
+  public CasePatternCompilation casePattern(EffesParser.CasePatternContext casePattern) {
     return casePatternDispatcher.apply(this, casePattern);
   }
 
+  private static class CasePatternCompilation {
+    @Nullable final PAlternative pAlternative;
+    Multimap<String,Token> wildcardTokens = null;
+
+    public CasePatternCompilation(PAlternative pAlternative) {
+      this.pAlternative = checkNotNull(pAlternative, "pAlternative");
+    }
+
+    public void addTokens(Multimap<String,Token> tokens) {
+      if (tokens != null && !tokens.isEmpty()) {
+        getOrCreateTokensMultimap().putAll(tokens);
+      }
+    }
+
+    public void addToken(String varName, Token token) {
+      getOrCreateTokensMultimap().put(varName, token);
+    }
+
+    public Collection<Token> getTokens(String varName) {
+      return wildcardTokens == null ? Collections.emptySet() : wildcardTokens.get(varName);
+    }
+
+    private Multimap<String,Token> getOrCreateTokensMultimap() {
+      if (wildcardTokens == null) {
+        wildcardTokens = HashMultimap.create();
+      }
+      return wildcardTokens;
+    }
+  }
 
   @Nullable
-  private PAlternative casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
+  private CasePatternCompilation casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
     TerminalNode typeNameTok = casePattern.TYPE_NAME();
     String typeName = typeNameTok.getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
@@ -423,12 +462,16 @@ public final class ExpressionCompiler {
       errs.add(
         tok,
         String.format("expected %d argument%s, but saw %d", type.getArgs().size(), (type.getArgs().size() == 1 ? "" : "s"), providedArgPatterns.size()));
-      return matchAllArgsFor(type);
+      return new CasePatternCompilation(matchAllArgsFor(type));
     }
-    return PAlternative.simple(type, providedArgPatterns.stream().map(this::casePattern).toArray(PAlternative[]::new));
+    List<CasePatternCompilation> argCompilations = providedArgPatterns.stream().map(this::casePattern).collect(Collectors.toList());
+    PAlternative pAlternative = PAlternative.simple(type, argCompilations.stream().map(c -> c.pAlternative).toArray(PAlternative[]::new));
+    CasePatternCompilation result = new CasePatternCompilation(pAlternative);
+    argCompilations.forEach(c -> result.addTokens(c.wildcardTokens));
+    return result;
   }
 
-  private PAlternative casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
+  private CasePatternCompilation casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
     long literalValue;
     try {
       literalValue = Long.parseLong(casePattern.getText());
@@ -439,18 +482,22 @@ public final class ExpressionCompiler {
     EfType.SimpleType type = literalValue == 0
       ? BuiltinType.IntZero.getEfType()
       : BuiltinType.IntValue.getEfType();
-    return PAlternative.simple(type, new PAlternative[0]); // TODO using an empty array to resolve the overload is uuuuuugly
+    return new CasePatternCompilation(PAlternative.simple(type, new PAlternative[0])); // TODO using an empty array to resolve the overload is uuuuuugly
   }
 
-  private PAlternative casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
-    return PAlternative.any(casePattern.VAR_NAME().getText()).build();
+  private CasePatternCompilation casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
+    TerminalNode varNode = casePattern.VAR_NAME();
+    String varName = varNode.getText();
+    CasePatternCompilation compilation = new CasePatternCompilation(PAlternative.any(varName).build());
+    compilation.addToken(varName, varNode.getSymbol());
+    return compilation;
   }
 
-  private PAlternative casePattern(EffesParser.UnboundWildPatternMatchContext casePattern) {
-    return PAlternative.any().build();
+  private CasePatternCompilation casePattern(EffesParser.UnboundWildPatternMatchContext casePattern) {
+    return new CasePatternCompilation(PAlternative.any().build());
   }
 
-  private PAlternative casePatternErr(EffesParser.CasePatternContext casePattern) {
+  private CasePatternCompilation casePatternErr(EffesParser.CasePatternContext casePattern) {
     Class<?> clazz;
     Token tok;
     if (casePattern == null) {
