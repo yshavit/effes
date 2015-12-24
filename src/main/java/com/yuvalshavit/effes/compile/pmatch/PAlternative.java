@@ -342,6 +342,9 @@ public abstract class PAlternative {
             if (actual instanceof PAlternative.Simple) {
               Simple simple = (Simple) actual;
               EfType expected = expecteds.get(i);
+              if (expecteds.stream().anyMatch(t -> t instanceof EfType.GenericType)) {
+                continue; // patterns are provided as un-reified, so a generic T is valid against any type
+              }
               if (!expected.contains(simple.value.type())) {
                 return false;
               }
