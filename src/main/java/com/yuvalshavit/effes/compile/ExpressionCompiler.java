@@ -339,17 +339,22 @@ public final class ExpressionCompiler {
     List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
     PAlternativeSubtractionResult subtractionResult = new PAlternativeSubtractionResult(matchAgainst.resultType());
     for (EffesParser.CaseAlternativeContext alternativeCtx : ctx.caseAlternative()) {
-      PAlternative alternative = alternative(alternativeCtx);
+      PAlternative alternative = casePattern(alternativeCtx.casePattern());
+      if (alternative == null) {
+        errs.add(alternativeCtx.casePattern().getStart(), "invalid case pattern");
+        alternative = PAlternative.any().build();
+      }
       PAlternativeSubtractionResult nextPossibility = alternative.subtractFrom(subtractionResult);
       if (nextPossibility == null) {
         errs.add(ctx.getStart(), String.format("%s can't match against %s", alternative, subtractionResult));
-        // TODO mark result as "| Unknown" somehow?
+        subtractionResult = new PAlternativeSubtractionResult(EfType.UNKNOWN);
+      } else {
+        subtractionResult = nextPossibility;
       }
       if (matchAgainstVar != null) {
         vars.pushScope();
-        // TODO get matched type from PAlternativeSubtractionResult, use that here
-//        EfVar matchAgainstDowncast = matchAgainstVar.cast(whatever);
-//        vars.replace(matchAgainstDowncast);
+        EfVar matchAgainstDowncast = matchAgainstVar.cast(subtractionResult.matchedType());
+        vars.replace(matchAgainstDowncast);
       }
       Expression ifMatched = apply(alternativeCtx.exprBlock().expr());
       if (matchAgainstVar != null) {
@@ -360,10 +365,6 @@ public final class ExpressionCompiler {
     }
     CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
     return new Expression.CaseExpression(ctx.getStart(), construct);
-  }
-
-  private PAlternative alternative(EffesParser.CaseAlternativeContext ctx) {
-    throw new UnsupportedOperationException(); // TODO
   }
 
   @Nullable

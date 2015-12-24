@@ -48,7 +48,7 @@ public class CaseConstruct<N extends Node> {
 
   public void state(NodeStateVisitor out) {
     out.visitChild("case", matchAgainst);
-    patterns.forEach(p -> out.visitChild(" of " + p, p.getIfMatched()));
+    patterns.forEach(p -> out.visitChild("of " + p, p.getIfMatched()));
   }
 
   @Override
@@ -89,6 +89,11 @@ public class CaseConstruct<N extends Node> {
 
     public PAlternative getPAlternative() {
       return matcher;
+    }
+
+    @Override
+    public String toString() {
+      return matcher.toString();
     }
   }
 }
