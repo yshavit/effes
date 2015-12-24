@@ -1,5 +1,22 @@
 package com.yuvalshavit.effes.compile;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Pair;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.node.*;
@@ -8,16 +25,6 @@ import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 import com.yuvalshavit.util.EfCollections;
-
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.Pair;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class ExpressionCompiler {
   private final MethodsRegistry<?> methodsRegistry;
@@ -70,7 +77,7 @@ public final class ExpressionCompiler {
     assert declaringType != null;
     return new Expression.VarExpression(token, EfVar.arg(EfVar.THIS_VAR_NAME, 0, declaringType.reify(t -> t)));
   }
-  
+
   private Expression intLiteralExpr(EffesParser.IntLiteralExprContext ctx) {
     Token tok = ctx.getStart();
     long v;
@@ -138,7 +145,6 @@ public final class ExpressionCompiler {
 
         EfType.DisjunctiveType targetDisjunction = (EfType.DisjunctiveType) target.resultType();
 
-        EfVar matchAgainstVarClosure = matchAgainstVar;
         List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction.getAlternatives()
           .stream()
           .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
@@ -148,18 +154,13 @@ public final class ExpressionCompiler {
               return null;
             }
             EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
-            throw new UnsupportedOperationException(); // TODO
-//            CasePattern casePattern = new CasePattern(matchAgainstType, ImmutableList.of(), inMatcher.token());
-//            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
-//            return this.<Void, Expression>caseAlternative( // gotta help the type inference a bit
-//              null,
-//              matchAgainstVarClosure,
-//              ignored1 -> casePattern,
-//              ignored2 -> getMethodInvokeOnSimpleTarget(ctx, usedAsExpression, downcast, matchAgainstType)
-//            );
+            PAlternative typeMatcher = matchAllArgsFor(matchAgainstType);
+            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
+            Expression downcastMethodInvoke = methodInvoke(ctx, usedAsExpression, downcast);
+            return new CaseConstruct.Alternative<>(typeMatcher, downcastMethodInvoke);
           })
-          .filter(Objects::nonNull).collect(null); throw new UnsupportedOperationException(); // TODO
-//        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
+          .filter(Objects::nonNull).collect(Collectors.toList());
+        return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
       });
     } else {
       errs.add(target.token(), "unrecognized type for target of method invocation");
@@ -335,6 +336,10 @@ public final class ExpressionCompiler {
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
     Expression matchAgainst = apply(ctx.expr());
     EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
+    if (matchAgainst.resultType().equals(EfType.UNKNOWN) || matchAgainst.resultType().equals(EfType.VOID)) {
+      errs.add(ctx.expr().getStart(), "case expressions require a disjunctive target type, but the target's type is unknown");
+      return new Expression.UnrecognizedExpression(ctx.expr().getStart());
+    }
 
     List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
     PAlternativeSubtractionResult subtractionResult = new PAlternativeSubtractionResult(matchAgainst.resultType());
@@ -347,7 +352,7 @@ public final class ExpressionCompiler {
       PAlternativeSubtractionResult nextPossibility = alternative.subtractFrom(subtractionResult);
       if (nextPossibility == null) {
         errs.add(ctx.getStart(), String.format("%s can't match against %s", alternative, subtractionResult));
-        subtractionResult = new PAlternativeSubtractionResult(EfType.UNKNOWN);
+        continue;
       } else {
         subtractionResult = nextPossibility;
       }
@@ -356,7 +361,13 @@ public final class ExpressionCompiler {
         EfVar matchAgainstDowncast = matchAgainstVar.cast(subtractionResult.matchedType());
         vars.replace(matchAgainstDowncast);
       }
-      Expression ifMatched = apply(alternativeCtx.exprBlock().expr());
+      Expression ifMatched;
+      if (alternativeCtx.exprBlock() == null) {
+        errs.add(alternativeCtx.exprBlock().getStart(), "couldn't parse block for case pattern");
+        ifMatched = new Expression.UnrecognizedExpression(alternativeCtx.getStart());
+      } else {
+        ifMatched = apply(alternativeCtx.exprBlock().expr());
+      }
       if (matchAgainstVar != null) {
         vars.popScope();
       }
@@ -390,13 +401,13 @@ public final class ExpressionCompiler {
     .put(EffesParser.VarBindingPatternMatchContext.class, ExpressionCompiler::casePattern)
     .put(EffesParser.UnboundWildPatternMatchContext.class, ExpressionCompiler::casePattern)
     .build(ExpressionCompiler::casePatternErr);
-    
-  
+
   @Nullable
   public PAlternative casePattern(EffesParser.CasePatternContext casePattern) {
     return casePatternDispatcher.apply(this, casePattern);
   }
-  
+
+
   @Nullable
   private PAlternative casePattern(EffesParser.SingleTypePatternMatchContext casePattern) {
     TerminalNode typeNameTok = casePattern.TYPE_NAME();
@@ -404,10 +415,19 @@ public final class ExpressionCompiler {
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
     if (type == null) {
       errs.add(typeNameTok.getSymbol(), "unknown type: " + typeName);
+      return null;
     }
-    return PAlternative.simple(type, casePattern.casePattern().stream().map(this::casePattern).toArray(PAlternative.Builder[]::new)).build();
+    List<EffesParser.CasePatternContext> providedArgPatterns = casePattern.casePattern();
+    if (providedArgPatterns.size() != type.getArgs().size()) {
+      Token tok = providedArgPatterns.size() > type.getArgs().size() ? providedArgPatterns.get(type.getArgs().size()).getStart() : casePattern.getStop();
+      errs.add(
+        tok,
+        String.format("expected %d argument%s, but saw %d", type.getArgs().size(), (type.getArgs().size() == 1 ? "" : "s"), providedArgPatterns.size()));
+      return matchAllArgsFor(type);
+    }
+    return PAlternative.simple(type, providedArgPatterns.stream().map(this::casePattern).toArray(PAlternative[]::new));
   }
-  
+
   private PAlternative casePattern(EffesParser.IntLiteralPatternMatchContext casePattern) {
     long literalValue;
     try {
@@ -421,11 +441,11 @@ public final class ExpressionCompiler {
       : BuiltinType.IntValue.getEfType();
     return PAlternative.simple(type, new PAlternative[0]); // TODO using an empty array to resolve the overload is uuuuuugly
   }
-  
+
   private PAlternative casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
     return PAlternative.any(casePattern.VAR_NAME().getText()).build();
   }
-  
+
   private PAlternative casePattern(EffesParser.UnboundWildPatternMatchContext casePattern) {
     return PAlternative.any().build();
   }
@@ -515,6 +535,14 @@ public final class ExpressionCompiler {
       errs.add(ctx.getStart(), "compiler error: unhandled " + ctx.getClass().getSimpleName());
       return null;
     }
+  }
+
+  private static PAlternative matchAllArgsFor(EfType.SimpleType matchAgainstType) {
+    PAlternative[] wildArgs = new PAlternative[matchAgainstType.getArgs().size()];
+    for (int i = 0; i < wildArgs.length; ++i) {
+      wildArgs[i] = PAlternative.any().build();
+    }
+    return PAlternative.simple(matchAgainstType, wildArgs);
   }
 
   private static class MethodLookup {

@@ -7,8 +7,8 @@ type Boolean = True | False
 
 describe (in: Node[True] | Node[False] | Boolean) -> TrueNode | FalseNode | Boolean:
   return case in of
-    Node[True](head, tail): TrueNode
-    Node[False](head, tail): FalseNode
+    Node(True, tail): TrueNode
+    Node(False, tail): FalseNode
     True: True
     False: False
 
