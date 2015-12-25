@@ -1,2 +1,2 @@
-non-0 int literals are unsupported as pattern matchers (at line 4, column 3: 1)
-expression alternative is never matched: IntZero (at line 3, column 41: i)
+IntValue can't match against IntZero (at line 3, column 36: case)
+unmatched possibility: IntZero (at line 3, column 36: case)

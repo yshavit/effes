@@ -5,11 +5,11 @@ def extractValue (wrapper: BoolWrapper | VoidWrapper) -> False | True | Void:
         VarExpression
           arg: wrapper
           pos: 0
-      of BoolWrapper:
+      of BoolWrapper(tf):
         VarExpression
           var: tf
           pos: 0
-      of VoidWrapper:
+      of VoidWrapper(v):
         VarExpression
           var: v
           pos: 0

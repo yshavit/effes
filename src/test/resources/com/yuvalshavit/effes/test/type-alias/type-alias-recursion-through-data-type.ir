@@ -13,7 +13,7 @@ def sub (n: One | Zero) -> One | Zero:
         VarExpression
           arg: n
           pos: 0
-      of One:
+      of One(p):
         VarExpression
           var: p
           pos: 0

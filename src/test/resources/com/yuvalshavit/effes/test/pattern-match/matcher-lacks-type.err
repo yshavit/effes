@@ -1,6 +1,5 @@
 parse error (at line 2, column 19: :)
 parse error (at line 4, column 5: :)
 parse error (at line 5, column 12: newline)
-pattern type (Void) can never match expression type (False | True) (at line 2, column 15: a)
-expression alternative is never matched: False (at line 2, column 15: a)
-expected result type Void but found unknown type (at line 2, column 10: case)
+Void can't match against False (at line 2, column 10: case)
+unmatched possibility: False (at line 2, column 10: case)

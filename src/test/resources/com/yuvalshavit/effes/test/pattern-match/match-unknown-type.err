@@ -1,1 +1,3 @@
-unrecognized type 'Hello' for pattern matcher (at line 5, column 5: Hello)
+unknown type: Hello (at line 5, column 5: Hello)
+invalid case pattern (at line 5, column 5: Hello)
+_ can never match (at line 2, column 10: case)
