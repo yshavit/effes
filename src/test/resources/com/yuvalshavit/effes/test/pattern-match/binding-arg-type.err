@@ -1,2 +1,1 @@
-case requires a disjunctive type (found no result type) (at line 3, column 21: case)
-method 'foo' has no return value (at line 3, column 26: foo)
+expected result type Void but found False | True | Void (at line 3, column 10: case)

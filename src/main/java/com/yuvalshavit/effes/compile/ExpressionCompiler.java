@@ -16,7 +16,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.base.Functions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.yuvalshavit.effes.compile.node.*;
 import com.yuvalshavit.effes.compile.pmatch.PAlternative;
@@ -358,18 +357,26 @@ public final class ExpressionCompiler {
       } else {
         subtractionResult = nextPossibility;
       }
-      boolean newScope = (matchAgainstVar != null) || subtractionResult.bindings().size() > 0;
-      if (newScope) {
+      boolean createScope = (matchAgainstVar != null) || subtractionResult.bindings().size() > 0;
+      if (createScope) {
         vars.pushScope();
       }
       if (matchAgainstVar != null) {
-        vars.pushScope();
         EfVar matchAgainstDowncast = matchAgainstVar.cast(subtractionResult.matchedType());
         vars.replace(matchAgainstDowncast);
       }
       subtractionResult.bindings().forEach((varName, varType) -> {
-        Collection<Token> tokens = compilation.getTokens(varName);
-        Token tok = Iterables.getLast(tokens, alternativeCtx.getStart());
+        Iterator<Token> tokens = compilation.getTokens(varName).iterator();
+        Token tok;
+        if (!tokens.hasNext()) {
+          tok = alternativeCtx.getStart();
+        } else {
+          tok = tokens.next();
+          while (tokens.hasNext()) {
+            Token dupeToken = tokens.next();
+            errs.add(dupeToken, String.format("duplicate variable name '%s'", varName));
+          }
+        }
         vars.add(EfVar.var(varName, vars.countElems(), varType), tok);
       });
       Expression ifMatched;
@@ -379,7 +386,7 @@ public final class ExpressionCompiler {
       } else {
         ifMatched = apply(alternativeCtx.exprBlock().expr());
       }
-      if (newScope) {
+      if (createScope) {
         vars.popScope();
       }
       CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched);
