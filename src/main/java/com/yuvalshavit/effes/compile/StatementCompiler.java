@@ -65,11 +65,12 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     PAlternativeSubtractionResult matchAgainstPossibility = new PAlternativeSubtractionResult(matchAgainst.resultType());
     List<CaseConstruct.Alternative<Block>> alternatives = new ArrayList<>(ctx.caseStatAlternative().size());
     for (EffesParser.CaseStatAlternativeContext caseStatAltCtx : ctx.caseStatAlternative()) {
-      CaseConstruct.Alternative<Block> step = caseAlternative(
+      EfType matchAgainstType = matchAgainstPossibility.remainingResultType();
+      CaseConstruct.Alternative<Block> step = vars.inScope(() -> caseAlternative(
         caseStatAltCtx.casePattern(),
-        matchAgainstPossibility.remainingResultType(),
+        matchAgainstType,
         matchAgainstVar,
-        () -> new Block(caseStatAltCtx.inlinableBlock().getStart(), Lists.transform(caseStatAltCtx.inlinableBlock().stat(), this::apply)));
+        () -> new Block(caseStatAltCtx.inlinableBlock().getStart(), Lists.newArrayList(Lists.transform(caseStatAltCtx.inlinableBlock().stat(), this::apply)))));
       alternatives.add(step);
       PAlternativeSubtractionResult nextPossibility = step.getPAlternative().subtractFrom(matchAgainstPossibility);
       if (nextPossibility == null) {
@@ -77,6 +78,7 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
       }
       matchAgainstPossibility = nextPossibility;
     }
+    expressionCompiler.checkAllAlternativesMatched(ctx, matchAgainstPossibility);
     CaseConstruct<Block> construct = new CaseConstruct<>(matchAgainst, alternatives);
     return new Statement.CaseStatement(ctx.getStart(), construct);
   }

@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -407,11 +408,15 @@ public final class ExpressionCompiler {
       CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched);
       patterns.add(caseAlt);
     }
+    checkAllAlternativesMatched(ctx, subtractionResult);
+    CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
+    return new Expression.CaseExpression(ctx.getStart(), construct);
+  }
+
+  public void checkAllAlternativesMatched(ParserRuleContext ctx, PAlternativeSubtractionResult subtractionResult) {
     if (!subtractionResult.remainingPossibility().equals(PPossibility.none)) {
       errs.add(ctx.getStart(), "unmatched possibility: " + subtractionResult.remainingResultType());
     }
-    CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
-    return new Expression.CaseExpression(ctx.getStart(), construct);
   }
 
   @Nullable
