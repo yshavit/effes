@@ -242,7 +242,7 @@ public abstract class PAlternative {
     private StepResult subtractFromLarge(LazyPossibility possibility) {
       StepResult r = new StepResult();
       r.addMatched(possibility);
-      r.addUnmatched(possibility);
+//      r.addUnmatched(possibility); // TODO need to differentiate between "of IntValue" and "of 10", with the latter also adding an unmatched
       return r;
     }
 

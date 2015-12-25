@@ -5,11 +5,11 @@ def foo (bool: BoolWrapper | VoidWrapper) -> False | True | Void:
         VarExpression
           arg: bool
           pos: 0
-      of BoolWrapper:
+      of BoolWrapper(v):
         VarExpression
           var: v
           pos: 0
-      of VoidWrapper:
+      of VoidWrapper(v):
         VarExpression
           var: v
           pos: 0

@@ -8,17 +8,17 @@ def foo (t: TwoArgs | Void) -> False | True | Void:
       of Void:
         CtorInvoke
           type: Void
-      of TwoArgs:
+      of TwoArgs(val, shouldPrint):
         MethodInvoke
           method: sayHi
           arg0:
             VarExpression
               var: val
-              pos: 0
+              pos: 1
           arg1:
             VarExpression
               var: shouldPrint
-              pos: 1
+              pos: 0
 def sayHi (value: Void) (vocal: False | True) -> Void:
   ReturnStatement
     CaseExpression

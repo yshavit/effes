@@ -1,1 +1,1 @@
-expected 1 binding but found 0 (at line 2, column 10: case)
+expected 1 argument, but saw 0 (at line 3, column 5: BoolWrapper)

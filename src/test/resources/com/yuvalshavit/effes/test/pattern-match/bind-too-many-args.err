@@ -1,1 +1,1 @@
-expected 1 binding but found 3 (at line 2, column 10: case)
+expected 1 argument, but saw 3 (at line 3, column 20: b)

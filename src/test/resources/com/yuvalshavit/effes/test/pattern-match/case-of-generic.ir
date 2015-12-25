@@ -5,10 +5,10 @@ def describe (in: False | Node[False] | Node[True] | True) -> False | FalseNode 
         VarExpression
           arg: in
           pos: 0
-      of Node[True]:
+      of Node[T](True, tail):
         CtorInvoke
           type: TrueNode
-      of Node[False]:
+      of Node[T](False, tail):
         CtorInvoke
           type: FalseNode
       of True:

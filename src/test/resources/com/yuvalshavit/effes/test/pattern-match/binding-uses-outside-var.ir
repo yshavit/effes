@@ -10,7 +10,7 @@ def foo (b: BoolWrapper | Void) -> Void:
         VarExpression
           arg: b
           pos: 0
-      of BoolWrapper:
+      of BoolWrapper(x):
         MethodInvoke
           method: debugPrint [built-in]
           arg0:

@@ -1,2 +1,2 @@
-pattern type (Extra) can never match expression type (False | True) (at line 4, column 15: a)
-pattern type (Void) can never match expression type (False | True) (at line 4, column 15: a)
+Void can never match (at line 4, column 10: case)
+Extra can never match (at line 4, column 10: case)
