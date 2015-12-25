@@ -37,7 +37,7 @@ public final class ExecutableCase {
         return;
       }
     }
-    throw new AssertionError(String.format("no patterns matched (%s): %s", stack.pop(), toString()));
+    throw new IllegalStateException(String.format("no patterns matched (%s): %s", stack.pop(), toString()));
   }
 
   public static class CaseMatcher {
