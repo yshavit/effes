@@ -99,6 +99,38 @@ public final class ScopesTest {
   }
 
   @Test
+  public void slotsCount() {
+    Scopes<Elem, Id> scopes = create();
+    assertEquals(scopes.depth(), 0);
+
+    assertEquals(0, scopes.countElems());
+    scopes.inScope(() -> {
+      assertEquals(scopes.countElems(), 0);
+      scopes.add(new Elem("one", "a"), id(1));
+      assertEquals(scopes.countElems(), 1);
+      scopes.add(new Elem("two", "a"), id(2));
+      assertEquals(scopes.countElems(), 2);
+      scopes.inScope(() -> {
+        assertEquals(scopes.countElems(), 2);
+        scopes.add(new Elem("three", "b"), id(3));
+        assertEquals(scopes.countElems(), 3);
+        // check that a blank scope doesn't add anything
+        scopes.inScope(() -> {
+          assertEquals(scopes.countElems(), 3);
+          scopes.inScope(() -> {
+            assertEquals(scopes.countElems(), 3);
+            scopes.add(new Elem("four", "c"), id(4));
+            assertEquals(scopes.countElems(), 4);
+          });
+          assertEquals(scopes.countElems(), 3);
+        });
+        assertEquals(scopes.countElems(), 3);
+      });
+      assertEquals(scopes.countElems(), 2);
+    });
+  }
+
+  @Test
   public void shadowInDifferentScopes() {
     Scopes<Elem, Id> scopes = create();
 

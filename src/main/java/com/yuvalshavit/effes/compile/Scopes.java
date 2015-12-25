@@ -44,6 +44,11 @@ public final class Scopes<T,D> {
     }
   }
 
+  public void inScope(Runnable action) {
+    Supplier<?> supplier = () -> { action.run(); return null; };
+    inScope(supplier);
+  }
+
   public void popScope() {
     try {
       scopes.pop();

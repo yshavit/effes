@@ -59,11 +59,6 @@ public final class EndToEndTest {
       .toArray(new Object[0][]);
   }
 
-  @DataProvider(name = "single")
-  public static Object[][] getSingleDataProvider() {
-    return new Object[][] { new Object[] {"reminder"}};
-  }
-
   private static boolean dataProviderFilter(String testName) {
     String testparam = System.getProperty("test.params");
     if (testparam == null) {
@@ -116,11 +111,6 @@ public final class EndToEndTest {
     Source prefix = new Source(ParserUtils.createParser(efPrefix).compilationUnit());
     Source parser = new Source(ParserUtils.createParser(efFile).compilationUnit());
     return new Sources(Arrays.asList(prefix, parser));
-  }
-
-  @Test(dataProvider = "single")
-  public void checkOffests(Object ignored) {
-    throw new UnsupportedOperationException("return to fix the offsets"); // TODO
   }
 
   @Test(dataProvider = "files")
