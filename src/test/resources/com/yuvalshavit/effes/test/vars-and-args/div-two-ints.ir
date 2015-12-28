@@ -1,0 +1,45 @@
+def addInts (a: IntValue | IntZero) (b: IntValue) -> IntValue | IntZero:
+  AssignStatement
+    var: tmpA (pos=0)
+    val:
+      VarExpression
+        arg: a
+        pos: 0
+  AssignStatement
+    var: tmpB (pos=1)
+    val:
+      VarExpression
+        arg: b
+        pos: 1
+  ReturnStatement
+    CaseExpression
+      case:
+        VarExpression
+          var: tmpA
+          pos: 0
+      of IntValue:
+        MethodInvoke
+          method: IntValue::/ [built-in]
+          arg0:
+            CastExpression
+              castTo: IntValue
+              VarExpression
+                var: tmpA
+                pos: 0
+          arg1:
+            VarExpression
+              var: tmpB
+              pos: 1
+      of IntZero:
+        MethodInvoke
+          method: IntZero::/ [built-in]
+          arg0:
+            CastExpression
+              castTo: IntZero
+              VarExpression
+                var: tmpA
+                pos: 0
+          arg1:
+            VarExpression
+              var: tmpB
+              pos: 1

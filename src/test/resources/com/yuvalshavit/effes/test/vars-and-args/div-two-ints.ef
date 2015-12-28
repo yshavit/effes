@@ -1,0 +1,7 @@
+addInts (a: Int), (b: IntValue) -> Int:
+  tmpA = a
+  tmpB = b
+  return tmpA . / tmpB
+
+main -> Int:
+  return addInts (10, 5)
