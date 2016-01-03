@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,6 +25,7 @@ import com.yuvalshavit.effes.compile.node.CtorArg;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.interpreter.EfValue;
 import com.yuvalshavit.util.EfCollections;
+import com.yuvalshavit.util.EfFunctions;
 import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
 
@@ -43,6 +46,10 @@ public abstract class PAlternative {
   public abstract boolean matches(EfValue value);
 
   public abstract <T> T map(BiFunction<EfType.SimpleType, List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard);
+
+  public void dispatch(BiConsumer<EfType.SimpleType, List<PAlternative>> whenSimple, Consumer<String> whenWildcard) {
+    map(EfFunctions.toFunction(whenSimple), EfFunctions.toFunction(whenWildcard));
+  }
 
   public interface Builder {
     @Nonnull

@@ -1,0 +1,7 @@
+foo (bool: BoolWrapper | VoidWrapper):
+  case bool of
+    BoolWrapper(b): debugPrint b
+    VoidWrapper(v): debugPrint v
+
+main:
+  foo BoolWrapper(True)

@@ -32,14 +32,14 @@ public class EfFunctions {
     return f::apply;
   }
   
-  public static <T> Function<? super T, ? extends Void> toFunction(Consumer<? super T> consumer) {
+  public static <T> Function<T,Void> toFunction(Consumer<? super T> consumer) {
     return t -> {
       consumer.accept(t);
       return null;
     };
   }
   
-  public static <T, R> BiFunction<? super T, ? super R, ? extends Void> toFunction(BiConsumer<? super T, ? super R> consumer) {
+  public static <T, R> BiFunction<T,R,Void> toFunction(BiConsumer<? super T, ? super R> consumer) {
     return (t, r) -> {
       consumer.accept(t, r);
       return null;

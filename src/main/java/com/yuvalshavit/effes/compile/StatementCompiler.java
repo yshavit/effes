@@ -1,24 +1,19 @@
 package com.yuvalshavit.effes.compile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.Pair;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.yuvalshavit.effes.compile.node.Block;
 import com.yuvalshavit.effes.compile.node.CaseConstruct;
 import com.yuvalshavit.effes.compile.node.EfType;
 import com.yuvalshavit.effes.compile.node.EfVar;
 import com.yuvalshavit.effes.compile.node.Expression;
-import com.yuvalshavit.effes.compile.node.Node;
 import com.yuvalshavit.effes.compile.node.Statement;
-import com.yuvalshavit.effes.compile.pmatch.PAlternativeSubtractionResult;
-import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import com.yuvalshavit.effes.parser.EffesParser;
 import com.yuvalshavit.util.Dispatcher;
 
@@ -62,58 +57,28 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
 
   private Statement caseStatement(EffesParser.CaseStatContext ctx) {
     Expression matchAgainst = expressionCompiler.apply(ctx.expr());
-    EfVar matchAgainstVar = expressionCompiler.tryGetEfVar(matchAgainst);
-    PAlternativeSubtractionResult matchAgainstPossibility = new PAlternativeSubtractionResult(matchAgainst.resultType());
-    List<CaseConstruct.Alternative<Block>> alternatives = new ArrayList<>(ctx.caseStatAlternative().size());
-    for (EffesParser.CaseStatAlternativeContext caseStatAltCtx : ctx.caseStatAlternative()) {
-      EfType matchAgainstType = matchAgainstPossibility.remainingResultType();
-      CaseConstruct.Alternative<Block> step = vars.inScope(() -> caseAlternative(
-        caseStatAltCtx.casePattern(),
-        matchAgainstType,
-        matchAgainstVar,
-        () -> new Block(caseStatAltCtx.inlinableBlock().getStart(), Lists.newArrayList(Lists.transform(caseStatAltCtx.inlinableBlock().stat(), this::apply)))));
-      alternatives.add(step);
-      PAlternativeSubtractionResult nextPossibility = step.getPAlternative().subtractFrom(matchAgainstPossibility);
-      if (nextPossibility == null) {
-        throw new UnsupportedOperationException("register the error, substitute UNKNOWN"); // TODO
-      }
-      matchAgainstPossibility = nextPossibility;
+
+    List<ExpressionCompiler.AlternativeConstruct<EffesParser.InlinableBlockContext>> alternativeConstructs = Lists.transform(
+      ctx.caseStatAlternative(),
+      alt -> new ExpressionCompiler.AlternativeConstruct<>(alt.getStart(), alt.casePattern(), alt.inlinableBlock()));
+
+    CaseConstruct<Block> construct = expressionCompiler.caseConstruct(
+      matchAgainst,
+      ctx.expr().getStart(),
+      ctx.getStart(),
+      alternativeConstructs,
+      this::compileBlock,
+      tok -> new Block(tok, Collections.singletonList(new Statement.UnrecognizedStatement(tok))));
+
+    if (construct == null) {
+      return new Statement.UnrecognizedStatement(ctx.expr().getStart());
     }
-    expressionCompiler.checkAllAlternativesMatched(ctx, matchAgainstPossibility);
-    CaseConstruct<Block> construct = new CaseConstruct<>(matchAgainst, alternatives);
     return new Statement.CaseStatement(ctx.getStart(), construct);
   }
 
-  public <N extends Node> CaseConstruct.Alternative<N> caseAlternative(
-    EffesParser.CasePatternContext ctx,
-    EfType matchAgainstType,
-    EfVar matchAgainstVar,
-    Supplier<N> matchAgainstNode)
-  {
-    Pair<PAlternative,EfType> pattern = expressionCompiler.compilePattern(ctx, matchAgainstType);
-    if (pattern == null) {
-      throw new UnsupportedOperationException(); // TODO
-    }
-    Map<String,EfVar> bindings = createEmptyBindingsMap(pattern.a);
-    boolean needScope = matchAgainstVar != null || bindings.size() > 0;
-    if (needScope) {
-      vars.pushScope();
-      if (matchAgainstVar != null) {
-        vars.replace(matchAgainstVar.cast(pattern.b));
-      }
-      for (Map.Entry<String,EfVar> entry : bindings.entrySet()) {
-        assert entry.getValue() == null : entry;
-        EfVar var = create the var
-        - need a test for this functionality
-        - large values (ints) won't be validated correctly. This NEEDS to be fixed!
-        entry.setValue(var);
-      }
-    }
-    N compiledNode = matchAgainstNode.get();
-    if (needScope) {
-      vars.popScope();
-    }
-    return new CaseConstruct.Alternative<>(pattern.a, compiledNode, null); // TODO!!!!!
+  private Block compileBlock(EffesParser.InlinableBlockContext ctx) {
+    List<Statement> statements = new ArrayList<>(Lists.transform(ctx.stat(), this::apply)); // put into ArrayList to force it
+    return new Block(ctx.getStart(), statements);
   }
 
   private Statement instanceMethodInvoke(EffesParser.InstanceMethodInvokeStatContext ctx) {

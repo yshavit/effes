@@ -1,0 +1,20 @@
+def foo (bool: BoolWrapper | VoidWrapper) -> no result type:
+  CaseStatement
+    case:
+      VarExpression
+        arg: bool
+        pos: 0
+    of BoolWrapper(b):
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          VarExpression
+            var: b
+            pos: 0
+    of VoidWrapper(v):
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          VarExpression
+            var: v
+            pos: 0

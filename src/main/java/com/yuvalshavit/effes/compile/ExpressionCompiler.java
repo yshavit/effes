@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -17,6 +16,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.base.Functions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.yuvalshavit.effes.compile.node.*;
 import com.yuvalshavit.effes.compile.pmatch.PAlternative;
@@ -338,21 +338,64 @@ public final class ExpressionCompiler {
     return apply(ctx.expr());
   }
 
+  public static class AlternativeConstruct<T> {
+    final Token casePatternToken;
+    final EffesParser.CasePatternContext casePattern;
+    final T ifMatched;
+
+    public AlternativeConstruct(
+      Token casePatternToken,
+      EffesParser.CasePatternContext casePattern,
+      T ifMatched)
+    {
+      this.casePatternToken = casePatternToken;
+      this.casePattern = casePattern;
+      this.ifMatched = ifMatched;
+    }
+  }
+
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
-    Expression matchAgainst = apply(ctx.expr());
-    EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
-    if (matchAgainst.resultType().equals(EfType.UNKNOWN) || matchAgainst.resultType().equals(EfType.VOID)) {
-      errs.add(ctx.expr().getStart(), "case expressions require a disjunctive target type, but the target's type is unknown");
+    List<AlternativeConstruct<EffesParser.ExprContext>> alternativeConstructs = Lists.transform(
+      ctx.caseAlternative(),
+      alt -> new AlternativeConstruct<>(alt.casePattern().getStart(), alt.casePattern(), alt.exprBlock().expr()));
+
+    CaseConstruct<Expression> construct = caseConstruct(
+      apply(ctx.expr()),
+      ctx.expr().getStart(),
+      ctx.getStart(),
+      alternativeConstructs,
+      this::apply,
+      Expression.UnrecognizedExpression::new);
+
+    if (construct == null) {
       return new Expression.UnrecognizedExpression(ctx.expr().getStart());
     }
+    return new Expression.CaseExpression(ctx.getStart(), construct);
+  }
 
-    List<CaseConstruct.Alternative<Expression>> patterns = new ArrayList<>(ctx.caseAlternative().size());
+  @Nullable
+  public <S,T extends Node> CaseConstruct<T> caseConstruct(
+    Expression matchAgainst,
+    Token matchAgainstTok,
+    Token startTok,
+    List<AlternativeConstruct<S>> casePatternContexts,
+    Function<S,T> compiler,
+    Function<Token,T> unrecognizedNodeCreator)
+  {
+    EfVar matchAgainstVar = tryGetEfVar(matchAgainst);
+    if (matchAgainst.resultType().equals(EfType.UNKNOWN) || matchAgainst.resultType().equals(EfType.VOID)) {
+      errs.add(matchAgainstTok, "case expressions require a disjunctive target type, but the target's type is unknown");
+      return null;
+    }
+
+    List<CaseConstruct.Alternative<T>> patterns = new ArrayList<>(casePatternContexts.size());
     PAlternativeSubtractionResult subtractionResult = new PAlternativeSubtractionResult(matchAgainst.resultType());
-    for (EffesParser.CaseAlternativeContext alternativeCtx : ctx.caseAlternative()) {
-      CasePatternCompilation compilation = casePattern(alternativeCtx.casePattern());
+    for (AlternativeConstruct<S> altConstruct : casePatternContexts) {
+      EffesParser.CasePatternContext casePattern = altConstruct.casePattern;
+      CasePatternCompilation compilation = casePattern(casePattern);
       PAlternative alternative;
       if (compilation == null) {
-        errs.add(alternativeCtx.casePattern().getStart(), "invalid case pattern");
+        errs.add(casePattern.getStart(), "invalid case pattern");
         alternative = PAlternative.any().build();
       } else {
         alternative = compilation.pAlternative;
@@ -362,7 +405,7 @@ public final class ExpressionCompiler {
         String msg = (subtractionResult.remainingPossibility() == PPossibility.none)
           ? String.format("%s can never match", alternative)
           : String.format("%s can't match against %s", alternative, subtractionResult.remainingResultType());
-        errs.add(ctx.getStart(), msg);
+        errs.add(startTok, msg);
         continue;
       } else {
         subtractionResult = nextPossibility;
@@ -380,7 +423,7 @@ public final class ExpressionCompiler {
         Iterator<Token> tokens = compilation.getTokens(varName).iterator();
         Token tok;
         if (!tokens.hasNext()) {
-          tok = alternativeCtx.getStart();
+          tok = altConstruct.casePatternToken;
         } else {
           tok = tokens.next();
           while (tokens.hasNext()) {
@@ -392,27 +435,27 @@ public final class ExpressionCompiler {
         vars.add(boundVar, tok);
         boundVarsByName.put(varName, boundVar);
       });
-      Expression ifMatched;
-      if (alternativeCtx.exprBlock() == null) {
-        errs.add(alternativeCtx.exprBlock().getStart(), "couldn't parse block for case pattern");
-        ifMatched = new Expression.UnrecognizedExpression(alternativeCtx.getStart());
+      T ifMatched;
+      S ifMatchedSource = altConstruct.ifMatched;
+      if (ifMatchedSource == null) {
+        errs.add(altConstruct.casePatternToken, "couldn't parse block for case pattern");
+        ifMatched = unrecognizedNodeCreator.apply(altConstruct.casePatternToken);//  new Expression.UnrecognizedExpression(altConstruct.casePatternToken);
       } else {
-        ifMatched = apply(alternativeCtx.exprBlock().expr());
+        ifMatched = compiler.apply(ifMatchedSource);
       }
       if (createScope) {
         vars.popScope();
       }
-      CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched, boundVarsByName);
+      CaseConstruct.Alternative<T> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched, boundVarsByName);
       patterns.add(caseAlt);
     }
-    checkAllAlternativesMatched(ctx, subtractionResult);
-    CaseConstruct<Expression> construct = new CaseConstruct<>(matchAgainst, patterns);
-    return new Expression.CaseExpression(ctx.getStart(), construct);
+    checkAllAlternativesMatched(startTok, subtractionResult);
+    return new CaseConstruct<>(matchAgainst, patterns);
   }
 
-  public void checkAllAlternativesMatched(ParserRuleContext ctx, PAlternativeSubtractionResult subtractionResult) {
+  public void checkAllAlternativesMatched(Token tok, PAlternativeSubtractionResult subtractionResult) {
     if (!subtractionResult.remainingPossibility().equals(PPossibility.none)) {
-      errs.add(ctx.getStart(), "unmatched possibility: " + subtractionResult.remainingResultType());
+      errs.add(tok, "unmatched possibility: " + subtractionResult.remainingResultType());
     }
   }
 
