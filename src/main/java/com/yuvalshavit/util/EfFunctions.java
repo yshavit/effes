@@ -91,4 +91,8 @@ public class EfFunctions {
       return result;
     };
   }
+
+  public static <T,U> BiConsumer<T,U> emptyBiConsumer() {
+    return (t, u) -> {};
+  }
 }

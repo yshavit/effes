@@ -2,6 +2,7 @@ package com.yuvalshavit.effes.compile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.antlr.v4.runtime.Token;
@@ -93,15 +94,26 @@ public final class StatementCompiler implements Function<EffesParser.StatContext
     if (pattern == null) {
       throw new UnsupportedOperationException(); // TODO
     }
-    if (matchAgainstVar != null) {
+    Map<String,EfVar> bindings = createEmptyBindingsMap(pattern.a);
+    boolean needScope = matchAgainstVar != null || bindings.size() > 0;
+    if (needScope) {
       vars.pushScope();
-      vars.replace(matchAgainstVar.cast(pattern.b));
+      if (matchAgainstVar != null) {
+        vars.replace(matchAgainstVar.cast(pattern.b));
+      }
+      for (Map.Entry<String,EfVar> entry : bindings.entrySet()) {
+        assert entry.getValue() == null : entry;
+        EfVar var = create the var
+        - need a test for this functionality
+        - large values (ints) won't be validated correctly. This NEEDS to be fixed!
+        entry.setValue(var);
+      }
     }
     N compiledNode = matchAgainstNode.get();
-    if (matchAgainstVar != null) {
+    if (needScope) {
       vars.popScope();
     }
-    return new CaseConstruct.Alternative<>(pattern.a, compiledNode);
+    return new CaseConstruct.Alternative<>(pattern.a, compiledNode, null); // TODO!!!!!
   }
 
   private Statement instanceMethodInvoke(EffesParser.InstanceMethodInvokeStatContext ctx) {

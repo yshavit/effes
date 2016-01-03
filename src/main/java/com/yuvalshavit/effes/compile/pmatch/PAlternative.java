@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,6 +41,8 @@ public abstract class PAlternative {
   public abstract String toString();
   // TODO this is a bit backwards -- PAlt shouldn't have a dep on the execution stack's EFValue. Refactor to use visitor or something
   public abstract boolean matches(EfValue value);
+
+  public abstract <T> T map(BiFunction<EfType.SimpleType, List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard);
 
   public interface Builder {
     @Nonnull
@@ -141,6 +144,11 @@ public abstract class PAlternative {
     }
 
     @Override
+    public <T> T map(BiFunction<EfType.SimpleType,List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard) {
+      return whenWildcard.apply(NON_CAPTURING_WILD.equals(name) ? null : name);
+    }
+
+    @Override
     public String toString() {
       return name;
     }
@@ -194,6 +202,12 @@ public abstract class PAlternative {
         this::handle,
         s -> handle(pPossibility, s),
         this::handleNone);
+    }
+
+    @Override
+    public <T> T map(BiFunction<EfType.SimpleType,List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard) {
+      List<PAlternative> args = value.transform(l -> Collections.<PAlternative>emptyList(), TypedValue.StandardValue::args);
+      return whenSimple.apply(value.type(), args);
     }
 
     private StepResult handle(PPossibility.Disjunction disjunction) {

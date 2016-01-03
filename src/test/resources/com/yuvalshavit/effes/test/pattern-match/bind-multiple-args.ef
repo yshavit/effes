@@ -8,7 +8,7 @@ sayHi (value: Void), (vocal: True | False) -> Void:
 foo (t: TwoArgs | Void) -> True | False | Void:
   return case t of
     Void: Void
-    TwoArgs(val, shouldPrint): sayHi(val, shouldPrint)
+    TwoArgs(shouldPrint, val): sayHi(shouldPrint, val) -- NOTE! the vars are the opposite of how they're declared; val == TwoArgs.shouldPrint and vice versa
 
 main -> Void:
   t = TwoArgs(Void, True)

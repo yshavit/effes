@@ -7,6 +7,7 @@ import com.yuvalshavit.effes.compile.pmatch.PAlternative;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.Map;
 
 public class CaseConstruct<N extends Node> {
 
@@ -77,10 +78,12 @@ public class CaseConstruct<N extends Node> {
   public static class Alternative<N extends Node> {
     private final PAlternative matcher;
     private final N ifMatched;
+    private final Map<String,EfVar> bindings;
 
-    public Alternative(PAlternative matcher, N ifMatched) {
+    public Alternative(PAlternative matcher, N ifMatched, Map<String,EfVar> bindings) {
       this.matcher = matcher;
       this.ifMatched = ifMatched;
+      this.bindings = bindings;
     }
 
     public N getIfMatched() {
@@ -89,6 +92,10 @@ public class CaseConstruct<N extends Node> {
 
     public PAlternative getPAlternative() {
       return matcher;
+    }
+
+    public Map<String,EfVar> bindings() {
+      return bindings;
     }
 
     @Override

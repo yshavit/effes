@@ -44,7 +44,7 @@ public final class ExecutableStatementCompiler implements Function<Statement, Ex
     ExecutableExpression matchAgainst = expressionCompiler.apply(stat.construct().getMatchAgainst());
     List<ExecutableCase.CaseMatcher> matchers = stat.construct().getPatterns().stream().map(p -> {
       ExecutableElement ifMatch = block(p.getIfMatched());
-      return new ExecutableCase.CaseMatcher(p.getPAlternative(), ifMatch);
+      return new ExecutableCase.CaseMatcher(p.getPAlternative(), ifMatch, p.bindings());
     }).collect(Collectors.toList());
     return new ExecutableStatement.CaseStatement(stat, matchAgainst, matchers);
   }

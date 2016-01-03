@@ -148,28 +148,22 @@ public final class ExpressionCompiler {
 
         EfType.DisjunctiveType targetDisjunction = (EfType.DisjunctiveType) target.resultType();
 
-        List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction.getAlternatives()
-                                                                                    .stream()
-                                                                                    .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
-                                                                                    .map((EfType efType) -> {
-                                                                                      if (!(efType instanceof EfType.SimpleType)) {
-                                                                                        errs.add(
-                                                                                          inMatcher.token(),
-                                                                                          "unrecognized type (possibly a compiler error): " + efType);
-                                                                                        return null;
-                                                                                      }
-                                                                                      EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
-                                                                                      PAlternative typeMatcher = matchAllArgsFor(matchAgainstType);
-                                                                                      Expression downcast = new Expression.CastExpression(
-                                                                                        inMatcher,
-                                                                                        matchAgainstType);
-                                                                                      Expression downcastMethodInvoke = methodInvoke(
-                                                                                        ctx,
-                                                                                        usedAsExpression,
-                                                                                        downcast);
-                                                                                      return new CaseConstruct.Alternative<>(typeMatcher, downcastMethodInvoke);
-                                                                                    })
-                                                                                    .filter(Objects::nonNull).collect(Collectors.toList());
+        List<CaseConstruct.Alternative<Expression>> alternatives = targetDisjunction
+          .getAlternatives()
+          .stream()
+          .sorted(EfType.comparator) // just for ease of debugging, provide consistent ordering
+          .map((EfType efType) -> {
+            if (!(efType instanceof EfType.SimpleType)) {
+              errs.add(inMatcher.token(), "unrecognized type (possibly a compiler error): " + efType);
+              return null;
+            }
+            EfType.SimpleType matchAgainstType = (EfType.SimpleType) efType;
+            PAlternative typeMatcher = matchAllArgsFor(matchAgainstType);
+            Expression downcast = new Expression.CastExpression(inMatcher, matchAgainstType);
+            Expression downcastMethodInvoke = methodInvoke(ctx, usedAsExpression, downcast);
+            return new CaseConstruct.Alternative<>(typeMatcher, downcastMethodInvoke, Collections.emptyMap());
+          })
+          .filter(Objects::nonNull).collect(Collectors.toList());
         return new Expression.CaseExpression(target.token(), new CaseConstruct<>(caseOf, alternatives));
       });
     } else {
@@ -381,6 +375,7 @@ public final class ExpressionCompiler {
         EfVar matchAgainstDowncast = matchAgainstVar.cast(subtractionResult.matchedType());
         vars.replace(matchAgainstDowncast);
       }
+      Map<String,EfVar> boundVarsByName = new HashMap<>(subtractionResult.bindings().size());
       subtractionResult.bindings().forEach((varName, varType) -> {
         Iterator<Token> tokens = compilation.getTokens(varName).iterator();
         Token tok;
@@ -393,7 +388,9 @@ public final class ExpressionCompiler {
             errs.add(dupeToken, String.format("duplicate variable name '%s'", varName));
           }
         }
-        vars.add(EfVar.var(varName, vars.countElems(), varType), tok);
+        EfVar boundVar = EfVar.var(varName, vars.countElems(), varType);
+        vars.add(boundVar, tok);
+        boundVarsByName.put(varName, boundVar);
       });
       Expression ifMatched;
       if (alternativeCtx.exprBlock() == null) {
@@ -405,7 +402,7 @@ public final class ExpressionCompiler {
       if (createScope) {
         vars.popScope();
       }
-      CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched);
+      CaseConstruct.Alternative<Expression> caseAlt = new CaseConstruct.Alternative<>(alternative, ifMatched, boundVarsByName);
       patterns.add(caseAlt);
     }
     checkAllAlternativesMatched(ctx, subtractionResult);
