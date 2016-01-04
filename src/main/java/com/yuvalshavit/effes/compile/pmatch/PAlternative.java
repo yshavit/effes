@@ -189,7 +189,7 @@ public abstract class PAlternative {
       return value.transform(
         large -> large.type().equals(efValue.getType()),
         std -> {
-          if (!std.type().equals(efValue.getType())) {
+          if (!std.type().getGeneric().equals(efValue.getType().getGeneric())) {
             return false;
           }
           for (int i = 0, len = std.args().size(); i < len; ++i) {
