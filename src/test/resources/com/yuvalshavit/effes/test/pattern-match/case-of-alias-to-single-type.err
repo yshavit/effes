@@ -1,0 +1,3 @@
+type aliases can't be used for pattern matching: TooTrue (at line 5, column 3: TooTrue)
+invalid case pattern (at line 5, column 3: TooTrue)
+Nothing can never match (at line 4, column 33: case)

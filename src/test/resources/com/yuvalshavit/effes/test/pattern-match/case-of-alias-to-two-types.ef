@@ -1,0 +1,6 @@
+type MaybeTrue = True | False
+type Nothing
+
+foo (v: True | False | Nothing): case v of
+  MaybeTrue: debugPrint True
+  Nothing: debugPrint v

@@ -523,7 +523,10 @@ public final class ExpressionCompiler {
     String typeName = typeNameTok.getText();
     EfType.SimpleType type = typeRegistry.getSimpleType(typeName);
     if (type == null) {
-      errs.add(typeNameTok.getSymbol(), "unknown type: " + typeName);
+      String message = (typeRegistry.getType(typeName) == null)
+        ? ("unknown type: " + typeName)
+        : ("type aliases can't be used for pattern matching: " + typeName);
+      errs.add(typeNameTok.getSymbol(), message);
       return null;
     }
     List<EffesParser.CasePatternContext> providedArgPatterns = casePattern.casePattern();

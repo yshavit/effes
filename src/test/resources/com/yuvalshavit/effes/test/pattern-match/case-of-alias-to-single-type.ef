@@ -1,0 +1,6 @@
+type Nothing
+type TooTrue = BoolWrapper
+
+foo (v: BoolWrapper | Nothing): case v of
+  TooTrue: debugPrint True
+  Nothing: debugPrint v
