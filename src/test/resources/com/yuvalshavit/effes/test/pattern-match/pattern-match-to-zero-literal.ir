@@ -8,6 +8,6 @@ def isZero (i: IntValue | IntZero) -> False | True:
       of IntZero:
         CtorInvoke
           type: True
-      of IntValue:
+      of IntValue (exhaustive):
         CtorInvoke
           type: False

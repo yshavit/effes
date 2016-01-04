@@ -92,7 +92,7 @@ public abstract class PPossibility {
     TypedValue<LazyPossibility> value;
     List<String> argNames;
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
-      value = new TypedValue.LargeDomainValue<>(type);
+      value = new TypedValue.LargeDomainValue<>(type, false);
       argNames = Collections.emptyList();
     } else {
       //    List<EfVar> args = argsByType.get(type.getGeneric());

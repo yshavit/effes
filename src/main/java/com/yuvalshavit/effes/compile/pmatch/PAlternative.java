@@ -65,7 +65,7 @@ public abstract class PAlternative {
   public static PAlternative simple(EfType.SimpleType type, PAlternative... args) {
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
       checkArgument(args.length == 0, "%s doesn't take any arguments", type);
-      return new Simple(new TypedValue.LargeDomainValue<>(type));
+      return new Simple(new TypedValue.LargeDomainValue<>(type, true));
     } else {
       Simple simple = new Simple(new TypedValue.StandardValue<>(type, Arrays.asList(args)));
       if (!simple.validate(type.getReification())) {
@@ -73,6 +73,11 @@ public abstract class PAlternative {
       }
       return simple;
     }
+  }
+
+  public static PAlternative nonExhaustiveLargeValue(EfType.SimpleType type) {
+    checkArgument(BuiltinType.isBuiltinWithLargeDomain(type), type);
+    return new Simple(new TypedValue.LargeDomainValue<>(type, false));
   }
 
   @Nullable
@@ -233,7 +238,7 @@ public abstract class PAlternative {
       }
 
       return value.transform(
-        largeAlternative -> subtractFromLarge(lazyPossibility),
+        largeAlternative -> subtractFromLarge(lazyPossibility, largeAlternative.isExhaustive()),
         standardAlternative -> simpleTypeAndArgs.transform(
           largePossibility -> {
             throw new AssertionError(
@@ -253,10 +258,12 @@ public abstract class PAlternative {
             })));
     }
 
-    private StepResult subtractFromLarge(LazyPossibility possibility) {
+    private StepResult subtractFromLarge(LazyPossibility possibility, boolean isExhaustive) {
       StepResult r = new StepResult();
       r.addMatched(possibility);
-//      r.addUnmatched(possibility); // TODO need to differentiate between "of IntValue" and "of 10", with the latter also adding an unmatched
+      if (!isExhaustive) {
+        r.addUnmatched(possibility);
+      }
       return r;
     }
 
@@ -387,7 +394,7 @@ public abstract class PAlternative {
     @Override
     public String toString() {
       return value.transform(
-        l -> l.type().toString(),
+        TypedValue.LargeDomainValue::toString,
         s -> {
           List<PAlternative> args = s.args();
           if (args.isEmpty()) {

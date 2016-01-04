@@ -1,0 +1,15 @@
+type Ten
+type TenTwo
+type Nada
+
+describe (value: Int):
+  case value of
+    10: debugPrint Ten
+    10: debugPrint TenTwo -- we don't track single points for large domain value types, so this is allowed but will never get hit
+    IntValue: debugPrint value
+    IntZero: debugPrint Nada
+
+main:
+  describe 0
+  describe 10
+  describe 20

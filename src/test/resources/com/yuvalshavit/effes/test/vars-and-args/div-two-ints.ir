@@ -17,7 +17,7 @@ def addInts (a: IntValue | IntZero) (b: IntValue) -> IntValue | IntZero:
         VarExpression
           var: tmpA
           pos: 0
-      of IntValue:
+      of IntValue (exhaustive):
         MethodInvoke
           method: IntValue::/ [built-in]
           arg0:

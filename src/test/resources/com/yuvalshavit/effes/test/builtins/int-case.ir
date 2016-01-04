@@ -8,7 +8,7 @@ def isZeroA (arg: IntValue | IntZero) -> False | True:
       of IntZero:
         CtorInvoke
           type: True
-      of IntValue:
+      of IntValue (exhaustive):
         CtorInvoke
           type: False
 def isZeroB (arg: IntValue | IntZero) -> False | True:
@@ -18,7 +18,7 @@ def isZeroB (arg: IntValue | IntZero) -> False | True:
         VarExpression
           arg: arg
           pos: 0
-      of IntValue:
+      of IntValue (exhaustive):
         CtorInvoke
           type: False
       of IntZero:

@@ -1,0 +1,15 @@
+type Ten
+type TenTwo
+type Nada
+
+describe (value: Int):
+  case value of
+    10: debugPrint Ten
+    IntValue: debugPrint TenTwo
+    IntValue: debugPrint value
+    IntZero: debugPrint Nada
+
+main:
+  describe 0
+  describe 10
+  describe 20

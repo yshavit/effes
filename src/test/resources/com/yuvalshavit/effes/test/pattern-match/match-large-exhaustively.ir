@@ -1,0 +1,31 @@
+def describe (value: IntValue | IntZero) -> no result type:
+  CaseStatement
+    case:
+      VarExpression
+        arg: value
+        pos: 0
+    of IntValue (point):
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          CtorInvoke
+            type: Ten
+    of IntValue (point):
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          CtorInvoke
+            type: TenTwo
+    of IntValue (exhaustive):
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          VarExpression
+            arg: value
+            pos: 0
+    of IntZero:
+      MethodInvoke
+        method: debugPrint [built-in]
+        arg0:
+          CtorInvoke
+            type: Nada

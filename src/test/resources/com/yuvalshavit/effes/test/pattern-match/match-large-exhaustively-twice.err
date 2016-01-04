@@ -1,0 +1,1 @@
+IntValue (exhaustive) can't match against IntZero (at line 6, column 3: case)

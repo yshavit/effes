@@ -35,8 +35,15 @@ public abstract class TypedValue<T> {
    * These are all built-in types (numbers and chars).
    */
   public static class LargeDomainValue<T> extends TypedValue<T> {
-    public LargeDomainValue(EfType.SimpleType type) {
+    private final boolean exhaustive;
+    public LargeDomainValue(EfType.SimpleType type, boolean exhaustive) {
       super(type);
+      this.exhaustive = exhaustive;
+    }
+
+    /** whether this value exhausts all possibilities. For instance, <tt>IntValue</tt> is exhaustive, while <tt>27</tt> is not. */
+    public boolean isExhaustive() {
+      return exhaustive;
     }
 
     @Override
@@ -49,7 +56,7 @@ public abstract class TypedValue<T> {
 
     @Override
     public String toString() {
-      return type().getName();
+      return String.format("%s (%s)", type().getName(), exhaustive ? "exhaustive" : "point");
     }
   }
 

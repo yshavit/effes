@@ -8,7 +8,7 @@ def divide10 (denominator: IntValue | IntZero) -> DivByZero | IntValue | IntZero
       of IntZero:
         CtorInvoke
           type: DivByZero
-      of IntValue:
+      of IntValue (exhaustive):
         MethodInvoke
           method: IntValue::/ [built-in]
           arg0:

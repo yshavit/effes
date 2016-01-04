@@ -1,2 +1,1 @@
-IntValue can't match against IntZero (at line 3, column 36: case)
 unmatched possibility: IntZero (at line 3, column 36: case)

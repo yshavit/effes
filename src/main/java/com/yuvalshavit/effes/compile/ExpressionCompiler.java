@@ -550,10 +550,13 @@ public final class ExpressionCompiler {
       errs.add(casePattern.getStart(), "number out of range: " + casePattern.getText());
       return null;
     }
-    EfType.SimpleType type = literalValue == 0
-      ? BuiltinType.IntZero.getEfType()
-      : BuiltinType.IntValue.getEfType();
-    return new CasePatternCompilation(PAlternative.simple(type, new PAlternative[0])); // TODO using an empty array to resolve the overload is uuuuuugly
+    PAlternative alternative;
+    if (literalValue == 0) {
+      alternative = PAlternative.simple(BuiltinType.IntZero.getEfType(), new PAlternative[0]); // TODO using an empty array to resolve the overload is uuuuuugly
+    } else {
+      alternative = PAlternative.nonExhaustiveLargeValue(BuiltinType.IntValue.getEfType());
+    }
+    return new CasePatternCompilation(alternative);
   }
 
   private CasePatternCompilation casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
