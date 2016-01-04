@@ -355,16 +355,16 @@ public final class ExpressionCompiler {
   }
 
   private Expression caseExpression(EffesParser.CaseExpressionContext ctx) {
-    List<AlternativeConstruct<EffesParser.ExprContext>> alternativeConstructs = Lists.transform(
+    List<AlternativeConstruct<EffesParser.ExprBlockContext>> alternativeConstructs = Lists.transform(
       ctx.caseAlternative(),
-      alt -> new AlternativeConstruct<>(alt.casePattern().getStart(), alt.casePattern(), alt.exprBlock().expr()));
+      alt -> new AlternativeConstruct<>(alt.casePattern().getStart(), alt.casePattern(), alt.exprBlock()));
 
     CaseConstruct<Expression> construct = caseConstruct(
       apply(ctx.expr()),
       ctx.expr().getStart(),
       ctx.getStart(),
       alternativeConstructs,
-      this::apply,
+      exprBlock -> apply(exprBlock.expr()),
       Expression.UnrecognizedExpression::new);
 
     if (construct == null) {
