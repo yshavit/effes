@@ -488,7 +488,6 @@ public final class ExpressionCompiler {
   }
 
   private static class CasePatternCompilation {
-    @Nullable
     final PAlternative pAlternative;
     Multimap<String,Token> wildcardTokens = null;
 
