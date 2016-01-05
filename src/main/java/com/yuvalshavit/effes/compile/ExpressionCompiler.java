@@ -396,7 +396,7 @@ public final class ExpressionCompiler {
       PAlternative alternative;
       if (compilation == null) {
         errs.add(casePattern.getStart(), "invalid case pattern");
-        alternative = PAlternative.any().build();
+        alternative = PAlternative.any();
       } else {
         alternative = compilation.pAlternative;
       }
@@ -554,7 +554,7 @@ public final class ExpressionCompiler {
     }
     PAlternative alternative;
     if (literalValue == 0) {
-      alternative = PAlternative.simple(BuiltinType.IntZero.getEfType(), new PAlternative[0]); // TODO using an empty array to resolve the overload is uuuuuugly
+      alternative = PAlternative.simple(BuiltinType.IntZero.getEfType());
     } else {
       alternative = PAlternative.nonExhaustiveLargeValue(BuiltinType.IntValue.getEfType());
     }
@@ -564,13 +564,13 @@ public final class ExpressionCompiler {
   private CasePatternCompilation casePattern(EffesParser.VarBindingPatternMatchContext casePattern) {
     TerminalNode varNode = casePattern.VAR_NAME();
     String varName = varNode.getText();
-    CasePatternCompilation compilation = new CasePatternCompilation(PAlternative.any(varName).build());
+    CasePatternCompilation compilation = new CasePatternCompilation(PAlternative.any(varName));
     compilation.addToken(varName, varNode.getSymbol());
     return compilation;
   }
 
   private CasePatternCompilation casePattern(EffesParser.UnboundWildPatternMatchContext casePattern) {
-    return new CasePatternCompilation(PAlternative.any().build());
+    return new CasePatternCompilation(PAlternative.any());
   }
 
   private CasePatternCompilation casePatternErr(EffesParser.CasePatternContext casePattern) {
@@ -617,7 +617,7 @@ public final class ExpressionCompiler {
         Pair<PAlternative,EfType> altCompiled = compilePattern(args.get(i), argType);
         if (altCompiled == null) {
           // TODO confirm that a message was logged already
-          argAlts[i] = PAlternative.any().build(); // TODO not a great option, should really be "none"
+          argAlts[i] = PAlternative.any(); // TODO not a great option, should really be "none"
           argTypes[i] = EfType.UNKNOWN;
         } else {
           argAlts[i] = altCompiled.a;
@@ -629,9 +629,9 @@ public final class ExpressionCompiler {
       return new Pair<>(resultAlt, resultType);
     } else if (ctx instanceof EffesParser.VarBindingPatternMatchContext) {
       String varName = ((EffesParser.VarBindingPatternMatchContext) ctx).VAR_NAME().getText();
-      return new Pair<>(PAlternative.any(varName).build(), matchAgainstType);
+      return new Pair<>(PAlternative.any(varName), matchAgainstType);
     } else if (ctx instanceof EffesParser.UnboundWildPatternMatchContext) {
-      return new Pair<>(PAlternative.any().build(), matchAgainstType);
+      return new Pair<>(PAlternative.any(), matchAgainstType);
     } else if (ctx instanceof EffesParser.IntLiteralPatternMatchContext) {
       TerminalNode intNode = ((EffesParser.IntLiteralPatternMatchContext) ctx).INT();
       long longValue;
@@ -646,7 +646,7 @@ public final class ExpressionCompiler {
         if (!matchAgainstType.contains(zeroType)) {
           return null;
         }
-        return new Pair<>(PAlternative.simple(zeroType, new PAlternative[0]), zeroType); // TODO using an empty arg to resolve the overload is uuuuuugly
+        return new Pair<>(PAlternative.simple(zeroType), zeroType);
       } else {
         EfType.SimpleType intType = BuiltinType.IntValue.getEfType();
         if (!matchAgainstType.contains(intType)) {
@@ -663,7 +663,7 @@ public final class ExpressionCompiler {
   private static PAlternative matchAllArgsFor(EfType.SimpleType matchAgainstType) {
     PAlternative[] wildArgs = new PAlternative[matchAgainstType.getArgs().size()];
     for (int i = 0; i < wildArgs.length; ++i) {
-      wildArgs[i] = PAlternative.any().build();
+      wildArgs[i] = PAlternative.any();
     }
     return PAlternative.simple(matchAgainstType, wildArgs);
   }

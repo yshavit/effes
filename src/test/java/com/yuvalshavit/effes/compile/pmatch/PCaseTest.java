@@ -1,7 +1,7 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.yuvalshavit.effes.compile.pmatch.PAlternative.Builder;
+
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.any;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.simple;
 import static java.util.Arrays.asList;
@@ -42,8 +42,6 @@ public class PCaseTest {
   
   private final EfType.SimpleType tEmpty;
 
-  private static final PAlternative.Builder[] noArgs = new Builder[0]; // TODO only needed cause of ugly overload shit, which I should fix
-
   public PCaseTest() {
     tTrue = createSimple("True");
     tFalse = createSimple("False");
@@ -82,7 +80,7 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
     
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative firstIsTrue = simple(cons, mTrue(), any("a")).build();
+    PAlternative firstIsTrue = simple(cons, mTrue(), any("a"));
     // case     List[Bool]
     // of       Cons(True, a)
     // 
@@ -102,7 +100,7 @@ public class PCaseTest {
     EfType.SimpleType oneBool = Reifications.reifyOnlyGenericOf(tOne).to(tBool);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(oneBool);
 
-    PAlternative oneOfTrue = simple(Reifications.reifyOnlyGenericOf(tOne).to(tTrue), mTrue()).build();
+    PAlternative oneOfTrue = simple(Reifications.reifyOnlyGenericOf(tOne).to(tTrue), mTrue());
     PAlternativeSubtractionResult result = oneOfTrue.subtractFrom(possibility);
     check(result,
       "One[α](False)",
@@ -117,7 +115,7 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative doubleWilds = simple(cons, any(), any()).build();
+    PAlternative doubleWilds = simple(cons, any(), any());
     PAlternativeSubtractionResult result = doubleWilds.subtractFrom(boolsPossibility);
     check(result, "Empty");
   }
@@ -128,7 +126,7 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative doubleWilds = any().build();
+    PAlternative doubleWilds = any();
     PAlternativeSubtractionResult result = doubleWilds.subtractFrom(boolsPossibility);
     assertNotNull(result);
     assertEquals(result.remainingPossibility(), PPossibility.none);
@@ -140,7 +138,7 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative fullyWild = any().build();
+    PAlternative fullyWild = any();
     PAlternativeSubtractionResult result = fullyWild.subtractFrom(boolsPossibility);
     assertNotNull(result);
     assertEquals(result.remainingPossibility(), PPossibility.none);
@@ -155,13 +153,15 @@ public class PCaseTest {
     EfType list = listTypes.list(tBool);
 
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
-    PAlternative firstIsTrue = simple(snoc, any(), mTrue()).build();
-    PAlternative secondIsTrue = simple(snoc,
-      simple(snoc,
+    PAlternative firstIsTrue = simple(snoc, any(), mTrue());
+    PAlternative secondIsTrue = simple(
+      snoc,
+      simple(
+        snoc,
         any(),
         mTrue()),
       any()
-    ).build();
+    );
 
     PAlternativeSubtractionResult result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
@@ -204,19 +204,22 @@ public class PCaseTest {
     // with foo: Nothing | One[False | True]
     //
     // This gets expanded a bit
-    
-    PAlternative case0 = simple(cons,
-      simple(tNothing, noArgs),
-      simple(cons,
+
+    PAlternative case0 = simple(
+      cons,
+      simple(tNothing),
+      simple(
+        cons,
         any("foo"),
-        simple(cons,
+        simple(
+          cons,
           simple(
             tOneBool,
-            simple(tTrue, noArgs)),
+            simple(tTrue)),
           any()
         )
       )
-    ).build();
+    );
     
     PAlternativeSubtractionResult afterCase0 = case0.subtractFrom(possibility);
     assertNotNull(afterCase0);
@@ -261,10 +264,11 @@ public class PCaseTest {
     //           [Nothing, _]                   = Cons(Nothing, _)
     //           []                             = Empty
 
-    PAlternative case1 = simple(cons,
+    PAlternative case1 = simple(
+      cons,
       simple(tOneBool, any("ft")),
       any()
-    ).build();
+    );
 
     PAlternativeSubtractionResult afterCase1 = case1.subtractFrom(afterCase0);
     assertNotNull(afterCase1);
@@ -283,10 +287,11 @@ public class PCaseTest {
       "bound ft: False | True");
     
     // Now we match against Cons(Nothing, _). We should expect Empty back
-    PAlternative case2 = simple(cons,
-      simple(tNothing, noArgs),
+    PAlternative case2 = simple(
+      cons,
+      simple(tNothing),
       any()
-    ).build();
+    );
 
     PAlternativeSubtractionResult afterCase2 = case2.subtractFrom(afterCase1);
     assertNotNull(afterCase2);
@@ -294,7 +299,7 @@ public class PCaseTest {
       "Empty");
     
     // Now match against Empty, which is the only alternative left
-    PAlternative case3 = simple(tEmpty, noArgs).build();
+    PAlternative case3 = simple(tEmpty);
     
     PAlternativeSubtractionResult afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
@@ -310,9 +315,8 @@ public class PCaseTest {
     
     // case Cons[True] of Cons[True](_, _)
     PAlternative caseOfConsFalse = simple(consOfFalse,
-      simple(tFalse, noArgs),
-      any()
-    ).build();
+      simple(tFalse),
+      any());
 
     PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNull(afterCase);
@@ -328,8 +332,7 @@ public class PCaseTest {
     // case Cons[True] of Cons[False](_, _)
     PAlternative caseOfConsFalse = simple(consOfFalse,
       any(),
-      any()
-    ).build();
+      any());
 
     PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNotNull(afterCase);
@@ -349,7 +352,7 @@ public class PCaseTest {
       any("a"),
       any("a"),
       any("b")
-    ).build();
+    );
     PAlternativeSubtractionResult result = alternative.subtractFrom(PPossibility.from(multiBox));
     check(result,
       "∅",
@@ -360,21 +363,21 @@ public class PCaseTest {
 
   @Test
   public void wildcardFromNone() {
-    PAlternative any = any().build();
+    PAlternative any = any();
     PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap(), tNothing));
     assertNull(subtraction);
   }
 
   @Test
   public void concreteFromNone() {
-    PAlternative any = simple(tNothing, noArgs).build();
+    PAlternative any = simple(tNothing);
     PAlternativeSubtractionResult subtraction = any.subtractFrom(new PAlternativeSubtractionResult(PPossibility.none, null, Collections.emptyMap(), tNothing));
     assertNull(subtraction);
   }
 
   @Test
   public void nothingFromEmpty() {
-    PAlternative any = simple(tNothing, noArgs).build();
+    PAlternative any = simple(tNothing);
     PAlternativeSubtractionResult subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
@@ -391,23 +394,23 @@ public class PCaseTest {
     EfAssertions.equalLists(actualList, expectedList);
   }
 
-  private Builder mTrue() {
-    return simple(tTrue, noArgs);
+  private PAlternative mTrue() {
+    return simple(tTrue);
   }
 
   @Test
   public void trueNoArgs() {
-    assertNotNull(mTrue().build());
+    assertNotNull(mTrue());
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithAnyArg() {
-    simple(tTrue, any()).build();
+    simple(tTrue, any());
   }
   
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithFalseArg() {
-    simple(tTrue, simple(tFalse, noArgs)).build();
+    simple(tTrue, simple(tFalse));
   }
 
   @Test

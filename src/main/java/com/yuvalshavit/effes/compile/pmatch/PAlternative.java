@@ -7,9 +7,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.antlr.v4.runtime.misc.Pair;
@@ -27,10 +25,16 @@ import com.yuvalshavit.util.Equality;
 import com.yuvalshavit.util.Lazy;
 
 public abstract class PAlternative {
-
   public static final String NON_CAPTURING_WILD = "_";
 
-  private PAlternative() {
+  private PAlternative() {}
+
+  public static PAlternative any() {
+    return PAlternative.Any.nonCapturingWild;
+  }
+
+  public static PAlternative any(String name) {
+    return new Any(name);
   }
 
   @Override
@@ -43,24 +47,6 @@ public abstract class PAlternative {
   public abstract boolean matches(EfValue value);
 
   public abstract <T> T map(BiFunction<EfType.SimpleType, List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard);
-
-  public interface Builder {
-    @Nonnull
-    PAlternative build();
-  }
-
-  public static Builder any(String name) {
-    checkNotNull(name, "name");
-    return () -> new Any(name);
-  }
-
-  public static Builder any() {
-    return any(NON_CAPTURING_WILD);
-  }
-
-  public static Builder simple(EfType.SimpleType type, Builder... args) {
-    return () -> simple(type, Stream.of(args).map(Builder::build).toArray(PAlternative[]::new));
-  }
 
   public static PAlternative simple(EfType.SimpleType type, PAlternative... args) {
     if (BuiltinType.isBuiltinWithLargeDomain(type)) {
@@ -123,6 +109,7 @@ public abstract class PAlternative {
 
   static class Any extends PAlternative {
     private static final Equality<Any> equality = Equality.forClass(Any.class).with("name", Any::name).exactClassOnly();
+    private static Any nonCapturingWild = new Any(NON_CAPTURING_WILD);
     private final String name;
 
     private Any(String name) {
@@ -142,7 +129,7 @@ public abstract class PAlternative {
     public StepResult subtractFrom(LazyPossibility pPossibility) {
       StepResult r = new StepResult();
       r.addMatched(pPossibility);
-      if (!NON_CAPTURING_WILD.equals(name)) {
+      if (!PAlternative.NON_CAPTURING_WILD.equals(name)) {
         r.addBinding(name, pPossibility.efType());
       }
       return r;
@@ -150,7 +137,7 @@ public abstract class PAlternative {
 
     @Override
     public <T> T map(BiFunction<EfType.SimpleType,List<PAlternative>,T> whenSimple, Function<String,T> whenWildcard) {
-      return whenWildcard.apply(NON_CAPTURING_WILD.equals(name) ? null : name);
+      return whenWildcard.apply(PAlternative.NON_CAPTURING_WILD.equals(name) ? null : name);
     }
 
     @Override
