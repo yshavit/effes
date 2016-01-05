@@ -1,7 +1,6 @@
 package com.yuvalshavit.effes.compile.pmatch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.any;
 import static com.yuvalshavit.effes.compile.pmatch.PAlternative.simple;
 import static java.util.Arrays.asList;
@@ -31,32 +30,32 @@ import com.yuvalshavit.util.EfAssertions;
 import com.yuvalshavit.util.EfFunctions;
 
 public class PCaseTest {
-  
+
   private final EfType.SimpleType tTrue;
   private final EfType.SimpleType tFalse;
   private final EfType.DisjunctiveType tBool;
-  
+
   private final EfType.SimpleType tOne;
   private final EfType.SimpleType tNothing;
   private final EfType.DisjunctiveType tMaybe;
-  
+
   private final EfType.SimpleType tEmpty;
 
   public PCaseTest() {
     tTrue = createSimple("True");
     tFalse = createSimple("False");
     tBool = (EfType.DisjunctiveType) EfType.disjunction(tTrue, tFalse);
-    
+
     tOne = createSimple("One", singletonList("T"), t -> {
         EfType.GenericType generic = t.getGenericsDeclr().get(0);
         t.setCtorArgs(singletonList(new CtorArg(0, "value", generic)));
       });
     tNothing = createSimple("Nothing");
     tMaybe = (EfType.DisjunctiveType) EfType.disjunction(tOne, tNothing);
-    
+
     tEmpty = createSimple("Empty");
   }
-  
+
   private ListTypes buildListType(String name, BiFunction<EfType.GenericType, EfType, List<Pair<String, EfType>>> consBuilder) {
     EfType.SimpleType cons = new EfType.SimpleType(name, singletonList("T"));
     EfType.GenericType genericParam = cons.getGenericsDeclr().get(0);
@@ -72,18 +71,18 @@ public class PCaseTest {
     cons.setCtorArgs(consVars);
     return new ListTypes(cons, list, reification);
   }
-  
+
   @Test
   public void listPattern() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
     EfType.SimpleType cons = listTypes.cons(tBool);
     EfType list = listTypes.list(tBool);
-    
+
     PPossibility.TypedPossibility<?> boolsPossibility = PPossibility.from(list);
     PAlternative firstIsTrue = simple(cons, mTrue(), any("a"));
     // case     List[Bool]
     // of       Cons(True, a)
-    // 
+    //
     // result   Cons(False, _) | Empty
     PAlternativeSubtractionResult result = firstIsTrue.subtractFrom(boolsPossibility);
     check(result,
@@ -143,7 +142,7 @@ public class PCaseTest {
     assertNotNull(result);
     assertEquals(result.remainingPossibility(), PPossibility.none);
   }
-  
+
   @Test
   public void snocListPattern() {
     // a Snoc List is like a Cons List, but with the args swapped: Cons(tail: ConsList[T], head: T).
@@ -220,7 +219,7 @@ public class PCaseTest {
         )
       )
     );
-    
+
     PAlternativeSubtractionResult afterCase0 = case0.subtractFrom(possibility);
     assertNotNull(afterCase0);
     check(
@@ -247,7 +246,7 @@ public class PCaseTest {
       "---",
       "bound foo: Nothing | One[False | True]");
 
-    // So, now we have T as a disjunction of: 
+    // So, now we have T as a disjunction of:
     //           [One(_), _]                    = Cons(One(_), _)
     //           [Nothing, _, Nothing, _]       = Cons(Nothing, Cons(_, Cons(Nothing, _)))
     //           [Nothing, _, One(False), _]    = Cons(Nothing, Cons(_, Cons(One(False), _)))
@@ -285,7 +284,7 @@ public class PCaseTest {
       "δ: Nothing",
       "---",
       "bound ft: False | True");
-    
+
     // Now we match against Cons(Nothing, _). We should expect Empty back
     PAlternative case2 = simple(
       cons,
@@ -297,10 +296,10 @@ public class PCaseTest {
     assertNotNull(afterCase2);
     check(afterCase2,
       "Empty");
-    
+
     // Now match against Empty, which is the only alternative left
     PAlternative case3 = simple(tEmpty);
-    
+
     PAlternativeSubtractionResult afterCase3 = case3.subtractFrom(afterCase2);
     assertNotNull(afterCase3);
     assertEquals(afterCase3.remainingPossibility(), PPossibility.none);
@@ -312,7 +311,7 @@ public class PCaseTest {
     EfType listOfTrue = listTypes.list(tTrue);
     EfType.SimpleType consOfFalse = listTypes.cons(tFalse);
     PPossibility.TypedPossibility<?> possibility = PPossibility.from(listOfTrue);
-    
+
     // case Cons[True] of Cons[True](_, _)
     PAlternative caseOfConsFalse = simple(consOfFalse,
       simple(tFalse),
@@ -321,7 +320,7 @@ public class PCaseTest {
     PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNull(afterCase);
   }
-  
+
   @Test
   public void consTrueMatchedAgainstConsFalseOfAny() {
     ListTypes listTypes = buildListType("Cons", (g, l) -> asList(create("head", g), create("tail", l)));
@@ -336,7 +335,7 @@ public class PCaseTest {
 
     PAlternativeSubtractionResult afterCase = caseOfConsFalse.subtractFrom(possibility);
     assertNotNull(afterCase);
-    
+
     check(afterCase,
       "Empty");
   }
@@ -381,11 +380,11 @@ public class PCaseTest {
     PAlternativeSubtractionResult subtraction = any.subtractFrom(PPossibility.from(tEmpty));
     assertNull(subtraction);
   }
-  
+
   private void check(PAlternativeSubtractionResult possibility, String... expected) {
     assertNotNull(possibility, "null possibility (alternative wasn't matched)");
     List<String> expectedList = Lists.newArrayList(expected);
-    
+
     List<String> actualList = PPossibilities.toStrings(possibility.remainingPossibility());
     if (!possibility.bindings().isEmpty()) {
       actualList.add("---");
@@ -407,7 +406,7 @@ public class PCaseTest {
   public void trueWithAnyArg() {
     simple(tTrue, any());
   }
-  
+
   @Test(expectedExceptions = IllegalArgumentException.class)
   public void trueWithFalseArg() {
     simple(tTrue, simple(tFalse));
