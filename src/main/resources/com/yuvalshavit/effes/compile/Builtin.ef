@@ -21,4 +21,13 @@ type False
 -- Void
 type Void
 
+-- String
+type String @builtin:
+  sprintf (args : List[String]) -> String
+
+-- Non-native
+type Head[T] (head: T, tail: List[T])
+type Empty
+type List[T] = Head[T] | Empty
+
 debugPrint [T] (a: T) -> Void: @builtin

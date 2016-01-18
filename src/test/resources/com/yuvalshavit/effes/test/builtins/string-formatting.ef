@@ -1,0 +1,2 @@
+main:
+  debugPrint "hello %s pooh bear: %d".sprintf ["there", 123]

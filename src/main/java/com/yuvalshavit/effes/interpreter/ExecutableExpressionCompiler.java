@@ -31,6 +31,7 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
       .put(Expression.CaseExpression.class, ExecutableExpressionCompiler::caseExpr)
       .put(Expression.InstanceArg.class, ExecutableExpressionCompiler::instanceArg)
       .put(Expression.IntLiteral.class, ExecutableExpressionCompiler::intLiteral)
+      .put(Expression.StringLiteral.class, ExecutableExpressionCompiler::stringLIteral)
       .put(Expression.MethodInvoke.class, ExecutableExpressionCompiler::methodInvoke)
       .put(Expression.CastExpression.class, ExecutableExpressionCompiler::castExpr)
       .put(Expression.CtorInvoke.class, ExecutableExpressionCompiler::ctorInvoke)
@@ -64,6 +65,10 @@ public final class ExecutableExpressionCompiler implements Function<Expression, 
   
   private ExecutableExpression intLiteral(Expression.IntLiteral expr) {
     return new ExecutableExpression.IntLiteral(expr);
+  }
+
+  private ExecutableExpression stringLIteral(Expression.StringLiteral expr) {
+    return new ExecutableExpression.StringLiteral(expr);
   }
 
   private ExecutableExpression ctorInvoke(Expression.CtorInvoke expr) {

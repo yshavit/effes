@@ -1,8 +1,12 @@
 package com.yuvalshavit.effes.compile.node;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.yuvalshavit.effes.compile.NodeStateVisitor;
+import com.yuvalshavit.effes.interpreter.EfValue;
+
 import org.antlr.v4.runtime.Token;
 
 import javax.annotation.Nullable;
@@ -244,6 +248,34 @@ public abstract class Expression extends Node {
     public void state(NodeStateVisitor out) {
       out.visitChild("target", target);
       out.visitScalar("arg", arg);
+    }
+  }
+
+  public static class StringLiteral extends Expression {
+    private final String value;
+
+    public StringLiteral(Token token, String value) {
+      super(token, BuiltinType.String.getEfType());
+      this.value = checkNotNull(value, "value");
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+    @Override
+    public void validate(CompileErrors errs) {
+      // always valid
+    }
+
+    @Override
+    public void state(NodeStateVisitor out) {
+      out.visitScalar(null, value);
+    }
+
+    public String getValue() {
+      return value;
     }
   }
 

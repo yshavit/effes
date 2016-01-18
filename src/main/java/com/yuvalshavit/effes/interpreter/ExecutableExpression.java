@@ -125,6 +125,20 @@ public abstract class ExecutableExpression implements ExecutableElement {
       stack.push(EfValue.of(value));
     }
   }
+
+  public static class StringLiteral extends ExecutableExpression {
+    private final String value;
+
+    public StringLiteral(Expression.StringLiteral source) {
+      super(source);
+      value = source.getValue();
+    }
+
+    @Override
+    public void execute(CallStack stack) {
+      stack.push(EfValue.of(value));
+    }
+  }
   
   public static class MethodInvokeExpression extends ExecutableExpression {
     private final List<ExecutableExpression> args;

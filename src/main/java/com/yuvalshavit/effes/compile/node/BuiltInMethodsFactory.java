@@ -35,6 +35,9 @@ public interface BuiltInMethodsFactory<T> {
   @BuiltInMethod(name = "/", resultType = "Int", args = "IntValue", targets = "IntValue | IntZero")
   T divInt();
 
+  @BuiltInMethod(name = "sprintf", resultType = "String", args = "List[String]", targets = "String")
+  T sprintf();
+
   default void addTo(TypeRegistry typeRegistry, MethodsRegistry<? super T> outRegistry, CompileErrors errs) {
     for (Method m : BuiltInMethodsFactory.class.getDeclaredMethods()) {
       BuiltInMethod meta = m.getAnnotation(BuiltInMethod.class);

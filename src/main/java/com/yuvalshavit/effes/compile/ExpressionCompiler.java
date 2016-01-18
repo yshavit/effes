@@ -67,6 +67,7 @@ public final class ExpressionCompiler {
               .put(EffesParser.ParenExprContext.class, ExpressionCompiler::paren)
               .put(EffesParser.CtorInvokeContext.class, ExpressionCompiler::ctorInvoke)
               .put(EffesParser.IntLiteralExprContext.class, ExpressionCompiler::intLiteralExpr)
+              .put(EffesParser.QuotedStringContext.class, ExpressionCompiler::stringLiteralExpr)
               .build(ExpressionCompiler::error);
 
   private Expression error(EffesParser.ExprContext ctx) {
@@ -89,6 +90,10 @@ public final class ExpressionCompiler {
       return new Expression.UnrecognizedExpression(tok);
     }
     return new Expression.IntLiteral(tok, v);
+  }
+
+  private Expression stringLiteralExpr(EffesParser.QuotedStringContext ctx) {
+    return new Expression.StringLiteral(ctx.getStart(), ctx.getText());
   }
 
   private Expression methodInvokeOrVar(EffesParser.MethodInvokeOrVarExprContext ctx) {

@@ -123,6 +123,7 @@ expr: OPEN_PAREN expr CLOSE_PAREN                                               
     | expr DOT methodInvoke                                                     # InstanceMethodInvokeOrVarExpr
     | TYPE_NAME singleTypeParameters ( OPEN_PAREN expr (COMMA expr)* CLOSE_PAREN )?  # CtorInvoke
     | INT                                                                       # IntLiteralExpr
+    | DQUOTED_STRING                                                            # QuotedString
     ;
 
 methodInvoke: methodName singleTypeParameters methodInvokeArgs;
@@ -143,6 +144,19 @@ casePattern: TYPE_NAME (OPEN_PAREN casePattern (COMMA casePattern)* CLOSE_PAREN)
 exprBlock: expr NL;
 
 // tokens
+DQUOTED_STRING : DQUOTE ( ESC_SEQ | ~["\r\n\\] )* DQUOTE ;
+fragment DQUOTE         : '"' ;
+fragment BACKSLASH			: '\\'	;
+fragment UNICODE_ESC    :	'u' HEX_DIGIT HEX_DIGIT (HEX_DIGIT HEX_DIGIT (HEX_DIGIT HEX_DIGIT)?)? ;
+fragment HEX_DIGIT		  : [0-9a-fA-F]	;
+fragment ESC_SEQ :  BACKSLASH
+    ( [tnr"\\]  // The standard escaped character set such as tab, newline, etc.
+    | UNICODE_ESC  // A Unicode escape sequence
+    | .        // Invalid escape character
+    | EOF      // Incomplete at EOF
+    )
+  ;
+
 
 TYPE: 'type';
 COLON: ':';
