@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 public final class EndToEndTest {
   private static final RelativeUrl urls = new RelativeUrl(EndToEndTest.class);
@@ -104,9 +103,6 @@ public final class EndToEndTest {
 
   private Sources getParser(String fileBaseName) throws IOException {
     URL url = urls.get(fileBaseName + ".ef");
-    if (url == null) {
-      fail("missing " + fileBaseName + ".ef");
-    }
     String efFile = Resources.toString(url, Charsets.UTF_8);
     Source prefix = new Source(ParserUtils.createParser(efPrefix).compilationUnit());
     Source parser = new Source(ParserUtils.createParser(efFile).compilationUnit());
@@ -152,7 +148,7 @@ public final class EndToEndTest {
   }
 
   private String readIfExists(String fileName) throws IOException {
-    URL url = urls.get(fileName);
+    URL url = urls.tryGet(fileName);
     return url == null
       ? ""
       : stripTrailingNewline(Resources.toString(url, Charsets.UTF_8));
