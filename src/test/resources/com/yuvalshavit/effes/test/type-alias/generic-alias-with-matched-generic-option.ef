@@ -1,0 +1,26 @@
+-- ! NoPrefix MainIr
+
+type A, B
+type One[E] (value: E)
+type Nothing
+
+type Maybe[T] = Nothing | One[T] -- note that T doesn't match One[E], but that's fine
+
+isMaybeOneA (val: Maybe[One[A]]) -> String : case val of
+  Nothing: "nope"
+  One(_): "yup"
+
+isMaybeOneAOrB (val: Maybe[One[A | B]]) -> String : case val of
+  Nothing: "nope"
+  One(A): "yup, A"
+  One(B): "yup, B"
+
+main:
+  oneA: One(A)
+  oneB: One(B)
+  none: Nothing
+
+  debugPrint isMaybeOneA oneA
+  debugPrint isMaybeOneAOrB oneA
+  debugPrint isMaybeOneAOrB oneB
+  debugPrint isMaybeOneAOrB none

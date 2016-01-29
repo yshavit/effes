@@ -2,7 +2,6 @@ package com.yuvalshavit.effes.test;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.yuvalshavit.effes.compile.Source;
 import com.yuvalshavit.effes.compile.Sources;
@@ -26,9 +25,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +43,7 @@ import static org.testng.Assert.assertEquals;
 public final class EndToEndTest {
   private static final RelativeUrl urls = new RelativeUrl(EndToEndTest.class);
   private final String efPrefix;
+  private static final Pattern optionsLinePattern = Pattern.compile("-- !(.*)\n");
 
   public EndToEndTest() throws IOException {
     efPrefix = Resources.toString(urls.get("_prefix.ef"), Charsets.UTF_8);
@@ -45,26 +51,24 @@ public final class EndToEndTest {
 
   @DataProvider(name = "files")
   public static Object[][] getBaseNames() throws IOException {
-    String regexPattern = System.getProperty("test.regex", "");
-    String suffixRegex = "^(.*" + regexPattern + ".*)\\.(ef|ir|err|out)$";
-    return Resources.readLines(urls.get("."), Charsets.UTF_8).stream()
+    String suffixRegex = "^(.*)\\.(ef|ir|err|out)$";
+    List<String> dir = Resources.readLines(urls.get("."), Charsets.UTF_8);
+    Predicate<String> filter;
+    if (System.getProperty("test.params") == null) {
+      filter = ignored -> true;
+    } else {
+      Pattern p = Pattern.compile(System.getProperty("test.params"));
+      filter = s -> p.matcher(s).find();
+    }
+    return dir.stream()
       .flatMap(EndToEndTest::readFileOrDir)
       .filter(s -> !"_prefix.ef".equals(s) && s.matches(suffixRegex))
       .map(s -> s.replaceFirst(suffixRegex, "$1"))
       .distinct()
-      .filter(EndToEndTest::dataProviderFilter)
+      .filter(filter)
       .map(s -> new Object[]{s})
       .collect(Collectors.toList())
       .toArray(new Object[0][]);
-  }
-
-  private static boolean dataProviderFilter(String testName) {
-    String testparam = System.getProperty("test.params");
-    if (testparam == null) {
-      return true;
-    }
-    Pattern pattern = Pattern.compile(testparam);
-    return pattern.matcher(testName).find();
   }
 
   private static Stream<String> readFileOrDir(String file) {
@@ -72,18 +76,20 @@ public final class EndToEndTest {
     // my own version of it. So, just take the incoming file "foo" and see if we can read "foo/.". This will only work
     // for directories, and it'll throw NPE (not IOException) for files. So, yes, yucky... but gets the job done.
     try {
-      return Resources.readLines(urls.get(file + "/."), Charsets.UTF_8).stream().map(f -> file + "/" + f);
-    } catch (NullPointerException e) {
-      return ImmutableList.of(file).stream();
+      URL fileUrl = urls.tryGet(file + "/.");
+      return fileUrl == null ?
+        Stream.of(file)
+        : Resources.readLines(fileUrl, Charsets.UTF_8).stream().map(f -> file + "/" + f);
     } catch (IOException e) {
-      throw new AssertionError(e);
+      throw new RuntimeException(e);
     }
   }
 
   @Test(dataProvider = "files")
   public void compile(String fileBaseName) throws IOException {
+    SourcesAndOptions sao = getParser(fileBaseName);
     IrCompiler<?> compiler = new IrCompiler<>(
-      getParser(fileBaseName),
+      sao.sources,
       (t, e) -> {
         BuiltInMethodsFactory<?> factory = new ExecutableBuiltInMethods(t, null);
         MethodsRegistry<Object> reg = new MethodsRegistry<>();
@@ -96,24 +102,34 @@ public final class EndToEndTest {
     String errFileName = fileBaseName + ".err";
     String actualIr = compiler.getErrors().hasErrors()
       ? ""
-      : printIr(compiler.getCompiledMethods());
+      : printIr(compiler.getCompiledMethods(), sao.options);
     assertEquals(Joiner.on('\n').join(compiler.getErrors().getErrors()), readIfExists(errFileName));
     assertEquals(actualIr, readIfExists(irFileName));
   }
 
-  private Sources getParser(String fileBaseName) throws IOException {
+  private SourcesAndOptions getParser(String fileBaseName) throws IOException {
     URL url = urls.get(fileBaseName + ".ef");
     String efFile = Resources.toString(url, Charsets.UTF_8);
-    Source prefix = new Source(ParserUtils.createParser(efPrefix).compilationUnit());
-    Source parser = new Source(ParserUtils.createParser(efFile).compilationUnit());
-    return new Sources(Arrays.asList(prefix, parser));
+    Collection<Source> sources = new ArrayList<>(2);
+    EnumSet<Option> options = EnumSet.noneOf(Option.class);
+    Matcher optionsLineMatcher = optionsLinePattern.matcher(efFile);
+    if (optionsLineMatcher.find()) {
+      String[] optionsStrs = optionsLineMatcher.group(1).split("\\s+");
+      Stream.of(optionsStrs).filter(s -> !s.isEmpty()).map(Option::valueOf).forEach(options::add);
+    }
+
+    if (!options.contains(Option.NoPrefix)) {
+      sources.add(new Source(ParserUtils.createParser(efPrefix).compilationUnit()));
+    }
+    sources.add(new Source(ParserUtils.createParser(efFile).compilationUnit()));
+    return new SourcesAndOptions(new Sources(sources), options);
   }
 
   @Test(dataProvider = "files")
   public void run(String fileBaseName) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(baos);
-    Interpreter interpreter = new Interpreter(getParser(fileBaseName), out);
+    Interpreter interpreter = new Interpreter(getParser(fileBaseName).sources, out);
 
     String outFileName = fileBaseName + ".out";
     String errFileName = fileBaseName + ".err";
@@ -133,13 +149,13 @@ public final class EndToEndTest {
     assertEquals(outStr, readIfExists(outFileName));
   }
 
-  private String printIr(MethodsRegistry<Block> compiledMethods) {
+  private String printIr(MethodsRegistry<Block> compiledMethods, Set<Option> options) {
     Map<? extends MethodId, ? extends EfMethod<? extends Block>> methods = compiledMethods.getMethodsByName();
     methods = new TreeMap<>(methods); // sort by name
     StringBuilder sb = new StringBuilder();
     NodeStateVisitor listener = new NodeStateToString(sb);
     methods.forEach((name, method) -> {
-      if(!MethodId.topLevel("main").equals(name)) {
+      if(options.contains(Option.MainIr) || !MethodId.topLevel("main").equals(name)) {
         sb.append("def ").append(name).append(' ').append(method).append(":\n");
         listener.visitChild(method.getBody());
       }
@@ -204,6 +220,21 @@ public final class EndToEndTest {
         out.append("  ");
       }
       return out;
+    }
+  }
+
+  private enum Option {
+    NoPrefix,
+    MainIr,
+  }
+
+  private static class SourcesAndOptions {
+    final Sources sources;
+    final Set<Option> options;
+
+    public SourcesAndOptions(Sources sources, Set<Option> options) {
+      this.sources = sources;
+      this.options = options;
     }
   }
 }

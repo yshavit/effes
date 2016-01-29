@@ -1,0 +1,5 @@
+-- ! NoPrefix
+type One
+type Nothing
+
+type Maybe[T] = Nothing | One

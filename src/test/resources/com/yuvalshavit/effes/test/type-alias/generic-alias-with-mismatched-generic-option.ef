@@ -1,0 +1,5 @@
+-- ! NoPrefix
+type One[T] (value: T)
+type Nothing
+
+type Maybe[T] = Nothing | One[E]
