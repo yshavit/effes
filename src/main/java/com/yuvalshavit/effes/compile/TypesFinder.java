@@ -13,6 +13,7 @@ import com.yuvalshavit.effes.parser.ParserUtils;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.Nullable;
@@ -59,7 +60,16 @@ public class TypesFinder implements Consumer<Sources> {
       this.sourceIsBuiltin = sourceIsBuiltin;
     }
 
-    private final Map<String, Alias> aliases = createMap();
+    /**
+     * Keys are the name of an alias, and the values are a pair whose "a" is the token that declared that alias,
+     * and whose "b" is the tokens that it was declared to point to. For instance, given "Boolean = True | False",
+     * the key is <tt>"Boolean"</tt>, and the value has <tt>Pair.a = Boolean</tt>, <tt>Pair.b = [True, False]</tt>.
+     * We need the String key so that we can look up the values if they're referred to by a subsequent token. For
+     * instance, if we later have a declaration <tt>MaybeBool = Boolean | Void</tt>, then to resolve it we may need
+     * to resolve <tt>Boolean</tt>. To do that, we need to find its Pair, which is most efficient to do via a String
+     * lookup (since Token doesn't define equals/hashCode based on getText).
+     */
+    private final Map<String, Pair<Token, Collection<Token>>> aliases = createMap();
 
     @Override
     public void enterDataTypeDeclr(@NotNull EffesParser.DataTypeDeclrContext ctx) {
@@ -108,10 +118,10 @@ public class TypesFinder implements Consumer<Sources> {
 
     @Override
     public void enterTypeAliasDeclr(@NotNull EffesParser.TypeAliasDeclrContext ctx) {
-      if (ctx.TYPE_NAME() == null || ctx.targets == null) {
+      if (ctx.name == null || ctx.targets == null) {
         errs.add(ctx.getStart(), "unrecognized targets for type alias");
       } else {
-        String name = ctx.TYPE_NAME().getText();
+        String name = ctx.name.getText();
         Set<String> targetNames = new HashSet<>();
         List<Token> targetTokens = new ArrayList<>();
         ctx.targets.singleType().stream().forEach(SingleTypeHandler.consumer(errs)
@@ -129,37 +139,36 @@ public class TypesFinder implements Consumer<Sources> {
           })
           .onGeneric(targetCtx -> errs.add(targetCtx.getStart(), "alias type alternatives can't be generic types"))
         );
-        aliases.put(name, new Alias(ctx.name, targetTokens));
+        aliases.put(name, new Pair<>(ctx.name, targetTokens));
       }
     }
 
     @Override
     public void exitCompilationUnit(@NotNull EffesParser.CompilationUnitContext ctx) {
-      aliases.forEach((nameToken, aliasInfo) -> buildAlias(aliasInfo, new HashSet<>()));
+      aliases.forEach((nameToken, aliasInfo) -> buildAlias(aliasInfo.a, aliasInfo.b, new HashSet<>()));
     }
 
     @Nullable
-    private EfType buildAlias(Alias toBuild, Set<String> building) {
-      String aliasName = toBuild.declaringToken.getText();
+    private EfType buildAlias(Token aliasNameToken, Collection<Token> targetTokens, Set<String> building) {
+      String aliasName = aliasNameToken.getText();
       if (registry.getType(aliasName) != null) {
         assert aliases.containsKey(aliasName) : aliasName;
         return registry.getType(aliasName);
       }
       if (!building.add(aliasName)) {
-        errs.add(toBuild.declaringToken, "cyclic type alias definition");
+        errs.add(aliasNameToken, "cyclic type alias definition");
         return null;
       }
 
-      Collection<Token> targetTokens = toBuild.targetTokens;
       Collection<EfType> targets = new ArrayList<>(targetTokens.size());
       targetTokens.forEach(targetTok -> {
         String targetName = targetTok.getText();
         EfType target = registry.getType(targetName);
         if (target == null) {
           // Not already known, so targetName may refer to an alias that hasn't been built yet; try to build it.
-          Alias targetInfo = aliases.get(targetName);
+          Pair<Token, Collection<Token>> targetInfo = aliases.get(targetName);
           if (targetInfo != null) {
-            target = buildAlias(targetInfo, building);
+            target = buildAlias(targetInfo.a, targetInfo.b, building);
           }
         }
         if (target == null) {
@@ -174,18 +183,8 @@ public class TypesFinder implements Consumer<Sources> {
       building.remove(aliasName);
 
       EfType aliasType = EfType.disjunction(targets);
-      registry.registerAlias(toBuild.declaringToken, aliasName, aliasType);
+      registry.registerAlias(aliasNameToken, aliasName, aliasType);
       return aliasType;
-    }
-
-    private class Alias {
-      final Token declaringToken;
-      final Collection<Token> targetTokens;
-
-      Alias(Token declaringToken, Collection<Token> targetTokens) {
-        this.declaringToken = declaringToken;
-        this.targetTokens = targetTokens;
-      }
     }
   }
 
